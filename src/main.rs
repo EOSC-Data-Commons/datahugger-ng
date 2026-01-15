@@ -13,7 +13,8 @@ async fn main() {
 
     tracing::subscriber::set_global_default(subscriber).unwrap();
     download_with_validation(
-        &Url::from_str("https://api.osf.io/v2/nodes/5dujq/files").unwrap(),
+        // 3ua2c has many files and a large file (>600M)
+        &Url::from_str("https://api.osf.io/v2/nodes/3ua2c/files").unwrap(),
         "./dummy_tests",
     )
     .await

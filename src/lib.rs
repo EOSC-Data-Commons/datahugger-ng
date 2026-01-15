@@ -93,8 +93,7 @@ where
     serde_json::from_value(current.clone()).context("failed to deserialize value at final path")
 }
 
-// TODO: can I return an iter stream, is that better? bench needed
-// #[instrument(skip(client))]
+// HTTP calls to the API and crawling the files, recursively crawling folders for files.
 fn resolve_files<P>(
     client: Client,
     url: Url,
@@ -111,7 +110,7 @@ where
             .error_for_status()?
             .json()
             .await?;
-        // TODO: can this done by json_get?
+        // TODO: json_get?
         let files = resp
             .get("data")
             .and_then(Value::as_array)
