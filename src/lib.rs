@@ -1,8 +1,11 @@
 use anyhow::Context;
 use anyhow::anyhow;
+use async_stream::try_stream;
 use bytes::Buf;
 use digest::Digest;
-use futures_util::{StreamExt, future::join_all, stream};
+use futures_core::stream::BoxStream;
+use futures_util::StreamExt;
+use futures_util::TryStreamExt;
 use reqwest::{Client, ClientBuilder};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
@@ -91,76 +94,69 @@ where
 }
 
 // TODO: can I return an iter stream, is that better? bench needed
-#[instrument(skip(client))]
-#[async_recursion::async_recursion]
-async fn resolve_files<P>(
-    client: &Client,
-    url: &Url,
+// #[instrument(skip(client))]
+fn resolve_files<P>(
+    client: Client,
+    url: Url,
     current_loc: P,
-) -> anyhow::Result<Vec<FileEntry>>
+) -> BoxStream<'static, anyhow::Result<FileEntry>>
 where
-    P: AsRef<Path> + std::marker::Send + std::fmt::Debug,
+    P: AsRef<Path> + std::fmt::Debug + Clone + Send + 'static,
 {
-    info!("enter resolve_files");
-    // must return the files, not dir, recursively resolve
-    let resp: Value = client
-        .get(url.as_ref())
-        .send()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
-    let Some(Value::Array(files)) = resp.get("data") else {
-        anyhow::bail!("data not resolve to an array")
-    };
+    Box::pin(try_stream! {
+        let resp: Value = client
+            .get(url.as_ref())
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        // TODO: can this done by json_get?
+        let files = resp
+            .get("data")
+            .and_then(Value::as_array)
+            .ok_or_else(|| anyhow!("data not resolve to an array"))?;
 
-    let mut entries = vec![];
-    let mut futures = vec![];
-    for filej in files {
-        let name: String = json_get(filej, "attributes.name")?;
-        let kind: String = json_get(filej, "attributes.kind")?;
-        match kind.as_ref() {
-            "file" => {
-                let size: usize = json_get(filej, "attributes.size")?;
-                let link: String = json_get(filej, "links.download")?;
-                let hash: String = json_get(filej, "attributes.extra.hashes.sha256")?;
-                let link = Url::from_str(&link)?;
-                // recursive traverse
-                let hash = Hash::Sha256(hash);
-                let entry = FileEntry {
-                    link,
-                    rel_path: current_loc.as_ref().join(name),
-                    is_dir: false,
-                    size: Some(size),
-                    hash: Some(hash),
-                };
-                entries.push(entry);
+        for filej in files {
+            let name: String = json_get(filej, "attributes.name")?;
+            let kind: String = json_get(filej, "attributes.kind")?;
+            match kind.as_ref() {
+                "file" => {
+                    let size: usize = json_get(filej, "attributes.size")?;
+                    let link: String = json_get(filej, "links.download")?;
+                    let hash: String = json_get(filej, "attributes.extra.hashes.sha256")?;
+                    let link = Url::from_str(&link)?;
+                    let hash = Hash::Sha256(hash);
+                    yield FileEntry {
+                        link,
+                        rel_path: current_loc.as_ref().join(name),
+                        is_dir: false,
+                        size: Some(size),
+                        hash: Some(hash),
+                    };
+                }
+                "folder" => {
+                    let rel_path = current_loc.as_ref().join(name);
+                    let link: String = json_get(filej, "relationships.files.links.related.href")?;
+                    let link = Url::from_str(&link)?;
+                    let entry = FileEntry {
+                        // XXX: clone is relatively cheap, don't need Arc I assume.
+                        link: link.clone(),
+                        rel_path: rel_path.clone(),
+                        is_dir: true,
+                        size: None,
+                        hash: None,
+                    };
+                    yield entry;
+                    let sub = resolve_files(client.clone(), link, rel_path);
+                    for await item in sub {
+                        yield item?;
+                    }
+                }
+                _ => Err(anyhow::anyhow!("kind is not 'file' or 'folder'"))?,
             }
-            "folder" => {
-                let rel_path = current_loc.as_ref().join(name);
-                let link: String = json_get(filej, "relationships.files.links.related.href")?;
-                let link = Url::from_str(&link)?;
-                let entry = FileEntry {
-                    // XXX: clone is relatively cheap, don't need Arc I assume.
-                    link: link.clone(),
-                    rel_path: rel_path.clone(),
-                    is_dir: true,
-                    size: None,
-                    hash: None,
-                };
-                entries.push(entry);
-                // recursive traverse BFS, async futures to join at end
-                futures.push(async move { resolve_files(client, &link, &rel_path).await });
-            }
-            _ => anyhow::bail!("kind is not 'file' or 'folder'"),
         }
-    }
-    // wait all concurrent call, not bounded with the assumption that a dataset usually don't
-    // have too many folders.
-    for result in join_all(futures).await {
-        entries.extend(result?);
-    }
-    Ok(entries)
+    })
 }
 
 // must be very efficient, both CPU and RAM usage.
@@ -242,7 +238,6 @@ where
 
     let checksum = hasher.finalize();
     if hex::encode(checksum) != expected_checksum {
-        // dbg!(String::from_utf8(checksum).unwrap());
         anyhow::bail!("checksum wrong")
     }
     Ok(())
@@ -256,15 +251,19 @@ where
     P: AsRef<Path>,
 {
     // TODO: deal with zip differently according to input instruction
-
     let client = ClientBuilder::new().build()?;
 
-    // pure files
-    let files = resolve_files(&client, url, "/").await?;
-    for f in files {
-        let root = dst_dir.as_ref();
-        download_file(&client, f, root).await?;
-    }
+    resolve_files(client.clone(), url.clone(), "./")
+        .try_for_each_concurrent(20, |f| {
+            let dst_dir = dst_dir.as_ref().to_path_buf();
+            let client = client.clone();
+            async move {
+                let mut dst = dst_dir;
+                dst.push(&f.rel_path);
+                download_file(&client, f, &dst).await
+            }
+        })
+        .await?;
     Ok(())
 }
 
@@ -280,25 +279,17 @@ where
 
     let client = ClientBuilder::new().build()?;
 
-    let files = resolve_files(&client, url, "./").await?;
-    let results = stream::iter(files)
-        .map(|f| {
-            let client = client.clone();
+    resolve_files(client.clone(), url.clone(), "./")
+        .try_for_each_concurrent(20, |f| {
             let dst_dir = dst_dir.as_ref().to_path_buf();
+            let client = client.clone();
             async move {
                 let mut dst = dst_dir;
                 dst.push(&f.rel_path);
                 download_file_with_validation(&client, f, &dst).await
             }
         })
-        .buffer_unordered(8)
-        .collect::<Vec<_>>()
-        .await;
-
-    // propagate any error
-    for r in results {
-        r?;
-    }
+        .await?;
     Ok(())
 }
 
