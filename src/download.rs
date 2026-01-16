@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use bytes::Buf;
 use digest::Digest;
 use futures_util::{StreamExt, TryStreamExt};
@@ -75,6 +75,7 @@ where
     match src {
         Entry::Dir(dir_meta) => {
             let path = dst.as_ref().join(dir_meta.relative());
+            // TODO: create_dir to be more strict on stream order
             fs::create_dir_all(path)?;
             Ok(())
         }
@@ -88,7 +89,6 @@ where
             let mut stream = resp.bytes_stream();
             // prepare file dst
             let path = dst.as_ref().join(file_meta.relative());
-            info!("{:?}", path);
             let mut fh = OpenOptions::new()
                 .write(true)
                 .create(true)
@@ -99,8 +99,9 @@ where
             let checksum = file_meta
                 .checksum
                 .iter()
-                .filter(|c| matches!(c, Checksum::Sha256(_)))
-                .collect::<Vec<_>>()[0];
+                .find(|c| matches!(c, Checksum::Sha256(_)))
+                .or_else(|| file_meta.checksum.first())
+                .ok_or_else(|| anyhow!("file_meta.checksum is empty"))?;
             let (mut hasher, expected_checksum) = match checksum {
                 Checksum::Sha256(value) => (Hasher::Sha256(sha2::Sha256::new()), value),
                 Checksum::Md5(value) => (Hasher::Md5(md5::Md5::new()), value),
@@ -162,19 +163,25 @@ where
 ///
 /// * `R` is A repository implementation providing file metadata, URLs, and an HTTP client.
 /// * `P` is A path-like type specifying the destination directory.
-pub async fn download_with_validation<R, P>(repo: Arc<R>, dst_dir: P) -> anyhow::Result<()>
+pub async fn download_with_validation<R, P>(
+    repo: Arc<R>,
+    id: &str,
+    dst_dir: P,
+) -> anyhow::Result<()>
 where
     P: AsRef<Path>,
     R: Repository + Send + Sync + 'static,
 {
     // TODO: deal with zip differently according to input instruction
 
-    let root_dir = DirMeta::new_root(repo.as_ref().root_url("3ua2c"));
+    let root_dir = DirMeta::new_root(repo.as_ref().root_url(id));
+    let path = dst_dir.as_ref().join(root_dir.relative());
+    fs::create_dir_all(path)?;
     crawl(repo.clone(), root_dir)
-        .try_for_each_concurrent(10, |f| {
+        .try_for_each_concurrent(10, |entry| {
             let dst_dir = dst_dir.as_ref().to_path_buf();
             let client = repo.client();
-            async move { download_file_with_validation(&client, f, &dst_dir).await }
+            async move { download_file_with_validation(&client, entry, &dst_dir).await }
         })
         .await?;
     Ok(())

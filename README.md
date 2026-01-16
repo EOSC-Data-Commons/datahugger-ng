@@ -30,3 +30,7 @@ before public and 1st release
 ## notes
 
 - [ ] maybe add support to windows, it is not now because CrawlPath is using '/'.
+- [ ] minimize the maintenance effort by having auto remove data repo validation and fire issues.
+- [ ] happing above auto validation and publish the result in the gh-page.
+- [ ] have clear data repo onboarding instruction (one trait to impl).
+- [ ] have clear new data repo request issue template.
