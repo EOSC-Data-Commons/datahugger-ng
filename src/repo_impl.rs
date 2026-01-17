@@ -6,7 +6,7 @@ use url::Url;
 
 use anyhow::anyhow;
 use reqwest::Client;
-use std::str::FromStr;
+use std::{any::Any, str::FromStr};
 
 use crate::{Checksum, DirMeta, Entry, Repository, json_get, repo::FileMeta};
 
@@ -19,6 +19,12 @@ impl OSF {
     #[must_use]
     pub fn new() -> Self {
         OSF
+    }
+}
+
+impl Default for OSF {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -76,6 +82,10 @@ impl Repository for OSF {
 
         Ok(entries)
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 // https://datavers.example/api/datasets/:persistentId/versions/:latest-poblished/?persistentId=<id>
@@ -120,6 +130,7 @@ impl Repository for DataverseDataset {
             .header(reqwest::header::ACCEPT, "application/json")
             .send()
             .await?
+            .error_for_status()?
             .json()
             .await?;
 
@@ -146,6 +157,10 @@ impl Repository for DataverseDataset {
         }
 
         Ok(entries)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -212,5 +227,9 @@ impl Repository for DataverseFile {
         let entries = vec![Entry::File(file)];
 
         Ok(entries)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

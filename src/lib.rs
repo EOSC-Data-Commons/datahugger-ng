@@ -15,4 +15,5 @@ pub use crate::helper::json_get;
 mod download;
 pub use crate::download::download_with_validation;
 
-pub mod dispatch;
+mod dispatch;
+pub use crate::dispatch::{QueryRepository, resolve};

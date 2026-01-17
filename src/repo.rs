@@ -1,10 +1,11 @@
+use anyhow::Context;
 use async_trait::async_trait;
 use futures_core::stream::BoxStream;
 use reqwest::Client;
 use url::Url;
 
 use async_stream::try_stream;
-use std::{path::Path, sync::Arc};
+use std::{any::Any, path::Path, sync::Arc};
 
 use digest::Digest;
 
@@ -141,8 +142,6 @@ pub enum Entry {
     File(FileMeta),
 }
 
-// TODO: DirMeta and FileMeta API need consistent, FileMeta doesn't have `new`
-
 #[derive(Debug, Clone)]
 pub struct DirMeta {
     path: CrawlPath,
@@ -207,9 +206,10 @@ pub enum Checksum {
 }
 
 #[async_trait]
-pub trait Repository: Send + Sync {
+pub trait Repository: Send + Sync + Any {
     async fn list(&self, client: &Client, dir: DirMeta) -> anyhow::Result<Vec<Entry>>;
     fn root_url(&self, id: &str) -> Url;
+    fn as_any(&self) -> &dyn Any;
 }
 
 pub fn crawl<R>(
@@ -221,7 +221,7 @@ where
     R: Repository + 'static + ?Sized,
 {
     Box::pin(try_stream! {
-        let entries = repo.list(&client, dir).await?;
+        let entries = repo.list(&client, dir).await.context("in crawl")?;
 
         for entry in entries {
             match entry {

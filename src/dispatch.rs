@@ -5,170 +5,231 @@ use url::Url;
 
 use crate::{
     Repository,
-    repo_impl::{DataverseDataset, DataverseFile},
+    repo_impl::{DataverseDataset, DataverseFile, OSF},
 };
+
+use std::collections::HashSet;
+use std::sync::LazyLock;
+static DATAONE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
+    HashSet::from([
+        "arcticdata.io",
+        "knb.ecoinformatics.org",
+        "data.pndb.fr",
+        "opc.dataone.org",
+        "portal.edirepository.org",
+        "goa.nceas.ucsb.edu",
+        "data.piscoweb.org",
+        "adc.arm.gov",
+        "scidb.cn",
+        "data.ess-dive.lbl.gov",
+        "hydroshare.org",
+        "ecl.earthchem.org",
+        "get.iedadata.org",
+        "usap-dc.org",
+        "iys.hakai.org",
+        "doi.pangaea.de",
+        "rvdata.us",
+        "sead-published.ncsa.illinois.edu",
+    ])
+});
+
+static DATAVERSE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
+    HashSet::from([
+        "www.march.es",
+        "www.murray.harvard.edu",
+        "abacus.library.ubc.ca",
+        "ada.edu.au",
+        "adattar.unideb.hu",
+        "archive.data.jhu.edu",
+        "borealisdata.ca",
+        "dados.ipb.pt",
+        "dadosdepesquisa.fiocruz.br",
+        "darus.uni-stuttgart.de",
+        "data.aussda.at",
+        "data.cimmyt.org",
+        "data.fz-juelich.de",
+        "data.goettingen-research-online.de",
+        "data.inrae.fr",
+        "data.scielo.org",
+        "data.sciencespo.fr",
+        "data.tdl.org",
+        "data.univ-gustave-eiffel.fr",
+        "datarepositorium.uminho.pt",
+        "datasets.iisg.amsterdam",
+        "dataspace.ust.hk",
+        "dataverse.asu.edu",
+        "dataverse.cirad.fr",
+        "dataverse.csuc.cat",
+        "dataverse.harvard.edu",
+        "dataverse.iit.it",
+        "dataverse.ird.fr",
+        "dataverse.lib.umanitoba.ca",
+        "dataverse.lib.unb.ca",
+        "dataverse.lib.virginia.edu",
+        "dataverse.nl",
+        "dataverse.no",
+        "dataverse.openforestdata.pl",
+        "dataverse.scholarsportal.info",
+        "dataverse.theacss.org",
+        "dataverse.ucla.edu",
+        "dataverse.unc.edu",
+        "dataverse.unimi.it",
+        "dataverse.yale-nus.edu.sg",
+        "dorel.univ-lorraine.fr",
+        "dvn.fudan.edu.cn",
+        "edatos.consorciomadrono.es",
+        "edmond.mpdl.mpg.de",
+        "heidata.uni-heidelberg.de",
+        "lida.dataverse.lt",
+        "mxrdr.icm.edu.pl",
+        "osnadata.ub.uni-osnabrueck.de",
+        "planetary-data-portal.org",
+        "qdr.syr.edu",
+        "rdm.aau.edu.et",
+        "rdr.kuleuven.be",
+        "rds.icm.edu.pl",
+        "recherche.data.gouv.fr",
+        "redu.unicamp.br",
+        "repod.icm.edu.pl",
+        "repositoriopesquisas.ibict.br",
+        "research-data.urosario.edu.co",
+        "researchdata.cuhk.edu.hk",
+        "researchdata.ntu.edu.sg",
+        "rin.lipi.go.id",
+        "ssri.is",
+        "www.seanoe.org",
+        "trolling.uit.no",
+        "www.sodha.be",
+        "www.uni-hildesheim.de",
+        "dataverse.acg.maine.edu",
+        "dataverse.icrisat.org",
+        "datos.pucp.edu.pe",
+        "datos.uchile.cl",
+        "opendata.pku.edu.cn",
+    ])
+});
 
 pub struct QueryRepository {
     pub repo: Arc<dyn Repository>,
     pub record_id: String,
 }
 
-fn resolve(url: &Url) -> anyhow::Result<QueryRepository> {
+/// # Errors
+/// ???
+pub fn resolve(url: &str) -> anyhow::Result<QueryRepository> {
+    let url = Url::from_str(url)?;
     let scheme = url.scheme();
     let domain = url.domain().ok_or_else(|| anyhow!("domain unresolved"))?;
     let host_str = url
         .host_str()
         .ok_or_else(|| anyhow!("host_str unresolved"))?;
+
+    // DataOne spec hosted
+    if DATAONE_DOMAINS.contains(domain) {
+        todo!()
+    }
+
+    // Dataverse spec hosted
+    if DATAVERSE_DOMAINS.contains(domain) {
+        // https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD
+        // https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/JCJCJC
+        let mut segments = url
+            .path_segments()
+            .ok_or_else(|| anyhow!("cannot be base"))?;
+        let typ = segments
+            .next()
+            .ok_or_else(|| anyhow!("no segments found"))?;
+        let queries = url.query_pairs();
+        let queries = queries.collect::<HashMap<_, _>>();
+        let Some(id) = queries.get("persistentId") else {
+            anyhow::bail!("query don't contains 'persistentId'")
+        };
+
+        let typ = typ
+            .strip_suffix(".xhtml")
+            .ok_or_else(|| anyhow!("segment not in format *.xhtml"))?;
+        let base_url = Url::from_str(&format!("{scheme}://{host_str}"))?;
+        let version = ":latest-published".to_string();
+        match typ {
+            "dataset" => {
+                let repo = Arc::new(DataverseDataset::new(base_url, version));
+                let repo_query = QueryRepository {
+                    repo,
+                    record_id: id.to_string(),
+                };
+                return Ok(repo_query);
+            }
+            "file" => {
+                let repo = Arc::new(DataverseFile::new(base_url, version));
+                let repo_query = QueryRepository {
+                    repo,
+                    record_id: id.to_string(),
+                };
+                return Ok(repo_query);
+            }
+            t => anyhow::bail!("{t} is not valid type, can only be 'dataset' or 'file'"),
+        }
+    }
+
     match domain {
-        "dataverse.acg.maine.edu"
-        | "dataverse.icrisat.org"
-        | "datos.pucp.edu.pe"
-        | "datos.uchile.cl"
-        | "opendata.pku.edu.cn" => {
-            // https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD
-            // https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/JCJCJC
+        "arxiv.org" => todo!(),
+        "zenodo.org" => todo!(),
+        "github.com" => todo!(),
+        "datadryad.org" => todo!(),
+        "huggingface.co" => todo!(),
+        "osf.io" => {
             let mut segments = url
                 .path_segments()
-                .ok_or_else(|| anyhow!("cannot be base"))?;
-            let typ = segments
-                .next()
-                .ok_or_else(|| anyhow!("no segments found"))?;
-            let queries = url.query_pairs();
-            let queries = queries.collect::<HashMap<_, _>>();
-            let Some(id) = queries.get("persistentId") else {
-                anyhow::bail!("query don't contains 'persistentId'")
-            };
+                .ok_or_else(|| anyhow!("cannot get path segments"))?;
 
-            let typ = typ
-                .strip_suffix(".xhtml")
-                .ok_or_else(|| anyhow!("segment not in format *.xhtml"))?;
-            let base_url = Url::from_str(&format!("{scheme}://{host_str}"))?;
-            let version = ":latest-published".to_string();
-            match typ {
-                "dataset" => {
-                    let repo = Arc::new(DataverseDataset::new(base_url, version));
-                    let repo_query = QueryRepository {
-                        repo,
-                        record_id: id.to_string(),
-                    };
-                    Ok(repo_query)
-                }
-                "file" => {
-                    let repo = Arc::new(DataverseFile::new(base_url, version));
-                    let repo_query = QueryRepository {
-                        repo,
-                        record_id: id.to_string(),
-                    };
-                    Ok(repo_query)
-                }
-                t => anyhow::bail!("{t} is not valid type, can only be 'dataset' or 'file'"),
-            }
+            let id = segments
+                .next()
+                .ok_or_else(|| anyhow!("no segments found"))?
+                .to_string();
+
+            let repo = Arc::new(OSF::new());
+            let repo_query = QueryRepository {
+                repo,
+                record_id: id,
+            };
+            Ok(repo_query)
         }
-        _ => todo!(),
+        "data.mendeley.com" => todo!(),
+        "data.4tu.nl" => todo!(),
+        // DataVerse repositories (extracted from re3data)
+        "b2share.eudat.eu" | "data.europa.eu" => todo!(),
+        _ => {
+            anyhow::bail!("unknown domain: {domain}")
+        }
     }
 }
 
-fn use_resolver() {
-    let _ = resolve(&Url::from_str("https://ht.com").unwrap()).unwrap();
-    todo!();
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_resolve_dataverse_default() {
+        // dataset
+        let url = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD";
+        let qr = resolve(url).unwrap();
+        assert_eq!(qr.record_id.as_str(), "doi:10.7910/DVN/KBHLOD");
+        qr.repo.as_any().downcast_ref::<DataverseDataset>().unwrap();
 
-// "arxiv.org": ArXivDataset,
-// "zenodo.org": ZenodoDataset,
-// "github.com": GitHubDataset,
-// "datadryad.org": DataDryadDataset,
-// "huggingface.co": HuggingFaceDataset,
-// "osf.io": OSFDataset,
-// "data.mendeley.com": MendeleyDataset,
-// # Figshare download
-// "figshare.com": FigShareDataset,
-// # Djehuty
-// "data.4tu.nl": DjehutyDataset,
-// # DataOne repositories
-// "arcticdata.io": DataOneDataset,
-// "knb.ecoinformatics.org": DataOneDataset,
-// "data.pndb.fr": DataOneDataset,
-// "opc.dataone.org": DataOneDataset,
-// "portal.edirepository.org": DataOneDataset,
-// "goa.nceas.ucsb.edu": DataOneDataset,
-// "data.piscoweb.org": DataOneDataset,
-// "adc.arm.gov": DataOneDataset,
-// "scidb.cn": DataOneDataset,
-// "data.ess-dive.lbl.gov": DataOneDataset,
-// "hydroshare.org": DataOneDataset,
-// "ecl.earthchem.org": DataOneDataset,
-// "get.iedadata.org": DataOneDataset,
-// "usap-dc.org": DataOneDataset,
-// "iys.hakai.org": DataOneDataset,
-// "doi.pangaea.de": PangaeaDataset,
-// "rvdata.us": DataOneDataset,
-// "sead-published.ncsa.illinois.edu": DataOneDataset,
-// # DataVerse repositories (extracted from re3data)
-// "www.march.es": DataverseDataset,
-// "www.murray.harvard.edu": DataverseDataset,
-// "abacus.library.ubc.ca": DataverseDataset,
-// "ada.edu.au": DataverseDataset,
-// "adattar.unideb.hu": DataverseDataset,
-// "archive.data.jhu.edu": DataverseDataset,
-// "borealisdata.ca": DataverseDataset,
-// "dados.ipb.pt": DataverseDataset,
-// "dadosdepesquisa.fiocruz.br": DataverseDataset,
-// "darus.uni-stuttgart.de": DataverseDataset,
-// "data.aussda.at": DataverseDataset,
-// "data.cimmyt.org": DataverseDataset,
-// "data.fz-juelich.de": DataverseDataset,
-// "data.goettingen-research-online.de": DataverseDataset,
-// "data.inrae.fr": DataverseDataset,
-// "data.scielo.org": DataverseDataset,
-// "data.sciencespo.fr": DataverseDataset,
-// "data.tdl.org": DataverseDataset,
-// "data.univ-gustave-eiffel.fr": DataverseDataset,
-// "datarepositorium.uminho.pt": DataverseDataset,
-// "datasets.iisg.amsterdam": DataverseDataset,
-// "dataspace.ust.hk": DataverseDataset,
-// "dataverse.asu.edu": DataverseDataset,
-// "dataverse.cirad.fr": DataverseDataset,
-// "dataverse.csuc.cat": DataverseDataset,
-// "dataverse.harvard.edu": DataverseDataset,
-// "dataverse.iit.it": DataverseDataset,
-// "dataverse.ird.fr": DataverseDataset,
-// "dataverse.lib.umanitoba.ca": DataverseDataset,
-// "dataverse.lib.unb.ca": DataverseDataset,
-// "dataverse.lib.virginia.edu": DataverseDataset,
-// "dataverse.nl": DataverseDataset,
-// "dataverse.no": DataverseDataset,
-// "dataverse.openforestdata.pl": DataverseDataset,
-// "dataverse.scholarsportal.info": DataverseDataset,
-// "dataverse.theacss.org": DataverseDataset,
-// "dataverse.ucla.edu": DataverseDataset,
-// "dataverse.unc.edu": DataverseDataset,
-// "dataverse.unimi.it": DataverseDataset,
-// "dataverse.yale-nus.edu.sg": DataverseDataset,
-// "dorel.univ-lorraine.fr": DataverseDataset,
-// "dvn.fudan.edu.cn": DataverseDataset,
-// "edatos.consorciomadrono.es": DataverseDataset,
-// "edmond.mpdl.mpg.de": DataverseDataset,
-// "heidata.uni-heidelberg.de": DataverseDataset,
-// "lida.dataverse.lt": DataverseDataset,
-// "mxrdr.icm.edu.pl": DataverseDataset,
-// "osnadata.ub.uni-osnabrueck.de": DataverseDataset,
-// "planetary-data-portal.org": DataverseDataset,
-// "qdr.syr.edu": DataverseDataset,
-// "rdm.aau.edu.et": DataverseDataset,
-// "rdr.kuleuven.be": DataverseDataset,
-// "rds.icm.edu.pl": DataverseDataset,
-// "recherche.data.gouv.fr": DataverseDataset,
-// "redu.unicamp.br": DataverseDataset,
-// "repod.icm.edu.pl": DataverseDataset,
-// "repositoriopesquisas.ibict.br": DataverseDataset,
-// "research-data.urosario.edu.co": DataverseDataset,
-// "researchdata.cuhk.edu.hk": DataverseDataset,
-// "researchdata.ntu.edu.sg": DataverseDataset,
-// "rin.lipi.go.id": DataverseDataset,
-// "ssri.is": DataverseDataset,
-// "www.seanoe.org": SeaNoeDataset,
-// "trolling.uit.no": DataverseDataset,
-// "www.sodha.be": DataverseDataset,
-// "www.uni-hildesheim.de": DataverseDataset,
-// "b2share.eudat.eu": B2shareDataset,
-// "data.europa.eu": DataEuropaDataset,
+        // file
+        let url =
+            "https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/DHJ45U";
+        let qr = resolve(url).unwrap();
+        assert_eq!(qr.record_id.as_str(), "doi:10.7910/DVN/KBHLOD/DHJ45U");
+        qr.repo.as_any().downcast_ref::<DataverseFile>().unwrap();
+    }
+
+    #[test]
+    fn test_resolve_default() {
+        // osf.io
+        for url in ["https://osf.io/dezms/overview", "https://osf.io/dezms/"] {
+            let qr = resolve(url).unwrap();
+            assert_eq!(qr.record_id.as_str(), "dezms");
+            qr.repo.as_any().downcast_ref::<OSF>().unwrap();
+        }
+    }
+}

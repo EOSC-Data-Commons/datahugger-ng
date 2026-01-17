@@ -18,6 +18,7 @@ before public and 1st release
 - [ ] not only local FS, but s3
 - [ ] seamephor, config that can intuitively estimate maximum resources been used.
 - [ ] do benchs to show its power.
+- [ ] compact but extremly expressive readme
 
 ## bench
 
