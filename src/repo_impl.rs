@@ -1,14 +1,17 @@
 #![allow(clippy::upper_case_acronyms)]
 
 use async_trait::async_trait;
+use exn::{Exn, ResultExt};
 use serde_json::Value as JsonValue;
 use url::Url;
 
-use anyhow::anyhow;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use std::{any::Any, str::FromStr};
 
-use crate::{Checksum, DirMeta, Entry, Repository, json_get, repo::FileMeta};
+use crate::{
+    Checksum, DirMeta, Entry, Repository, json_extract,
+    repo::{FileMeta, RepoError},
+};
 
 // https://osf.io/
 // API root url at https://api.osf.io/v2/nodes/
@@ -41,29 +44,67 @@ impl Repository for OSF {
         url
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> anyhow::Result<Vec<Entry>> {
-        let resp: JsonValue = client
+    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+        let resp = client
             .get(dir.api_url.clone())
             .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await?;
+            .await
+            .or_raise(|| RepoError {
+                message: format!("fail at client sent GET {}", dir.api_url),
+            })?;
+        let resp = resp.error_for_status().map_err(|err| match err.status() {
+            Some(StatusCode::NOT_FOUND) => RepoError {
+                message: format!("resource not found when GET {}", dir.api_url),
+            },
+            Some(status_code) => RepoError {
+                message: format!(
+                    "fail GET {}, with state code: {}",
+                    dir.api_url,
+                    status_code.as_str()
+                ),
+            },
+            None => RepoError {
+                message: format!("fail GET {}, network / protocol error", dir.api_url,),
+            },
+        })?;
+        let resp: JsonValue = resp.json().await.or_raise(|| RepoError {
+            message: "".to_string(),
+        })?;
         let files = resp
             .get("data")
             .and_then(JsonValue::as_array)
-            .ok_or_else(|| anyhow!("data not resolve to an array"))?;
+            .ok_or_else(|| RepoError {
+                message: "field with key 'data' not resolve to an json array".to_string(),
+            })?;
 
         let mut entries = Vec::with_capacity(files.len());
         for filej in files {
-            let name: String = json_get(filej, "attributes.name")?;
-            let kind: String = json_get(filej, "attributes.kind")?;
+            let name: String = json_extract(filej, "attributes.name").or_raise(|| RepoError {
+                message: "fail to extracting 'attributes.name' as String from json".to_string(),
+            })?;
+            let kind: String = json_extract(filej, "attributes.kind").or_raise(|| RepoError {
+                message: "fail to extracting 'attributes.kind' as String from json".to_string(),
+            })?;
             match kind.as_ref() {
                 "file" => {
-                    let size: u64 = json_get(filej, "attributes.size")?;
-                    let download_url: String = json_get(filej, "links.download")?;
-                    let download_url = Url::from_str(&download_url)?;
-                    let hash: String = json_get(filej, "attributes.extra.hashes.sha256")?;
+                    let size: u64 =
+                        json_extract(filej, "attributes.size").or_raise(|| RepoError {
+                            message: "fail to extracting 'attributes.size' as u64 from json"
+                                .to_string(),
+                        })?;
+                    let download_url: String =
+                        json_extract(filej, "links.download").or_raise(|| RepoError {
+                            message: "fail to extracting 'links.download' as String from json"
+                                .to_string(),
+                        })?;
+                    let download_url = Url::from_str(&download_url).or_raise(|| RepoError {
+                        message: format!("cannot parse '{download_url}' download url"),
+                    })?;
+                    let hash: String = json_extract(filej, "attributes.extra.hashes.sha256")
+                        .or_raise(|| RepoError {
+                            message: "fail to extracting 'attributes.extra.hashes.sha256' as String from json"
+                                .to_string(),
+                        })?;
                     let checksum = Checksum::Sha256(hash);
                     let file =
                         FileMeta::new(dir.join(&name), download_url, Some(size), vec![checksum]);
@@ -71,12 +112,24 @@ impl Repository for OSF {
                 }
                 "folder" => {
                     let api_url: String =
-                        json_get(filej, "relationships.files.links.related.href")?;
-                    let api_url = Url::from_str(&api_url)?;
+                        json_extract(filej, "relationships.files.links.related.href")
+                        .or_raise(|| RepoError {
+                            message: "fail to extracting 'relationships.files.links.related.href' as String from json"
+                                .to_string(),
+                        })?;
+                    let api_url = Url::from_str(&api_url).or_raise(|| RepoError {
+                        message: format!("cannot parse '{api_url}' api url"),
+                    })?;
                     let dir = DirMeta::new(api_url, dir.join(&name));
                     entries.push(Entry::Dir(dir));
                 }
-                _ => Err(anyhow::anyhow!("kind is not 'file' or 'folder'"))?,
+                typ => {
+                    exn::bail!(RepoError {
+                        message: format!(
+                            "kind can be 'dataset' or 'kind' for an OSF entry, got {typ}"
+                        )
+                    });
+                }
             }
         }
 
@@ -90,6 +143,7 @@ impl Repository for OSF {
 
 // https://datavers.example/api/datasets/:persistentId/versions/:latest-poblished/?persistentId=<id>
 #[derive(Debug)]
+// TODO: rename to Dataverse
 pub struct DataverseDataset {
     base_url: Url,
     version: String,
@@ -124,33 +178,63 @@ impl Repository for DataverseDataset {
         url
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> anyhow::Result<Vec<Entry>> {
-        let resp: JsonValue = client
+    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+        let resp = client
             .get(dir.api_url.clone())
-            .header(reqwest::header::ACCEPT, "application/json")
             .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await?;
+            .await
+            .or_raise(|| RepoError {
+                message: format!("fail at client sent GET {}", dir.api_url),
+            })?;
+        let resp = resp.error_for_status().map_err(|err| match err.status() {
+            Some(StatusCode::NOT_FOUND) => RepoError {
+                message: format!("resource not found when GET {}", dir.api_url),
+            },
+            Some(status_code) => RepoError {
+                message: format!(
+                    "fail GET {}, with state code: {}",
+                    dir.api_url,
+                    status_code.as_str()
+                ),
+            },
+            None => RepoError {
+                message: format!("fail GET {}, network / protocol error", dir.api_url,),
+            },
+        })?;
+        let resp: JsonValue = resp.json().await.or_raise(|| RepoError {
+            message: "".to_string(),
+        })?;
 
         let files = resp
             .get("data")
             .and_then(|d| d.get("files"))
             .and_then(JsonValue::as_array)
-            .ok_or_else(|| anyhow!("data not resolve to an array"))?;
+            .ok_or_else(|| RepoError {
+                message: "field with key 'data.files' not resolve to an json array".to_string(),
+            })?;
 
         let mut entries = Vec::with_capacity(files.len());
         for filej in files {
-            let name: String = json_get(filej, "dataFile.filename")?;
-            let id: u64 = json_get(filej, "dataFile.id")?;
-
-            let size: u64 = json_get(filej, "dataFile.filesize")?;
-            let download_url = Url::from_str("https://dataverse.harvard.edu/api/access/datafile/")
-                .expect("a valid url");
-            let download_url = download_url.join(&format!("{id}"))?;
+            let name: String = json_extract(filej, "dataFile.filename").or_raise(|| RepoError {
+                message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
+            })?;
+            let id: u64 = json_extract(filej, "dataFile.id").or_raise(|| RepoError {
+                message: "fail to extracting 'dataFile.id' as u64 from json".to_string(),
+            })?;
+            let size: u64 = json_extract(filej, "dataFile.filesize").or_raise(|| RepoError {
+                message: "fail to extracting 'dataFile.filesize' as u64 from json".to_string(),
+            })?;
+            let download_url = "https://dataverse.harvard.edu/api/access/datafile/";
+            let download_url = Url::from_str(download_url).or_raise(|| RepoError {
+                message: format!("cannot parse '{download_url}' download base url"),
+            })?;
+            let download_url = download_url.join(&format!("{id}")).or_raise(|| RepoError {
+                message: format!("cannot parse '{download_url}' download url"),
+            })?;
             // XXX: Is dataverse only MD5 support? there is dataFile.checksum.value as well
-            let hash: String = json_get(filej, "dataFile.md5")?;
+            let hash: String = json_extract(filej, "dataFile.md5").or_raise(|| RepoError {
+                message: "fail to extracting 'dataFile.md5' as String from json".to_string(),
+            })?;
             let checksum = Checksum::Md5(hash);
             let file = FileMeta::new(dir.join(&name), download_url, Some(size), vec![checksum]);
             entries.push(Entry::File(file));
@@ -200,28 +284,58 @@ impl Repository for DataverseFile {
         url
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> anyhow::Result<Vec<Entry>> {
-        let resp: JsonValue = client
+    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+        let resp = client
             .get(dir.api_url.clone())
-            .header(reqwest::header::ACCEPT, "application/json")
             .send()
-            .await?
-            .json()
-            .await?;
+            .await
+            .or_raise(|| RepoError {
+                message: format!("fail at client sent GET {}", dir.api_url),
+            })?;
+        let resp = resp.error_for_status().map_err(|err| match err.status() {
+            Some(StatusCode::NOT_FOUND) => RepoError {
+                message: format!("resource not found when GET {}", dir.api_url),
+            },
+            Some(status_code) => RepoError {
+                message: format!(
+                    "fail GET {}, with state code: {}",
+                    dir.api_url,
+                    status_code.as_str()
+                ),
+            },
+            None => RepoError {
+                message: format!("fail GET {}, network / protocol error", dir.api_url,),
+            },
+        })?;
+        let resp: JsonValue = resp.json().await.or_raise(|| RepoError {
+            message: "".to_string(),
+        })?;
 
-        let filej = resp
-            .get("data")
-            .ok_or_else(|| anyhow!("data not resolved"))?;
+        let filej = resp.get("data").ok_or_else(|| RepoError {
+            message: "field with key 'data' not resolve to an json value".to_string(),
+        })?;
 
-        let name: String = json_get(filej, "dataFile.filename")?;
-        let id: u64 = json_get(filej, "dataFile.id")?;
+        let name: String = json_extract(filej, "dataFile.filename").or_raise(|| RepoError {
+            message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
+        })?;
+        let id: u64 = json_extract(filej, "dataFile.id").or_raise(|| RepoError {
+            message: "fail to extracting 'dataFile.id' as u64 from json".to_string(),
+        })?;
 
-        let size: u64 = json_get(filej, "dataFile.filesize")?;
-        let download_url = Url::from_str("https://dataverse.harvard.edu/api/access/datafile/")
-            .expect("a valid url");
-        let download_url = download_url.join(&format!("{id}"))?;
+        let size: u64 = json_extract(filej, "dataFile.filesize").or_raise(|| RepoError {
+            message: "fail to extracting 'dataFile.filesize' as u64 from json".to_string(),
+        })?;
+        let download_url = "https://dataverse.harvard.edu/api/access/datafile/";
+        let download_url = Url::from_str(download_url).or_raise(|| RepoError {
+            message: format!("cannot parse '{download_url}' download base url"),
+        })?;
+        let download_url = download_url.join(&format!("{id}")).or_raise(|| RepoError {
+            message: format!("cannot parse '{download_url}' download url"),
+        })?;
         // XXX: Is dataverse only MD5 support? there is dataFile.checksum.value as well
-        let hash: String = json_get(filej, "dataFile.md5")?;
+        let hash: String = json_extract(filej, "dataFile.md5").or_raise(|| RepoError {
+            message: "fail to extracting 'dataFile.md5' as String from json".to_string(),
+        })?;
         let checksum = Checksum::Md5(hash);
         let file = FileMeta::new(dir.join(&name), download_url, Some(size), vec![checksum]);
         let entries = vec![Entry::File(file)];

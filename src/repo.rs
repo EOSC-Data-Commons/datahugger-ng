@@ -1,5 +1,5 @@
-use anyhow::Context;
 use async_trait::async_trait;
+use exn::{Exn, ResultExt};
 use futures_core::stream::BoxStream;
 use reqwest::Client;
 use url::Url;
@@ -8,6 +8,8 @@ use async_stream::try_stream;
 use std::{any::Any, path::Path, sync::Arc};
 
 use digest::Digest;
+
+use crate::error::ErrorStatus;
 
 const ROOT: &str = "__ROOT__";
 
@@ -48,6 +50,12 @@ const ROOT: &str = "__ROOT__";
 /// ```
 #[derive(Debug, Clone)]
 pub struct CrawlPath(String);
+
+impl std::fmt::Display for CrawlPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl AsRef<Path> for CrawlPath {
     fn as_ref(&self) -> &Path {
@@ -148,6 +156,17 @@ pub struct DirMeta {
     pub api_url: Url,
 }
 
+impl std::fmt::Display for DirMeta {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "DirMeta (at: {}, src: {})",
+            self.path,
+            self.api_url.as_str()
+        )
+    }
+}
+
 impl DirMeta {
     #[must_use]
     pub fn new(api_url: Url, path: CrawlPath) -> Self {
@@ -205,9 +224,36 @@ pub enum Checksum {
     Sha256(String),
 }
 
+#[derive(Debug)]
+pub struct RepoError {
+    pub message: String,
+}
+
+impl std::fmt::Display for RepoError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "repo fail: {}", self.message)
+    }
+}
+
+impl std::error::Error for RepoError {}
+
+#[derive(Debug)]
+pub struct CrawlerError {
+    pub message: String,
+    pub status: ErrorStatus,
+}
+
+impl std::fmt::Display for CrawlerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "crawler fail: {}", self.message)
+    }
+}
+
+impl std::error::Error for CrawlerError {}
+
 #[async_trait]
 pub trait Repository: Send + Sync + Any {
-    async fn list(&self, client: &Client, dir: DirMeta) -> anyhow::Result<Vec<Entry>>;
+    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>>;
     fn root_url(&self, id: &str) -> Url;
     fn as_any(&self) -> &dyn Any;
 }
@@ -216,12 +262,19 @@ pub fn crawl<R>(
     client: Client,
     repo: Arc<R>,
     dir: DirMeta,
-) -> BoxStream<'static, anyhow::Result<Entry>>
+) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>>
 where
     R: Repository + 'static + ?Sized,
 {
     Box::pin(try_stream! {
-        let entries = repo.list(&client, dir).await.context("in crawl")?;
+        // TODO: this is at boundary need to deal with error to retry.
+        let entries = repo.list(&client, dir.clone())
+            .await
+            .or_raise(||
+                CrawlerError{
+                    message: format!("cannot list all entries of '{dir}', after retry"),
+                    status: ErrorStatus::Persistent,
+                })?;
 
         for entry in entries {
             match entry {

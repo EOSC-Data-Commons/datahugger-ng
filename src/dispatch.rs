@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::FromStr, sync::Arc};
 
-use anyhow::anyhow;
+use exn::{Exn, ResultExt};
 use url::Url;
 
 use crate::{
@@ -10,6 +10,20 @@ use crate::{
 
 use std::collections::HashSet;
 use std::sync::LazyLock;
+
+#[derive(Debug)]
+pub struct DispatchError {
+    pub message: String,
+}
+
+impl std::fmt::Display for DispatchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for DispatchError {}
+
 static DATAONE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     HashSet::from([
         "arcticdata.io",
@@ -109,6 +123,7 @@ static DATAVERSE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     ])
 });
 
+// TODO: rename QueryRepository -> Dataset?
 pub struct QueryRepository {
     pub repo: Arc<dyn Repository>,
     pub record_id: String,
@@ -116,13 +131,17 @@ pub struct QueryRepository {
 
 /// # Errors
 /// ???
-pub fn resolve(url: &str) -> anyhow::Result<QueryRepository> {
-    let url = Url::from_str(url)?;
+pub fn resolve(url: &str) -> Result<QueryRepository, Exn<DispatchError>> {
+    let url = Url::from_str(url).or_raise(|| DispatchError {
+        message: format!("'{url}' not a valid url"),
+    })?;
     let scheme = url.scheme();
-    let domain = url.domain().ok_or_else(|| anyhow!("domain unresolved"))?;
-    let host_str = url
-        .host_str()
-        .ok_or_else(|| anyhow!("host_str unresolved"))?;
+    let domain = url.domain().ok_or_else(|| DispatchError {
+        message: "domain unresolved".to_string(),
+    })?;
+    let host_str = url.host_str().ok_or_else(|| DispatchError {
+        message: format!("host_str unresolved from '{url}'"),
+    })?;
 
     // DataOne spec hosted
     if DATAONE_DOMAINS.contains(domain) {
@@ -133,22 +152,27 @@ pub fn resolve(url: &str) -> anyhow::Result<QueryRepository> {
     if DATAVERSE_DOMAINS.contains(domain) {
         // https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD
         // https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/JCJCJC
-        let mut segments = url
-            .path_segments()
-            .ok_or_else(|| anyhow!("cannot be base"))?;
-        let typ = segments
-            .next()
-            .ok_or_else(|| anyhow!("no segments found"))?;
+        let mut segments = url.path_segments().ok_or_else(|| DispatchError {
+            message: format!("'{url}' cannot be base"),
+        })?;
+        let typ = segments.next().ok_or_else(|| DispatchError {
+            message: format!("'{url}' no segments found"),
+        })?;
         let queries = url.query_pairs();
         let queries = queries.collect::<HashMap<_, _>>();
         let Some(id) = queries.get("persistentId") else {
-            anyhow::bail!("query don't contains 'persistentId'")
+            exn::bail!(DispatchError {
+                message: "query don't contains 'persistentId'".to_string()
+            })
         };
 
-        let typ = typ
-            .strip_suffix(".xhtml")
-            .ok_or_else(|| anyhow!("segment not in format *.xhtml"))?;
-        let base_url = Url::from_str(&format!("{scheme}://{host_str}"))?;
+        let typ = typ.strip_suffix(".xhtml").ok_or_else(|| DispatchError {
+            message: "segment not in format *.xhtml".to_string(),
+        })?;
+        let base_url = format!("{scheme}://{host_str}");
+        let base_url = Url::from_str(&base_url).or_raise(|| DispatchError {
+            message: format!("'{base_url}' is not valid url"),
+        })?;
         let version = ":latest-published".to_string();
         match typ {
             "dataset" => {
@@ -167,7 +191,9 @@ pub fn resolve(url: &str) -> anyhow::Result<QueryRepository> {
                 };
                 return Ok(repo_query);
             }
-            t => anyhow::bail!("{t} is not valid type, can only be 'dataset' or 'file'"),
+            ty => exn::bail!(DispatchError {
+                message: format!("{ty} is not valid type, can only be 'dataset' or 'file'")
+            }),
         }
     }
 
@@ -178,19 +204,18 @@ pub fn resolve(url: &str) -> anyhow::Result<QueryRepository> {
         "datadryad.org" => todo!(),
         "huggingface.co" => todo!(),
         "osf.io" => {
-            let mut segments = url
-                .path_segments()
-                .ok_or_else(|| anyhow!("cannot get path segments"))?;
+            let mut segments = url.path_segments().ok_or_else(|| DispatchError {
+                message: format!("cannot get path segments of url '{}'", url.as_str()),
+            })?;
 
-            let id = segments
-                .next()
-                .ok_or_else(|| anyhow!("no segments found"))?
-                .to_string();
+            let id = segments.next().ok_or_else(|| DispatchError {
+                message: format!("no segments path in url '{}'", url.as_str()),
+            })?;
 
             let repo = Arc::new(OSF::new());
             let repo_query = QueryRepository {
                 repo,
-                record_id: id,
+                record_id: id.to_string(),
             };
             Ok(repo_query)
         }
@@ -199,7 +224,9 @@ pub fn resolve(url: &str) -> anyhow::Result<QueryRepository> {
         // DataVerse repositories (extracted from re3data)
         "b2share.eudat.eu" | "data.europa.eu" => todo!(),
         _ => {
-            anyhow::bail!("unknown domain: {domain}")
+            exn::bail!(DispatchError {
+                message: format!("unknown domain: {domain}")
+            })
         }
     }
 }

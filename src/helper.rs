@@ -1,7 +1,22 @@
-use anyhow::Context;
-use anyhow::anyhow;
+use exn::{Result, ResultExt};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
+
+use crate::error::ErrorStatus;
+
+#[derive(Debug)]
+pub struct JsonExtractError {
+    pub message: String,
+    pub status: ErrorStatus,
+}
+
+impl std::fmt::Display for JsonExtractError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "json value extract error: {}", self.message)
+    }
+}
+
+impl std::error::Error for JsonExtractError {}
 
 /// Retrieves a value from a `serde_json::Value` by following a dot-separated path
 /// and deserializes it into the requested type.
@@ -24,7 +39,7 @@ use serde_json::Value;
 ///
 /// ```rust
 /// use serde_json::json;
-/// use datahugger::json_get;
+/// use datahugger::json_extract;
 ///
 /// let value = json!({
 ///     "user": {
@@ -33,39 +48,50 @@ use serde_json::Value;
 ///     }
 /// });
 ///
-/// let id: u64 = json_get(&value, "user.id").expect("id is an u64");
-/// let tag: String = json_get(&value, "user.tags.0").expect("tag is a string");
+/// let id: u64 = json_extract(&value, "user.id").expect("id is an u64");
+/// let tag: String = json_extract(&value, "user.tags.0").expect("tag is a string");
 /// ```
 ///
 /// # Type Parameters
 ///
 /// * `T` - The type to deserialize the final JSON value into.
-pub fn json_get<T>(value: &Value, xp: &str) -> anyhow::Result<T>
+pub fn json_extract<T>(value: &Value, path: &str) -> Result<T, JsonExtractError>
 where
     T: DeserializeOwned,
 {
     let mut current = value;
 
-    for key in xp.split('.').filter(|s| !s.is_empty()) {
+    for key in path.split('.').filter(|s| !s.is_empty()) {
         current = match current {
-            Value::Object(map) => map
-                .get(key)
-                .with_context(|| format!("path element '{key}' not found"))?,
+            Value::Object(map) => map.get(key).ok_or(JsonExtractError {
+                message: format!("'{key}' not found in object at path '{path}'"),
+                status: ErrorStatus::Permanent,
+            })?,
             Value::Array(arr) => {
-                let idx: usize = key
-                    .parse()
-                    .with_context(|| format!("expected array index, got '{key}'"))?;
-                arr.get(idx)
-                    .with_context(|| format!("array index {idx} out of bounds"))?
+                let idx = key.parse::<usize>().or_raise(|| JsonExtractError {
+                    message: format!("key '{key}' cannot parse to an index at path '{path}'"),
+                    status: ErrorStatus::Permanent,
+                })?;
+                // .with_context(|| format!("expected array index, got '{key}'"))?;
+                arr.get(idx).ok_or(JsonExtractError {
+                    message: format!("key '{key}' not found in array at path '{path}'"),
+                    status: ErrorStatus::Permanent,
+                })?
             }
-            _ => {
-                return Err(anyhow!(
-                    "cannot descend into non-container value at '{key}'",
-                ));
-            }
+            _ => Err(JsonExtractError {
+                message: format!(
+                    "key '{key}' cannot descend into non-container value at path '{path}'"
+                ),
+                status: ErrorStatus::Permanent,
+            })?,
         };
     }
-    serde_json::from_value(current.clone()).context("failed to deserialize value at final path")
+    let value: T = serde_json::from_value::<T>(current.clone()).or_raise(|| JsonExtractError {
+        message: format!("failed to deserialize value at path '{path}'"),
+        status: ErrorStatus::Permanent,
+    })?;
+
+    Ok(value)
 }
 
 #[cfg(test)]
@@ -75,51 +101,51 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_json_get_default() {
+    fn test_json_extract_default() {
         let value = json!({
             "data": [
                 { "name": "bob", "num": 5 }
             ]
         });
         let xp = "data.0.name";
-        let v: String = json_get(&value, xp).unwrap();
+        let v: String = json_extract(&value, xp).unwrap();
         assert_eq!(v, "bob");
 
         let xp = "data.0.num";
-        let v: u64 = json_get(&value, xp).unwrap();
+        let v: u64 = json_extract(&value, xp).unwrap();
         assert_eq!(v, 5);
     }
 
     #[test]
-    fn test_json_get_missing_path() {
+    fn test_json_extract_missing_path() {
         let value = serde_json::json!({
             "data": []
         });
 
         let xp = "data.0.name";
-        let err = json_get::<String>(&value, xp).unwrap_err();
+        let err = json_extract::<String>(&value, xp).unwrap_err();
         assert!(err.to_string().contains("out of bounds"));
     }
 
     #[test]
-    fn test_json_get_wrong_container() {
+    fn test_json_extract_wrong_container() {
         let value = serde_json::json!({
             "data": "not an array"
         });
 
         let xp = "data.0";
-        let err = json_get::<String>(&value, xp).unwrap_err();
+        let err = json_extract::<String>(&value, xp).unwrap_err();
         assert!(err.to_string().contains("cannot descend"));
     }
 
     #[test]
-    fn test_json_get_deserialize_error() {
+    fn test_json_extract_deserialize_error() {
         let value = serde_json::json!({
             "data": { "id": "not a number" }
         });
 
         let xp = "data.id";
-        let err = json_get::<i64>(&value, xp).unwrap_err();
+        let err = json_extract::<i64>(&value, xp).unwrap_err();
         assert!(err.to_string().contains("deserialize"));
     }
 }

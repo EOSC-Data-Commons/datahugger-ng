@@ -1,13 +1,16 @@
-use anyhow::{Context, anyhow};
 use bytes::Buf;
 use digest::Digest;
+use exn::{Exn, ResultExt};
 use futures_util::{StreamExt, TryStreamExt};
 use reqwest::Client;
 use std::{fs, path::Path, sync::Arc};
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 use tracing::{info, instrument};
 
-use crate::{Checksum, DirMeta, Entry, Hasher, crawl, dispatch::QueryRepository};
+use crate::{
+    Checksum, DirMeta, Entry, Hasher, crawl, dispatch::QueryRepository, error::ErrorStatus,
+    repo::CrawlerError,
+};
 
 // // must be very efficient, both CPU and RAM usage.
 // // [x] need async,
@@ -67,7 +70,11 @@ use crate::{Checksum, DirMeta, Entry, Hasher, crawl, dispatch::QueryRepository};
 // }
 
 #[instrument(skip(client))]
-async fn download_file_with_validation<P>(client: &Client, src: Entry, dst: P) -> anyhow::Result<()>
+async fn download_crawled_file_with_validation<P>(
+    client: &Client,
+    src: Entry,
+    dst: P,
+) -> Result<(), Exn<CrawlerError>>
 where
     P: AsRef<Path> + std::fmt::Debug,
 {
@@ -76,7 +83,10 @@ where
         Entry::Dir(dir_meta) => {
             let path = dst.as_ref().join(dir_meta.relative());
             // TODO: create_dir to be more strict on stream order
-            fs::create_dir_all(path)?;
+            fs::create_dir_all(path.as_path()).or_raise(|| CrawlerError {
+                message: format!("cannot create dir {}", path.display()),
+                status: ErrorStatus::Permanent,
+            })?;
             Ok(())
         }
         Entry::File(file_meta) => {
@@ -84,8 +94,17 @@ where
             let resp = client
                 .get(file_meta.download_url.clone())
                 .send()
-                .await?
-                .error_for_status()?;
+                .await
+                .or_raise(|| CrawlerError {
+                    message: format!("fail to send http GET to {}", file_meta.download_url),
+                    status: ErrorStatus::Temporary,
+                })?
+                .error_for_status()
+                .or_raise(|| CrawlerError {
+                    message: format!("fail to send http GET to {}", file_meta.download_url),
+                    // Temporary??
+                    status: ErrorStatus::Temporary,
+                })?;
             let mut stream = resp.bytes_stream();
             // prepare file dst
             let path = dst.as_ref().join(file_meta.relative());
@@ -93,37 +112,62 @@ where
                 .write(true)
                 .create(true)
                 .truncate(true)
-                .open(path)
-                .await?;
+                .open(path.as_path())
+                .await
+                .or_raise(|| CrawlerError {
+                    message: format!("fail on create file at {}", path.display()),
+                    status: ErrorStatus::Permanent,
+                })?;
 
             let checksum = file_meta
                 .checksum
                 .iter()
                 .find(|c| matches!(c, Checksum::Sha256(_)))
                 .or_else(|| file_meta.checksum.first())
-                .ok_or_else(|| anyhow!("file_meta.checksum is empty"))?;
+                .ok_or_else(|| CrawlerError {
+                    message: "no checksum found on file metadata".to_string(),
+                    status: ErrorStatus::Permanent,
+                })?;
             let (mut hasher, expected_checksum) = match checksum {
                 Checksum::Sha256(value) => (Hasher::Sha256(sha2::Sha256::new()), value),
                 Checksum::Md5(value) => (Hasher::Md5(md5::Md5::new()), value),
             };
-            let expected_size = file_meta.size.context("missing size")?;
+            let expected_size = file_meta.size.ok_or_else(|| CrawlerError {
+                message: "no size found at the file metadata".to_string(),
+                status: ErrorStatus::Permanent,
+            })?;
             let mut got_size = 0;
 
             while let Some(item) = stream.next().await {
-                let mut bytes = item?;
+                let mut bytes = item.or_raise(|| CrawlerError {
+                    message: "reqwest error stream".to_string(),
+                    status: ErrorStatus::Permanent,
+                })?;
                 let chunk = bytes.chunk();
                 hasher.update(chunk);
                 got_size += bytes.len() as u64;
-                fh.write_all_buf(&mut bytes).await?;
+                fh.write_all_buf(&mut bytes)
+                    .await
+                    .or_raise(|| CrawlerError {
+                        message: "fail at writing to fs".to_string(),
+                        status: ErrorStatus::Permanent,
+                    })?;
             }
 
             if got_size != expected_size {
-                anyhow::bail!("size wrong")
+                exn::bail!(CrawlerError {
+                    message: format!("size wrong, expect {expected_size}, got {got_size}"),
+                    status: ErrorStatus::Permanent
+                })
             }
 
-            let checksum = hasher.finalize();
-            if hex::encode(checksum) != *expected_checksum {
-                anyhow::bail!("checksum wrong")
+            let checksum = hex::encode(hasher.finalize());
+
+            if checksum != *expected_checksum {
+                exn::bail!(CrawlerError {
+                    message: format!("size wrong, expect {expected_checksum}, got {checksum}"),
+                    status: ErrorStatus::Permanent
+                })
             }
             Ok(())
         }
@@ -161,16 +205,15 @@ where
 /// - Any underlying repository or HTTP client operation fails.
 ///
 ///
-/// * `R` is A repository implementation providing file metadata, URLs, and an HTTP client.
 /// * `P` is A path-like type specifying the destination directory.
 pub async fn download_with_validation<P>(
     client: &Client,
     query_repo: QueryRepository,
     dst_dir: P,
-) -> anyhow::Result<()>
+) -> Result<(), Exn<CrawlerError>>
+// TODO: use DownloadError
 where
     P: AsRef<Path>,
-    // R: Repository + Send + Sync + 'static,
 {
     // TODO: deal with zip differently according to input instruction
 
@@ -178,12 +221,20 @@ where
     let record_id = query_repo.record_id;
     let root_dir = DirMeta::new_root(repo.as_ref().root_url(&record_id));
     let path = dst_dir.as_ref().join(root_dir.relative());
-    fs::create_dir_all(path)?;
+    fs::create_dir_all(path.as_path()).or_raise(|| CrawlerError {
+        message: format!("cannot create dir at '{}'", path.display()),
+        status: ErrorStatus::Permanent,
+    })?;
+    // XXX: ? download_crawled_file_with_validation return its own error type?? can I?
     crawl(client.clone(), Arc::clone(&repo), root_dir)
         .try_for_each_concurrent(10, |entry| {
             let dst_dir = dst_dir.as_ref().to_path_buf();
-            async move { download_file_with_validation(client, entry, &dst_dir).await }
+            async move { download_crawled_file_with_validation(client, entry, &dst_dir).await }
         })
-        .await?;
+        .await
+        .or_raise(|| CrawlerError {
+            message: "".to_string(),
+            status: ErrorStatus::Permanent,
+        })?;
     Ok(())
 }
