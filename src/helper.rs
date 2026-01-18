@@ -72,9 +72,8 @@ where
                     message: format!("key '{key}' cannot parse to an index at path '{path}'"),
                     status: ErrorStatus::Permanent,
                 })?;
-                // .with_context(|| format!("expected array index, got '{key}'"))?;
                 arr.get(idx).ok_or(JsonExtractError {
-                    message: format!("key '{key}' not found in array at path '{path}'"),
+                    message: format!("array index {idx} out of bounds"),
                     status: ErrorStatus::Permanent,
                 })?
             }
