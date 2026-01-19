@@ -11,6 +11,7 @@
 before public and 1st release
 
 - [ ] all repos that already supported by py-datahugger
+- [ ] onedata support.
 - [ ] one eosc target data repo support that not include in original py-datahugger
 - [ ] python bindings
 - [ ] cli that can do all py-datahugger do.

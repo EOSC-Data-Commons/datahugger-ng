@@ -1,25 +1,25 @@
-use datahugger::download_with_validation;
 use datahugger::resolve;
-use exn::ResultExt;
+use datahugger::DownloadExt;
+use futures_util::future::join_all;
 use reqwest::ClientBuilder;
 use tracing_subscriber::FmtSubscriber;
 
-#[derive(Debug)]
-enum AppError {
-    Fatal { consequences: &'static str },
-    // Trivial,
-}
-
-impl std::fmt::Display for AppError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AppError::Fatal { consequences } => write!(f, "fatal error: {consequences}"),
-            // AppError::Trivial => write!(f, "trivial error"),
-        }
-    }
-}
-
-impl std::error::Error for AppError {}
+// #[derive(Debug)]
+// enum AppError {
+//     Fatal { consequences: &'static str },
+//     // Trivial,
+// }
+//
+// impl std::fmt::Display for AppError {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         match self {
+//             AppError::Fatal { consequences } => write!(f, "fatal error: {consequences}"),
+//             // AppError::Trivial => write!(f, "trivial error"),
+//         }
+//     }
+// }
+//
+// impl std::error::Error for AppError {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,22 +38,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let user_agent = format!("datahugger-rs-cli/{}", env!("CARGO_PKG_VERSION"));
     let client = ClientBuilder::new().user_agent(user_agent).build()?;
-    for repo in repos {
-        let repo = match resolve(repo) {
-            Ok(repo) => repo,
-            Err(err) => {
-                eprintln!("failed to resolve '{repo}': {err:?}");
-                std::process::exit(1);
-            }
-        };
+    let futures = repos.into_iter().map(|repo| {
+        let client = client.clone();
 
-        // TODO: download action as method from blanket trait
-        if let Err(err) = download_with_validation(&client, repo, "./dummy_tests")
-            .await
-            .or_raise(|| AppError::Fatal {
-                consequences: "download fail",
-            })
-        {
+        async move {
+            let repo = match resolve(repo) {
+                Ok(repo) => repo,
+                Err(err) => {
+                    eprintln!("failed to resolve '{repo}': {err:?}");
+                    std::process::exit(1);
+                }
+            };
+
+            // repo.print_meta(&client).await
+            // require:
+            // use datahugger::DownloadExt;
+            repo.download_with_validation(&client, "./dummy_tests")
+                .await
+        }
+    });
+
+    let results = join_all(futures).await;
+
+    for result in results {
+        if let Err(err) = result {
             eprintln!("{err:?}");
         }
     }

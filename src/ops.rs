@@ -1,16 +1,46 @@
-use bytes::Buf;
-use digest::Digest;
+use async_trait::async_trait;
 use exn::{Exn, ResultExt};
 use futures_util::{StreamExt, TryStreamExt};
+use std::sync::Arc;
+
 use reqwest::Client;
-use std::{fs, path::Path, sync::Arc};
+
+use crate::{Entry, RepositoryRecord, crawl, crawler::CrawlerError, error::ErrorStatus};
+
+use bytes::Buf;
+use digest::Digest;
+use std::{fs, path::Path};
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
 use tracing::{info, instrument};
 
-use crate::{
-    Checksum, DirMeta, Entry, Hasher, crawl, dispatch::RepositoryRecord, error::ErrorStatus,
-    repo::CrawlerError,
-};
+use crate::{Checksum, Hasher};
+
+impl RepositoryRecord {
+    /// crawling and print the metadata of dirs and files
+    /// # Errors
+    /// when crawl fails
+    pub async fn print_meta(&self, client: &Client) -> Result<(), Exn<CrawlerError>> {
+        let root_dir = self.root_dir();
+        crawl(client.clone(), Arc::clone(&self.repo), root_dir)
+            .try_for_each_concurrent(10, |entry| async move {
+                match entry {
+                    Entry::Dir(dir_meta) => {
+                        println!("{dir_meta}");
+                    }
+                    Entry::File(file_meta) => {
+                        println!("{file_meta}");
+                    }
+                }
+                Ok(())
+            })
+            .await
+            .or_raise(|| CrawlerError {
+                message: "crawl, download and validation failed".to_string(),
+                status: ErrorStatus::Permanent,
+            })?;
+        Ok(())
+    }
+}
 
 // // must be very efficient, both CPU and RAM usage.
 // // [x] need async,
@@ -42,30 +72,6 @@ use crate::{
 //         let mut bytes = item?;
 //         fh.write_all_buf(&mut bytes).await?;
 //     }
-//     Ok(())
-// }
-
-// /// download files resolved from a url into a folder
-// /// # Errors
-// /// ???
-// pub async fn download<P>(url: &Url, dst_dir: P) -> anyhow::Result<()>
-// where
-//     P: AsRef<Path>,
-// {
-//     // TODO: deal with zip differently according to input instruction
-//     let client = ClientBuilder::new().build()?;
-//
-//     crawl(client.clone(), url.clone(), ".")
-//         .try_for_each_concurrent(20, |f| {
-//             let dst_dir = dst_dir.as_ref().to_path_buf();
-//             let client = client.clone();
-//             async move {
-//                 let mut dst = dst_dir;
-//                 dst.push(&f.rel_path);
-//                 download_file(&client, f, &dst).await
-//             }
-//         })
-//         .await?;
 //     Ok(())
 // }
 
@@ -174,67 +180,81 @@ where
     }
 }
 
-/// Downloads all files reachable from a repository root URL into a local directory,
-/// validating both checksum and file size for each downloaded file.
-///
-/// The repository is crawled recursively starting from its root, and all resolved
-/// files are downloaded concurrently (with a bounded level of parallelism).
-/// Each file is written into `dst_dir` at local fs, preserving its relative path, and is verified
-/// after download to ensure data integrity.
-///
-/// # Validation
-///
-/// For every file, this function verifies:
-/// - The downloaded file size matches the expected size.
-/// - The computed checksum matches the checksum provided by the repository metadata.
-///
-/// A validation failure for any file causes the entire operation to fail.
-///
-/// # Concurrency
-///
-/// Downloads are performed concurrently with a fixed upper limit to avoid overwhelming
-/// the network or filesystem.
-///
-/// # Errors
-///
-/// Returns an error if:
-/// - Repository crawling fails (e.g. invalid URLs or metadata).
-/// - A file cannot be downloaded due to network or I/O errors.
-/// - The destination directory cannot be created or written to.
-/// - File size or checksum validation fails for any file.
-/// - Any underlying repository or HTTP client operation fails.
-///
-///
-/// * `P` is A path-like type specifying the destination directory.
-pub async fn download_with_validation<P>(
-    client: &Client,
-    record: RepositoryRecord,
-    dst_dir: P,
-) -> Result<(), Exn<CrawlerError>>
-// TODO: use DownloadError
-where
-    P: AsRef<Path>,
-{
-    // TODO: deal with zip differently according to input instruction
+#[async_trait]
+pub trait DownloadExt {
+    async fn download_with_validation<P>(
+        self,
+        client: &Client,
+        dst_dir: P,
+    ) -> Result<(), Exn<CrawlerError>>
+    where
+        P: AsRef<Path> + Sync + Send;
+}
 
-    let repo = record.repo;
-    let record_id = record.record_id;
-    let root_dir = DirMeta::new_root(repo.as_ref().root_url(&record_id));
-    let path = dst_dir.as_ref().join(root_dir.relative());
-    fs::create_dir_all(path.as_path()).or_raise(|| CrawlerError {
-        message: format!("cannot create dir at '{}'", path.display()),
-        status: ErrorStatus::Permanent,
-    })?;
-    // XXX: ? download_crawled_file_with_validation return its own error type?? can I?
-    crawl(client.clone(), Arc::clone(&repo), root_dir)
-        .try_for_each_concurrent(10, |entry| {
-            let dst_dir = dst_dir.as_ref().to_path_buf();
-            async move { download_crawled_file_with_validation(client, entry, &dst_dir).await }
-        })
-        .await
-        .or_raise(|| CrawlerError {
-            message: "crawl, download and validation failed".to_string(),
+#[async_trait]
+impl DownloadExt for RepositoryRecord {
+    /// Downloads all files reachable from a repository root URL into a local directory,
+    /// validating both checksum and file size for each downloaded file.
+    ///
+    /// The repository is crawled recursively starting from its root, and all resolved
+    /// files are downloaded concurrently (with a bounded level of parallelism).
+    /// Each file is written into `dst_dir` at local fs, preserving its relative path, and is verified
+    /// after download to ensure data integrity.
+    ///
+    /// # Validation
+    ///
+    /// For every file, this function verifies:
+    /// - The downloaded file size matches the expected size.
+    /// - The computed checksum matches the checksum provided by the repository metadata.
+    ///
+    /// A validation failure for any file causes the entire operation to fail.
+    ///
+    /// # Concurrency
+    ///
+    /// Downloads are performed concurrently with a fixed upper limit to avoid overwhelming
+    /// the network or filesystem.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Repository crawling fails (e.g. invalid URLs or metadata).
+    /// - A file cannot be downloaded due to network or I/O errors.
+    /// - The destination directory cannot be created or written to.
+    /// - File size or checksum validation fails for any file.
+    /// - Any underlying repository or HTTP client operation fails.
+    ///
+    ///
+    /// * `P` is A path-like type specifying the destination directory.
+    async fn download_with_validation<P>(
+        self,
+        client: &Client,
+        dst_dir: P,
+    ) -> Result<(), Exn<CrawlerError>>
+    where
+        P: AsRef<Path> + Sync + Send,
+    {
+        // TODO: deal with zip differently according to input instruction
+
+        let root_dir = self.root_dir();
+        let path = dst_dir.as_ref().join(root_dir.relative());
+        fs::create_dir_all(path.as_path()).or_raise(|| CrawlerError {
+            message: format!("cannot create dir at '{}'", path.display()),
             status: ErrorStatus::Permanent,
         })?;
-    Ok(())
+        // XXX: ? download_crawled_file_with_validation return its own error type?? can I?
+        crawl(client.clone(), Arc::clone(&self.repo), root_dir)
+            .try_for_each_concurrent(10, |entry| {
+                let dst_dir = dst_dir.as_ref().to_path_buf();
+                async move {
+                    download_crawled_file_with_validation(client, entry, &dst_dir).await?;
+                    Ok(())
+                }
+            })
+            .await
+            .or_raise(|| CrawlerError {
+                message: "crawl, download and validation failed".to_string(),
+                status: ErrorStatus::Permanent,
+            })?;
+        Ok(())
+    }
 }

@@ -1,15 +1,11 @@
 use async_trait::async_trait;
-use exn::{Exn, ResultExt};
-use futures_core::stream::BoxStream;
+use exn::Exn;
 use reqwest::Client;
 use url::Url;
 
-use async_stream::try_stream;
-use std::{any::Any, path::Path, sync::Arc};
+use std::{any::Any, path::Path};
 
 use digest::Digest;
-
-use crate::error::ErrorStatus;
 
 const ROOT: &str = "__ROOT__";
 
@@ -197,6 +193,17 @@ pub struct Endpoint {
     pub key: Option<String>,
 }
 
+impl std::fmt::Display for Endpoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Endpoint (parent_url: {}, key: {})",
+            self.parent_url.as_str(),
+            self.key.clone().unwrap_or("<Null>".to_string())
+        )
+    }
+}
+
 #[derive(Debug)]
 pub struct FileMeta {
     path: CrawlPath,
@@ -204,6 +211,25 @@ pub struct FileMeta {
     pub download_url: Url,
     pub size: Option<u64>,
     pub checksum: Vec<Checksum>,
+}
+
+impl std::fmt::Display for FileMeta {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let checksum_str = self
+            .checksum
+            .iter()
+            .map(|c| format!("{c}"))
+            .collect::<Vec<_>>();
+        write!(
+            f,
+            "FileMeta (at: {}, endpoint: {}, download_url: {}, size: {}, checksum: {})",
+            self.path,
+            self.endpoint,
+            self.download_url,
+            self.size.map_or("<Null>".to_string(), |s| format!("{s}")),
+            checksum_str.join(","),
+        )
+    }
 }
 
 impl FileMeta {
@@ -236,6 +262,15 @@ pub enum Checksum {
     Sha256(String),
 }
 
+impl std::fmt::Display for Checksum {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Checksum::Md5(h) => write!(f, "(md5: {h})"),
+            Checksum::Sha256(h) => write!(f, "(sha256: {h})"),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct RepoError {
     pub message: String,
@@ -249,57 +284,9 @@ impl std::fmt::Display for RepoError {
 
 impl std::error::Error for RepoError {}
 
-#[derive(Debug)]
-pub struct CrawlerError {
-    pub message: String,
-    pub status: ErrorStatus,
-}
-
-impl std::fmt::Display for CrawlerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "crawler fail: {}", self.message)
-    }
-}
-
-impl std::error::Error for CrawlerError {}
-
 #[async_trait]
 pub trait Repository: Send + Sync + Any {
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>>;
     fn root_url(&self, id: &str) -> Url;
     fn as_any(&self) -> &dyn Any;
-}
-
-pub fn crawl<R>(
-    client: Client,
-    repo: Arc<R>,
-    dir: DirMeta,
-) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>>
-where
-    R: Repository + 'static + ?Sized,
-{
-    Box::pin(try_stream! {
-        // TODO: this is at boundary need to deal with error to retry.
-        let entries = repo.list(&client, dir.clone())
-            .await
-            .or_raise(||
-                CrawlerError{
-                    message: format!("cannot list all entries of '{dir}', after retry"),
-                    status: ErrorStatus::Persistent,
-                })?;
-
-        for entry in entries {
-            match entry {
-                Entry::File(f) => yield Entry::File(f),
-                Entry::Dir(sub_dir) => {
-                    yield Entry::Dir(sub_dir.clone());
-                    let client = client.clone();
-                    let sub_stream = crawl(client, Arc::clone(&repo), sub_dir);
-                    for await item in sub_stream {
-                        yield item?;
-                    }
-                }
-            }
-        }
-    })
 }

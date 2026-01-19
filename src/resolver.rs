@@ -4,7 +4,7 @@ use exn::{Exn, ResultExt};
 use url::Url;
 
 use crate::{
-    Repository,
+    DirMeta, Repository,
     repo_impl::{DataverseDataset, DataverseFile, OSF},
 };
 
@@ -123,9 +123,17 @@ static DATAVERSE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     ])
 });
 
+#[derive(Clone)]
 pub struct RepositoryRecord {
     pub repo: Arc<dyn Repository>,
     pub record_id: String,
+}
+
+impl RepositoryRecord {
+    #[must_use]
+    pub fn root_dir(&self) -> DirMeta {
+        DirMeta::new_root(self.repo.root_url(&self.record_id))
+    }
 }
 
 /// # Errors
