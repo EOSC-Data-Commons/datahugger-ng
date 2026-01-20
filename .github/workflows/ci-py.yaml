@@ -1,0 +1,64 @@
+name: ci-py
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  pytest:
+    name: python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        python-version: ["3.10", "3.14"]
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        include:
+          - os: ubuntu-latest
+            python-version: "3.10" # test MSPV
+    env:
+      UV_CACHE_DIR: /tmp/.uv-cache
+      RUST_BACKTRACE: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest' }}
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Set up uv
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: irm https://astral.sh/uv/install.ps1 | iex
+        shell: powershell
+      - name: Cache folder for uv
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.uv-cache
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+            uv-${{ runner.os }}
+      - name: Install the project
+        working-directory: python
+        run: uv sync --all-extras --dev --python ${{ matrix.python-version }}
+      - name: Build the wrapper
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: python
+          command: develop
+          args: --release
+          sccache: 'true'
+      - name: Run linter and formatter
+        working-directory: python
+        run: |
+          uv run ruff check
+          uv run ruff format --check
+      - name: Test Python
+        working-directory: python
+        run: |
+          uv run pytest tests/
+        shell: bash

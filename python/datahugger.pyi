@@ -1,4 +1,5 @@
 import typing
+
 CONSTANT: typing.Final = "FOO"
 
 class Class:
