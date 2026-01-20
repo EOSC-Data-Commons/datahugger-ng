@@ -1,7 +1,18 @@
 [package]
 name = "datahugger"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+description = "Tool for fetching data and metadata from DOI or URL."
+authors = ["Jusong Yu <jusong.yu@pm.me>"]
+readme = "README.md"
+repository = "https://github.com/EOSC-Data-Commons/datahugger-rs"
+homepage = "https://github.com/EOSC-Data-Commons/datahugger-rs"
+license = "MIT OR Apache-2.0"
+keywords = ["science", "data", "research"]
+exclude = [
+    "misc/*",
+    "python/*",
+]
 
 [dependencies]
 async-recursion = "1.1.1"

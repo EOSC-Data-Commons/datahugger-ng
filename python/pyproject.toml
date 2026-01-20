@@ -1,0 +1,25 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "datahugger"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+tests = [
+  "pytest~=8.3",
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "."
+
+[dependency-groups]
+dev = ["pip", "pytest>=8.0.2", "ruff>=0.8.0", "pre-commit>=4.0.1", "ipython"]

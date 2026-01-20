@@ -1,5 +1,5 @@
 use clap::{Args, Parser, Subcommand};
-use datahugger::{DownloadExt, resolve};
+use datahugger::{resolve, DownloadExt};
 use indicatif::MultiProgress;
 use reqwest::ClientBuilder;
 use tracing_subscriber::FmtSubscriber;
@@ -57,7 +57,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let mp = MultiProgress::new();
-            repo.download_with_validation(&client, "./dummy_tests", mp, args.limit)
+            let _ = repo
+                .download_with_validation(&client, "./dummy_tests", mp, args.limit)
                 .await
                 .map_err(|err| {
                     eprintln!("download failed: {err:?}");

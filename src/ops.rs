@@ -6,7 +6,12 @@ use std::sync::Arc;
 
 use reqwest::Client;
 
-use crate::{Entry, RepositoryRecord, crawl, crawler::CrawlerError, error::ErrorStatus};
+use crate::{
+    crawl,
+    crawler::{CrawlerError, ProgressManager},
+    error::ErrorStatus,
+    Entry, RepositoryRecord,
+};
 
 use bytes::Buf;
 use digest::Digest;
@@ -81,12 +86,12 @@ impl RepositoryRecord {
 // }
 
 #[allow(clippy::too_many_lines)]
-#[instrument(skip(client))]
+#[instrument(skip(client, mp))]
 async fn download_crawled_file_with_validation<P>(
     client: &Client,
     src: Entry,
     dst: P,
-    mp: MultiProgress,
+    mp: impl ProgressManager,
 ) -> Result<(), Exn<CrawlerError>>
 where
     P: AsRef<Path> + std::fmt::Debug,
@@ -158,7 +163,7 @@ where
             )
             .unwrap()
             .progress_chars("=>-");
-            let pb = mp.add(ProgressBar::new(expected_size));
+            let pb = mp.insert_from_back(0, ProgressBar::new(expected_size));
             pb.set_style(style);
             pb.enable_steady_tick(std::time::Duration::from_millis(100));
             pb.set_message(compact_path(file_meta.relative().as_str()));
@@ -237,7 +242,7 @@ pub trait DownloadExt {
         self,
         client: &Client,
         dst_dir: P,
-        mp: MultiProgress,
+        mp: impl ProgressManager,
         limit: usize,
     ) -> Result<(), Exn<CrawlerError>>
     where
@@ -282,7 +287,7 @@ impl DownloadExt for RepositoryRecord {
         self,
         client: &Client,
         dst_dir: P,
-        mp: MultiProgress,
+        mp: impl ProgressManager,
         limit: usize,
     ) -> Result<(), Exn<CrawlerError>>
     where

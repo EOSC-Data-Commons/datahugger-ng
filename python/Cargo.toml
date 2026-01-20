@@ -1,0 +1,23 @@
+[package]
+name = "datahuggerpy"
+version = "0.1.0"
+edition = "2021"
+authors = ["Jusong Yu <jusong.yu@pm.me>"]
+homepage = "https://github.com/EOSC-Data-Commons/datahugger-rs"
+
+[lib]
+name = "datahugger"
+crate-type = ["cdylib"]
+
+[dependencies]
+async-trait = "0.1.89"
+datahugger = { path = ".." }
+exn = "0.2.1"
+indicatif = "0.18.3"
+pyo3 = { version = "0.27.2", features = ["extension-module", "abi3", "abi3-py310", "auto-initialize", "experimental-inspect"] }
+pyo3-introspection = "0.27.2"
+reqwest = "0.13.1"
+tokio = { version = "1.49.0", features = ["rt"] }
+
+[package.metadata.maturin]
+python-source = "datahugger"

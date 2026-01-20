@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   languages.rust.enable = true;
 
   packages = [
@@ -21,7 +22,7 @@
     # Build the CLI for integration tests
     cargo build --release
     export PATH="$PWD/target/release:$PATH"
-    
+
     # Run CLI integration tests
     bash tests/cli-integration.sh
   '';

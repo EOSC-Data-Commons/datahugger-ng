@@ -1,26 +1,8 @@
-use datahugger::DownloadExt;
 use datahugger::resolve;
 use futures_util::future::join_all;
 use indicatif::MultiProgress;
 use reqwest::ClientBuilder;
 use tracing_subscriber::FmtSubscriber;
-
-// #[derive(Debug)]
-// enum AppError {
-//     Fatal { consequences: &'static str },
-//     // Trivial,
-// }
-//
-// impl std::fmt::Display for AppError {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             AppError::Fatal { consequences } => write!(f, "fatal error: {consequences}"),
-//             // AppError::Trivial => write!(f, "trivial error"),
-//         }
-//     }
-// }
-//
-// impl std::error::Error for AppError {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

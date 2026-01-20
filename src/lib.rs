@@ -14,7 +14,7 @@ mod helper;
 pub use crate::helper::json_extract;
 
 mod resolver;
-pub use crate::resolver::{RepositoryRecord, resolve};
+pub use crate::resolver::{resolve, RepositoryRecord};
 
 pub mod crawler;
 pub use crawler::crawl;

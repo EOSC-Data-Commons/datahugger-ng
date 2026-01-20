@@ -9,8 +9,9 @@ use reqwest::{Client, StatusCode};
 use std::{any::Any, str::FromStr};
 
 use crate::{
-    Checksum, DirMeta, Entry, Repository, json_extract,
+    json_extract,
     repo::{Endpoint, FileMeta, RepoError},
+    Checksum, DirMeta, Entry, Repository,
 };
 
 // https://osf.io/

@@ -1,0 +1,9 @@
+import pathlib
+
+class RepositoryRecord(object):
+    def download_with_validation(self, dst_dir: pathlib.Path, limit: int = 0) -> None:
+        """blocking call, using rust's async runtime"""
+    def id(self) -> str: ...
+    def root_url(self) -> str: ...
+
+def resolve(url: str, /) -> RepositoryRecord: ...

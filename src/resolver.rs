@@ -4,8 +4,8 @@ use exn::{Exn, ResultExt};
 use url::Url;
 
 use crate::{
-    DirMeta, Repository,
     repo_impl::{DataverseDataset, DataverseFile, OSF},
+    DirMeta, Repository,
 };
 
 use std::collections::HashSet;

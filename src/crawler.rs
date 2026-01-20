@@ -6,7 +6,7 @@ use reqwest::Client;
 use async_stream::try_stream;
 use std::sync::Arc;
 
-use crate::{DirMeta, Entry, Repository, error::ErrorStatus};
+use crate::{error::ErrorStatus, DirMeta, Entry, Repository};
 
 #[derive(Debug)]
 pub struct CrawlerError {
@@ -22,13 +22,27 @@ impl std::fmt::Display for CrawlerError {
 
 impl std::error::Error for CrawlerError {}
 
+pub trait ProgressManager: Send + Sync + 'static + Clone {
+    fn insert(&self, index: usize, pb: ProgressBar) -> ProgressBar;
+    fn insert_from_back(&self, index: usize, pb: ProgressBar) -> ProgressBar;
+}
+
+impl ProgressManager for MultiProgress {
+    fn insert(&self, index: usize, pb: ProgressBar) -> ProgressBar {
+        self.insert(index, pb)
+    }
+    fn insert_from_back(&self, index: usize, pb: ProgressBar) -> ProgressBar {
+        self.insert_from_back(index, pb)
+    }
+}
+
 /// # Panics
 /// indicatif template error
 pub fn crawl<R>(
     client: Client,
     repo: Arc<R>,
     dir: DirMeta,
-    mp: MultiProgress,
+    mp: impl ProgressManager,
 ) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>>
 where
     R: Repository + 'static + ?Sized,
