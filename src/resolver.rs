@@ -1,11 +1,11 @@
 use std::{collections::HashMap, str::FromStr, sync::Arc};
 
-use exn::{Exn, ResultExt};
+use exn::{Exn, OptionExt, ResultExt};
 use url::Url;
 
 use crate::{
     repo::RepositoryExt,
-    repo_impl::{DataverseDataset, DataverseFile, OSF},
+    repo_impl::{Dataone, DataverseDataset, DataverseFile, OSF},
     RepositoryRecord,
 };
 
@@ -140,7 +140,24 @@ pub fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> {
 
     // DataOne spec hosted
     if DATAONE_DOMAINS.contains(domain) {
-        todo!()
+        // https://data.ess-dive.lbl.gov/view/doi%3A10.15485%2F1971251
+        // resolved to xml at https://cn.dataone.org/cn/v2/object/doi%3A10.15485%2F1971251
+        let mut segments = url.path_segments().ok_or_else(|| DispatchError {
+            message: format!("'{url}' cannot be base"),
+        })?;
+        let id = segments
+            .find(|pat| pat.starts_with("doi"))
+            .ok_or_raise(|| DispatchError {
+                message: format!("expect 'doi' in '{url}'"),
+            })?;
+
+        let base_url = format!("{scheme}://{host_str}");
+        let base_url = Url::from_str(&base_url).or_raise(|| DispatchError {
+            message: format!("'{base_url}' is not valid url"),
+        })?;
+        let repo = Arc::new(Dataone::new(base_url));
+        let record = repo.get_record(id);
+        return Ok(record);
     }
 
     // Dataverse spec hosted
@@ -172,11 +189,8 @@ pub fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> {
         match typ {
             "dataset" => {
                 let repo = Arc::new(DataverseDataset::new(base_url, version));
-                let repo_query = RepositoryRecord {
-                    repo,
-                    record_id: id.to_string(),
-                };
-                return Ok(repo_query);
+                let record = repo.get_record(id);
+                return Ok(record);
             }
             "file" => {
                 let repo = Arc::new(DataverseFile::new(base_url, version));

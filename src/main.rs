@@ -2,7 +2,7 @@ use clap::{Args, Parser, Subcommand};
 use datahugger::{resolve, DownloadExt};
 use indicatif::MultiProgress;
 use reqwest::ClientBuilder;
-use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -31,9 +31,11 @@ struct DownloadArgs {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // console_subscriber::init();
     let subscriber = FmtSubscriber::builder()
         .with_thread_ids(true)
         .with_target(false)
+        .with_env_filter(EnvFilter::from_default_env())
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)?;
@@ -47,7 +49,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Download(args) => {
             let url = &args.url;
             let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
-            let client = ClientBuilder::new().user_agent(user_agent).build()?;
+            let client = ClientBuilder::new()
+                .user_agent(user_agent)
+                .use_native_tls()
+                .build()?;
             let repo = match resolve(url) {
                 Ok(repo) => repo,
                 Err(err) => {

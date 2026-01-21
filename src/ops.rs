@@ -17,7 +17,7 @@ use bytes::Buf;
 use digest::Digest;
 use std::{fs, path::Path};
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
-use tracing::{debug, instrument};
+use tracing::{debug, instrument, warn};
 
 use crate::{Checksum, Hasher};
 
@@ -52,39 +52,6 @@ impl RepositoryRecord {
     }
 }
 
-// // must be very efficient, both CPU and RAM usage.
-// // [x] need async,
-// // [x] need buffer,
-// // [x] need reuse HTTP client
-// #[instrument(skip(client))]
-// async fn download_file<P>(client: &Client, src: FileEntry, dst_root: P) -> anyhow::Result<()>
-// where
-//     P: AsRef<Path> + std::fmt::Debug,
-// {
-//     info!("downloading");
-//     let resp = client.get(src.link).send().await?.error_for_status()?;
-//     let mut stream = resp.bytes_stream();
-//
-//     // create dst path relative to root
-//     let dst = dst_root.as_ref().join(src.rel_path);
-//     if src.is_dir {
-//         fs::create_dir_all(dst)?;
-//         return Ok(());
-//     }
-//
-//     let mut fh = OpenOptions::new()
-//         .write(true)
-//         .create(true)
-//         .truncate(true)
-//         .open(dst)
-//         .await?;
-//     while let Some(item) = stream.next().await {
-//         let mut bytes = item?;
-//         fh.write_all_buf(&mut bytes).await?;
-//     }
-//     Ok(())
-// }
-
 #[allow(clippy::too_many_lines)]
 #[instrument(skip(client, mp))]
 async fn download_crawled_file_with_validation<P>(
@@ -109,6 +76,13 @@ where
         }
         Entry::File(file_meta) => {
             // prepare stream src
+            let pb = mp.insert(0, ProgressBar::new_spinner());
+            pb.set_style(
+                ProgressStyle::with_template("{spinner:.green} {msg}")
+                    .expect("indicatif template error"),
+            );
+            pb.enable_steady_tick(std::time::Duration::from_millis(100));
+            pb.set_message(format!("Connecting... {}", file_meta.download_url.as_str()));
             let resp = client
                 .get(file_meta.download_url.clone())
                 .send()
@@ -123,6 +97,7 @@ where
                     // Temporary??
                     status: ErrorStatus::Temporary,
                 })?;
+            pb.finish_and_clear();
             let mut stream = resp.bytes_stream();
             // prepare file dst
             let path = dst.as_ref().join(file_meta.relative());
@@ -141,20 +116,19 @@ where
                 .checksum
                 .iter()
                 .find(|c| matches!(c, Checksum::Sha256(_)))
-                .or_else(|| file_meta.checksum.first())
-                .ok_or_else(|| CrawlerError {
-                    message: "no checksum found on file metadata".to_string(),
-                    status: ErrorStatus::Permanent,
-                })?;
-            let (mut hasher, expected_checksum) = match checksum {
-                Checksum::Sha256(value) => (Hasher::Sha256(sha2::Sha256::new()), value),
-                Checksum::Md5(value) => (Hasher::Md5(md5::Md5::new()), value),
+                .or_else(|| file_meta.checksum.first());
+            let expected_size = file_meta.size;
+            let (mut hasher, expected_checksum) = if let Some(checksum) = checksum {
+                match checksum {
+                    Checksum::Sha256(value) => {
+                        (Some(Hasher::Sha256(sha2::Sha256::new())), Some(value))
+                    }
+                    Checksum::Md5(value) => (Some(Hasher::Md5(md5::Md5::new())), Some(value)),
+                }
+            } else {
+                warn!("unable to find expected checksum to verify");
+                (None, None)
             };
-            let expected_size = file_meta.size.ok_or_else(|| CrawlerError {
-                message: "no size found at the file metadata".to_string(),
-                status: ErrorStatus::Permanent,
-            })?;
-            let mut got_size = 0;
 
             let style = ProgressStyle::with_template(
                 "{msg:<60} [{bar:40.cyan/blue}] \
@@ -163,17 +137,25 @@ where
             )
             .unwrap()
             .progress_chars("=>-");
-            let pb = mp.insert_from_back(0, ProgressBar::new(expected_size));
+            let pb = if let Some(expected_size) = expected_size {
+                mp.insert_from_back(0, ProgressBar::new(expected_size))
+            } else {
+                mp.insert_from_back(0, ProgressBar::no_length())
+            };
             pb.set_style(style);
             pb.enable_steady_tick(std::time::Duration::from_millis(100));
             pb.set_message(compact_path(file_meta.relative().as_str()));
+
+            let mut got_size = 0;
             while let Some(item) = stream.next().await {
                 let mut bytes = item.or_raise(|| CrawlerError {
                     message: "reqwest error stream".to_string(),
                     status: ErrorStatus::Permanent,
                 })?;
                 let chunk = bytes.chunk();
-                hasher.update(chunk);
+                if let Some(ref mut hasher) = hasher {
+                    hasher.update(chunk);
+                }
                 let bytes_len = bytes.len() as u64;
                 got_size += bytes_len;
                 fh.write_all_buf(&mut bytes)
@@ -187,20 +169,24 @@ where
 
             pb.finish_and_clear();
 
-            if got_size != expected_size {
-                exn::bail!(CrawlerError {
-                    message: format!("size wrong, expect {expected_size}, got {got_size}"),
-                    status: ErrorStatus::Permanent
-                })
-            }
+            if let (Some(expected_size), Some(expected_checksum)) =
+                (expected_size, expected_checksum)
+            {
+                if got_size != expected_size {
+                    exn::bail!(CrawlerError {
+                        message: format!("size wrong, expect {expected_size}, got {got_size}"),
+                        status: ErrorStatus::Permanent
+                    })
+                }
 
-            let checksum = hex::encode(hasher.finalize());
+                let checksum = hex::encode(hasher.expect("hasher is not none").finalize());
 
-            if checksum != *expected_checksum {
-                exn::bail!(CrawlerError {
-                    message: format!("size wrong, expect {expected_checksum}, got {checksum}"),
-                    status: ErrorStatus::Permanent
-                })
+                if checksum != *expected_checksum {
+                    exn::bail!(CrawlerError {
+                        message: format!("size wrong, expect {expected_checksum}, got {checksum}"),
+                        status: ErrorStatus::Permanent
+                    })
+                }
             }
             Ok(())
         }

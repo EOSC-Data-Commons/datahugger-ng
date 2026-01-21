@@ -193,6 +193,7 @@ impl DirMeta {
     }
 }
 
+// TODO: this should support both xml and json to re-locate where the entry is defined
 #[derive(Debug, Clone)]
 pub struct Endpoint {
     pub parent_url: Url,

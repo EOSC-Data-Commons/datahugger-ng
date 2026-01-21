@@ -49,6 +49,13 @@ where
 {
     Box::pin(try_stream! {
         // TODO: this is at boundary need to deal with error to retry.
+        let pb = mp.insert(0, ProgressBar::new_spinner());
+        pb.set_style(
+            ProgressStyle::with_template("{spinner:.green} {msg}")
+                .expect("indicatif template error"),
+        );
+        pb.enable_steady_tick(std::time::Duration::from_millis(100));
+        pb.set_message(format!("listing files of {}", dir.api_url.as_str()));
         let entries = repo.list(&client, dir.clone())
             .await
             .or_raise(||
@@ -56,6 +63,7 @@ where
                     message: format!("cannot list all entries of '{dir}', after retry"),
                     status: ErrorStatus::Persistent,
                 })?;
+        pb.finish_and_clear();
 
         for entry in entries {
             let pb = mp.insert(0, ProgressBar::new_spinner());
