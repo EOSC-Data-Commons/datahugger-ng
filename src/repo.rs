@@ -3,7 +3,7 @@ use exn::Exn;
 use reqwest::Client;
 use url::Url;
 
-use std::{any::Any, path::Path};
+use std::{any::Any, path::Path, sync::Arc};
 
 use digest::Digest;
 
@@ -296,3 +296,38 @@ pub trait Repository: Send + Sync + Any {
     fn root_url(&self, id: &str) -> Url;
     fn as_any(&self) -> &dyn Any;
 }
+
+#[derive(Clone)]
+pub struct RepositoryRecord {
+    pub repo: Arc<dyn Repository>,
+    pub record_id: String,
+}
+
+impl RepositoryRecord {
+    #[must_use]
+    pub fn root_dir(&self) -> DirMeta {
+        DirMeta::new_root(self.repo.root_url(&self.record_id))
+    }
+}
+
+/// Extension trait that provides a “free” `get_record` method for all types
+/// implementing `Repository`.
+///
+/// This trait is automatically implemented for all `Repository` types.
+///
+/// # Example
+///
+/// ```ignore
+/// let repo: Arc<dyn Repository> = Arc::new(MyRepo::new());
+/// let record = repo.get_record("some_id");
+/// ```
+pub trait RepositoryExt: Repository + Sized + 'static {
+    fn get_record(self: Arc<Self>, id: &str) -> RepositoryRecord {
+        RepositoryRecord {
+            repo: self.clone(),
+            record_id: id.to_string(),
+        }
+    }
+}
+
+impl<T: Repository + Sized + 'static> RepositoryExt for T {}

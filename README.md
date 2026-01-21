@@ -38,11 +38,11 @@ You can use it as a python library.
 ```python
 from datahugger_ng import resolve
 
-```python
 record = resolve(
     "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
 )
 record.download_with_validation(tmp_path)
+
 assert sorted([i.name for i in tmp_path.iterdir()]) == [
     "ECM_matrix.py",
     "Markov_comp.py",

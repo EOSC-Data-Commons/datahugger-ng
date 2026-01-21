@@ -4,8 +4,9 @@ use exn::{Exn, ResultExt};
 use url::Url;
 
 use crate::{
+    repo::RepositoryExt,
     repo_impl::{DataverseDataset, DataverseFile, OSF},
-    DirMeta, Repository,
+    RepositoryRecord,
 };
 
 use std::collections::HashSet;
@@ -123,19 +124,6 @@ static DATAVERSE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     ])
 });
 
-#[derive(Clone)]
-pub struct RepositoryRecord {
-    pub repo: Arc<dyn Repository>,
-    pub record_id: String,
-}
-
-impl RepositoryRecord {
-    #[must_use]
-    pub fn root_dir(&self) -> DirMeta {
-        DirMeta::new_root(self.repo.root_url(&self.record_id))
-    }
-}
-
 /// # Errors
 /// ???
 pub fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> {
@@ -192,11 +180,8 @@ pub fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> {
             }
             "file" => {
                 let repo = Arc::new(DataverseFile::new(base_url, version));
-                let repo_query = RepositoryRecord {
-                    repo,
-                    record_id: id.to_string(),
-                };
-                return Ok(repo_query);
+                let record = repo.get_record(id);
+                return Ok(record);
             }
             ty => exn::bail!(DispatchError {
                 message: format!("{ty} is not valid type, can only be 'dataset' or 'file'")
@@ -220,11 +205,8 @@ pub fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> {
             })?;
 
             let repo = Arc::new(OSF::new());
-            let repo_query = RepositoryRecord {
-                repo,
-                record_id: id.to_string(),
-            };
-            Ok(repo_query)
+            let record = repo.get_record(id);
+            Ok(record)
         }
         "data.mendeley.com" => todo!(),
         "data.4tu.nl" => todo!(),

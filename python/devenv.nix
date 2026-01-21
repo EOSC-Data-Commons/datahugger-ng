@@ -24,11 +24,6 @@
     pkgs.maturin
   ];
 
-  git-hooks.hooks = {
-    rustfmt.enable = true;
-    clippy.enable = true;
-  };
-
   enterTest = ''
     cargo test --all
   '';

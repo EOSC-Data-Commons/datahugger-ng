@@ -10,6 +10,7 @@ use reqwest::ClientBuilder;
 use std::path::PathBuf;
 
 #[pyclass]
+#[derive(Clone)]
 struct RepositoryRecord(InnerRepositoryRecord);
 
 #[derive(Clone)]
@@ -24,6 +25,21 @@ impl ProgressManager for NoProgress {
         ProgressBar::hidden()
     }
 }
+
+// impl RepositoryRecord {
+//     async fn inner_download<P>(
+//         self,
+//         client: &Client,
+//         dst_dir: P,
+//         mp: impl ProgressManager,
+//         limit: usize,
+//     ) -> Result<(), Exn<CrawlerError>>
+//     where
+//         P: AsRef<Path> + Sync + Send,
+//     {
+//         todo!()
+//     }
+// }
 
 #[pymethods]
 impl RepositoryRecord {
@@ -48,6 +64,23 @@ impl RepositoryRecord {
         })
         .map_err(|err| PyRuntimeError::new_err(format!("{err}")))
     }
+
+    // #[pyo3(signature = (dst_dir, limit=0))]
+    // fn download(self_: PyRef<'_, Self>, dst_dir: PathBuf, limit: usize) -> PyResult<()> {
+    //     let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
+    //     let client = ClientBuilder::new().user_agent(user_agent).build().unwrap();
+    //     let mp = NoProgress;
+    //
+    //     // blocking call to download, not ideal, but just to sync with original API.
+    //     let rt = tokio::runtime::Runtime::new().expect("unable to create tokio runtime");
+    //     rt.block_on(async move {
+    //         self_
+    //             .clone()
+    //             .inner_download(&client, dst_dir, mp, limit)
+    //             .await
+    //     })
+    //     .map_err(|err| PyRuntimeError::new_err(format!("{err}")))
+    // }
 
     fn root_url(self_: PyRef<'_, Self>) -> String {
         let id = self_.0.record_id.clone();
