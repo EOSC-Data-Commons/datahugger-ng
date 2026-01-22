@@ -1,3 +1,5 @@
+use std::{fs, path::PathBuf};
+
 use clap::{Args, Parser, Subcommand};
 use datahugger::{resolve, DownloadExt};
 use indicatif::MultiProgress;
@@ -17,19 +19,28 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// download subcommand
+    /// Download files of dataset
     Download(DownloadArgs),
 }
 
 #[derive(Args)]
 struct DownloadArgs {
-    /// Url of the data record to download
+    /// URL of the data record to download.
     url: String,
 
-    /// Upper limit for concurency to avaid overwhelming the network or filesystem, default to `0`
-    /// which means no limitation, and it is usually fine for single dataset record.
+    /// Maximum number of concurrent downloads.
+    ///
+    /// This limit helps avoid overwhelming the network or filesystem.
+    /// A value of `0` (the default) disables the limit.
+    /// For a single dataset record, leaving this unlimited is usually fine.
     #[arg(short, long, default_value_t = 0)]
     limit: usize,
+
+    /// Destination directory for downloaded files.
+    ///
+    /// Defaults to the current directory (`"./"`).
+    #[arg(short, long, value_name = "DIR")]
+    to: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -48,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD",
     // "https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/DHJ45U",
     let cli = Cli::parse();
-    match &cli.command {
+    match cli.command {
         Commands::Download(args) => {
             let url = &args.url;
             let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
@@ -62,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Ok(token) = std::env::var("DRYAD_API_TOKEN") {
                 headers.insert(
                     AUTHORIZATION,
-                    HeaderValue::from_str(&format!("Bearer {}", token))?,
+                    HeaderValue::from_str(&format!("Bearer {token}"))?,
                 );
             }
             headers.insert(USER_AGENT, HeaderValue::from_str(&user_agent)?);
@@ -80,8 +91,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let mp = MultiProgress::new();
+            let dst = args.to.unwrap_or_else(|| PathBuf::from("."));
+            fs::create_dir_all(&dst)?;
             let _ = repo
-                .download_with_validation(&client, "./dummy_tests", mp, args.limit)
+                .download_with_validation(&client, dst, mp, args.limit)
                 .await
                 .map_err(|err| {
                     eprintln!("download failed: {err:?}");
