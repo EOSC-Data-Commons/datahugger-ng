@@ -11,7 +11,7 @@ use url::Url;
 use crate::{
     json_extract,
     repo::RepositoryExt,
-    repo_impl::{Dataone, DataverseDataset, DataverseFile, GitHub, OSF},
+    repo_impl::{Arxiv, Dataone, DataverseDataset, DataverseFile, GitHub, OSF},
     RepositoryRecord,
 };
 
@@ -270,7 +270,21 @@ pub async fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> 
     }
 
     match domain {
-        "arxiv.org" => todo!(),
+        "arxiv.org" => {
+            let mut segments = url.path_segments().ok_or_else(|| DispatchError {
+                message: format!("cannot get path segments of url '{}'", url.as_str()),
+            })?;
+            let id = segments
+                .next()
+                .and_then(|_| segments.next())
+                .ok_or(DispatchError {
+                    message: format!("connot get record id from '{url}'"),
+                })?;
+
+            let repo = Arc::new(Arxiv::new());
+            let record = repo.get_record(id);
+            Ok(record)
+        }
         "zenodo.org" => todo!(),
         "github.com" => {
             let mut segments = url.path_segments().ok_or_else(|| DispatchError {

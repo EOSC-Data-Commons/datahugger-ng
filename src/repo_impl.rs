@@ -151,6 +151,63 @@ impl Repository for Dataone {
     }
 }
 
+// https://arxiv.org/
+// API root url at https://arxiv.org/pdf/
+#[derive(Debug)]
+pub struct Arxiv;
+
+impl Arxiv {
+    #[must_use]
+    pub fn new() -> Self {
+        Arxiv
+    }
+}
+
+impl Default for Arxiv {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[async_trait]
+impl Repository for Arxiv {
+    fn root_url(&self, id: &str) -> Url {
+        // https://arxiv.org/pdf/<id> to get the record pdf
+
+        // Safe to unwrap:
+        // - the base URL is a hard-coded, valid absolute URL
+        // - `path_segments_mut` cannot fail for this URL scheme
+        let mut url = Url::from_str("https://arxiv.org").unwrap();
+        url.path_segments_mut().unwrap().extend(["pdf", id]);
+        url
+    }
+
+    async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+        let root_url = dir.root_url();
+        // safe to unwrap, because I create the root_url
+        let name: Vec<&str> = root_url.path_segments().unwrap().collect::<Vec<_>>();
+        let name = name[1];
+        let download_url = root_url.clone();
+        let endpoint = Endpoint {
+            parent_url: dir.root_url(),
+            key: Some(name.to_string()),
+        };
+        let file = FileMeta::new(
+            dir.join(&format!("{name}.pdf")),
+            endpoint,
+            download_url,
+            None,
+            vec![],
+        );
+
+        Ok(vec![Entry::File(file)])
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 // https://osf.io/
 // API root url at https://api.osf.io/v2/nodes/
 #[derive(Debug)]
@@ -529,7 +586,7 @@ impl GitHub {
     }
 }
 
-fn branch_or_commit_from_url(url: &Url) -> Option<String> {
+fn github_branch_or_commit_from_url(url: &Url) -> Option<String> {
     let segments: Vec<&str> = url.path_segments()?.collect();
 
     // GitHub tree URL format:
@@ -598,7 +655,7 @@ impl Repository for GitHub {
                 message: "Missing 'type' in tree entry".to_string(),
             })?;
 
-            let record_id = branch_or_commit_from_url(&dir.root_url())
+            let record_id = github_branch_or_commit_from_url(&dir.root_url())
                 .expect("can parse branch or commit from url");
             match kind.as_ref() {
                 "blob" => {

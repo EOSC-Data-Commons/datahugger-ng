@@ -7,6 +7,7 @@ Support data repositories:
 - [dataverse](https://dataverse.org/) (click [here](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataverse-repo-list.md) to see all dataverse data repositories we support).
 - [osf.io](https://osf.io/)
 - [github.com](https://github.com/)
+- [arxiv](https://arxiv.org/)
 - [Dataone](https://www.dataone.org/) (click [here](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md) to see all Dataone data repositories we support. Most of its umbrella data repositories, the http requests takes long time to response.)
 
 ## Usage
