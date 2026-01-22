@@ -4,11 +4,15 @@ Tool for fetching data from DOI or URL.
 
 Support data repositories:
 
-- [dataverse](https://dataverse.org/) (click [here](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataverse-repo-list.md) to see all dataverse data repositories we support).
-- [osf.io](https://osf.io/)
-- [github.com](https://github.com/)
-- [arxiv](https://arxiv.org/)
-- [Dataone](https://www.dataone.org/) (click [here](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md) to see all Dataone data repositories we support. Most of its umbrella data repositories, the http requests takes long time to response.)
+| Source        | Website                         | Notes |
+|---------------|----------------------------------|-------|
+| Dataverse     | https://dataverse.org/           | [Supported Dataverse repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataverse-repo-list.md) |
+| OSF           | https://osf.io/                  | — |
+| GitHub        | https://github.com/              | Use a GitHub API token to get a higher rate limit |
+| arXiv         | https://arxiv.org/               | — |
+| Dryad         | https://datadryad.org            | Requires a bearer token to download data ([API instructions](https://datadryad.org/api)) |
+| DataONE       | https://www.dataone.org/         | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md); requests to umbrella repositories may be slow |
+
 
 ## Usage
 

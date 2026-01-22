@@ -59,6 +59,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     HeaderValue::from_str(&format!("token {token}"))?,
                 );
             }
+            if let Ok(token) = std::env::var("DRYAD_API_TOKEN") {
+                headers.insert(
+                    AUTHORIZATION,
+                    HeaderValue::from_str(&format!("Bearer {}", token))?,
+                );
+            }
             headers.insert(USER_AGENT, HeaderValue::from_str(&user_agent)?);
             let client = ClientBuilder::new()
                 .user_agent(user_agent)

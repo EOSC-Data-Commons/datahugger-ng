@@ -11,7 +11,7 @@ use url::Url;
 use crate::{
     json_extract,
     repo::RepositoryExt,
-    repo_impl::{Arxiv, Dataone, DataverseDataset, DataverseFile, GitHub, OSF},
+    repo_impl::{Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, OSF},
     RepositoryRecord,
 };
 
@@ -310,7 +310,30 @@ pub async fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> 
 
             Ok(record)
         }
-        "datadryad.org" => todo!(),
+        "datadryad.org" => {
+            // example url: https://datadryad.org/dataset/doi:10.5061/dryad.mj8m0
+            let segments = url
+                .path_segments()
+                .ok_or_else(|| DispatchError {
+                    message: format!("cannot get path segments of url '{}'", url.as_str()),
+                })?
+                .collect::<Vec<&str>>();
+            // id is 'doi:10.5061/dryad.mj8m0'
+            let record_id = if segments.len() >= 3 && segments[0] == "dataset" {
+                format!("{}/{}", segments[1], segments[2])
+            } else {
+                exn::bail!(DispatchError {
+                    message: format!("unable to parse dryad dataset id from '{url}'",)
+                })
+            };
+            let base_url = Url::from_str("https://datadryad.org/").or_raise(|| DispatchError {
+                message: "invalid base url".to_string(),
+            })?;
+
+            let repo = Arc::new(DataDryad::new(base_url));
+            let record = repo.get_record(&record_id);
+            Ok(record)
+        }
         "huggingface.co" => todo!(),
         "osf.io" => {
             let mut segments = url.path_segments().ok_or_else(|| DispatchError {
