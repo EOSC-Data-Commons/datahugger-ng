@@ -10,6 +10,7 @@ Support data repositories:
 | OSF           | https://osf.io/                  | — |
 | GitHub        | https://github.com/              | Use a GitHub API token to get a higher rate limit |
 | arXiv         | https://arxiv.org/               | — |
+| Zenodo        | https://zenodo.org/              | — |
 | Dryad         | https://datadryad.org            | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for how to your api key) |
 | DataONE       | https://www.dataone.org/         | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md); requests to umbrella repositories may be slow |
 
@@ -80,7 +81,7 @@ assert sorted([i.name for i in tmp_path.iterdir()]) == [
 - [ ] all repos that already supported by py-datahugger
     - [x] Dataone (the repos itself are verry slow in responding http request).
     - [x] Github repo download (support folders collapse and download).
-    - [ ] zenodo 
+    - [x] zenodo 
     - [x] datadryad
     - [x] arxiv
     - [ ] MendelyDataset
