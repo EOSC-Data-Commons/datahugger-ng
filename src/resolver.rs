@@ -9,10 +9,7 @@ use serde_json::Value as JsonValue;
 use url::Url;
 
 use crate::{
-    json_extract,
-    repo::RepositoryExt,
-    repo_impl::{Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, Zenodo, OSF},
-    RepositoryRecord,
+    RepositoryRecord, json_extract, repo::RepositoryExt, repo_impl::{Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, HalScience, OSF, Zenodo}
 };
 
 use std::collections::HashSet;
@@ -285,6 +282,21 @@ pub async fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> 
             let record = repo.get_record(id);
             Ok(record)
         }
+        "hal.science" => {
+            let mut segments = url.path_segments().ok_or_else(|| DispatchError {
+                message: format!("cannot get path segments of url '{}'", url.as_str()),
+            })?;
+            let id = segments
+                .next()
+                .ok_or(DispatchError {
+                    message: format!("connot get record id from '{url}'"),
+                })?;
+
+            let repo = Arc::new(HalScience::new());
+            let record = repo.get_record(id);
+            Ok(record)
+        }
+        "huggingface.co" => todo!(),
         "zenodo.org" => {
             let segments = url
                 .path_segments()
@@ -351,7 +363,6 @@ pub async fn resolve(url: &str) -> Result<RepositoryRecord, Exn<DispatchError>> 
             let record = repo.get_record(&record_id);
             Ok(record)
         }
-        "huggingface.co" => todo!(),
         "osf.io" => {
             let mut segments = url.path_segments().ok_or_else(|| DispatchError {
                 message: format!("cannot get path segments of url '{}'", url.as_str()),
