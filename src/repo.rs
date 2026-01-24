@@ -307,43 +307,26 @@ impl std::fmt::Display for RepoError {
 impl std::error::Error for RepoError {}
 
 #[async_trait]
-pub trait Repository: Send + Sync + Any {
+pub trait DatasetBackend: Send + Sync + Any {
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>>;
-    fn root_url(&self, id: &str) -> Url;
+    fn root_url(&self) -> Url;
     fn as_any(&self) -> &dyn Any;
 }
 
 #[derive(Clone)]
-pub struct RepositoryRecord {
-    pub repo: Arc<dyn Repository>,
-    pub record_id: String,
+pub struct Dataset {
+    pub backend: Arc<dyn DatasetBackend>,
 }
 
-impl RepositoryRecord {
+impl Dataset {
     #[must_use]
-    pub fn root_dir(&self) -> DirMeta {
-        DirMeta::new_root(&self.repo.root_url(&self.record_id))
-    }
-}
-
-/// Extension trait that provides a “free” `get_record` method for all types
-/// implementing `Repository`.
-///
-/// This trait is automatically implemented for all `Repository` types.
-///
-/// # Example
-///
-/// ```ignore
-/// let repo: Arc<dyn Repository> = Arc::new(MyRepo::new());
-/// let record = repo.get_record("some_id");
-/// ```
-pub trait RepositoryExt: Repository + Sized + 'static {
-    fn get_record(self: Arc<Self>, id: &str) -> RepositoryRecord {
-        RepositoryRecord {
-            repo: self.clone(),
-            record_id: id.to_string(),
+    pub fn new(backend: impl DatasetBackend) -> Self {
+        Dataset {
+            backend: Arc::new(backend),
         }
     }
+    #[must_use]
+    pub fn root_dir(&self) -> DirMeta {
+        DirMeta::new_root(&self.backend.root_url())
+    }
 }
-
-impl<T: Repository + Sized + 'static> RepositoryExt for T {}

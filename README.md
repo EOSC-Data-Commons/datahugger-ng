@@ -68,8 +68,8 @@ assert sorted([i.name for i in tmp_path.iterdir()]) == [
 
 ## Rust SDK
 
-- `trait Repository` for adding support for new data repository in your own rust crate.
-- `impl RepositoryRecord` interface for adding new operations in your own crate. 
+- `trait DatasetBackend` for adding support for new data repository in your own rust crate.
+- `impl Dataset` interface for adding new operations in your own crate. 
 
 ## Python SDK
 
@@ -100,7 +100,7 @@ export DRYAD_API_KEY="your_api_key"
 datahugger download https://datadryad.org/dataset/doi:10.5061/dryad.mj8m0 --to /tmp/dryad_download/
 ```
 
-### Repository without limitations
+### Datasets without limitations
 
 - Huggingface datasets - simple download
 
@@ -151,7 +151,7 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
 
 - `--to /tmp/...` shows the **download target directory**.  
 - `--limit 10` limit the concurrency channel to do polite crawling and downloading.
-- Repositories with **rate limits or auth** are highlighted with PAT / API key instructions.  
+- Datasets from data repositories which have **rate limits or auth** are highlighted with PAT / API key instructions.  
 - Others can be downloaded directly without credentials.  
 
 ## Roadmap 

@@ -1,8 +1,7 @@
 #![allow(clippy::needless_pass_by_value)]
 
 use datahugger::{
-    crawler::ProgressManager, resolve as inner_resolve, DownloadExt,
-    RepositoryRecord as InnerRepositoryRecord,
+    crawler::ProgressManager, resolve as inner_resolve, Dataset as InnerDataset, DownloadExt,
 };
 use indicatif::ProgressBar;
 use pyo3::{exceptions::PyRuntimeError, prelude::*};
@@ -11,7 +10,7 @@ use std::path::PathBuf;
 
 #[pyclass]
 #[derive(Clone)]
-struct RepositoryRecord(InnerRepositoryRecord);
+struct Dataset(InnerDataset);
 
 #[derive(Clone)]
 struct NoProgress;
@@ -42,7 +41,7 @@ impl ProgressManager for NoProgress {
 // }
 
 #[pymethods]
-impl RepositoryRecord {
+impl Dataset {
     #[pyo3(signature = (dst_dir, limit=0))]
     fn download_with_validation(
         self_: PyRef<'_, Self>,
@@ -83,24 +82,19 @@ impl RepositoryRecord {
     // }
 
     fn root_url(self_: PyRef<'_, Self>) -> String {
-        let id = self_.0.record_id.clone();
-        let repo = self_.0.repo.clone();
-        repo.root_url(&id).as_str().into()
-    }
-
-    fn id(self_: PyRef<'_, Self>) -> String {
-        self_.0.record_id.clone()
+        let repo = self_.0.backend.clone();
+        repo.root_url().as_str().into()
     }
 }
 
 #[pyfunction]
 #[pyo3(signature = (url, /))]
-fn resolve(_py: Python, url: &str) -> PyResult<RepositoryRecord> {
+fn resolve(_py: Python, url: &str) -> PyResult<Dataset> {
     let rt = tokio::runtime::Runtime::new().unwrap(); // create a runtime
-    let record = rt
+    let ds = rt
         .block_on(inner_resolve(url))
         .map_err(|err| PyRuntimeError::new_err(format!("{err}")))?;
-    Ok(RepositoryRecord(record))
+    Ok(Dataset(ds))
 }
 
 #[pymodule]
