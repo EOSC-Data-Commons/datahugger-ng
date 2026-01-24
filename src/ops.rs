@@ -10,7 +10,7 @@ use crate::{
     crawl,
     crawler::{CrawlerError, ProgressManager},
     error::ErrorStatus,
-    Entry, RepositoryRecord,
+    Dataset, Entry,
 };
 
 use bytes::Buf;
@@ -21,7 +21,7 @@ use tracing::{debug, instrument, warn};
 
 use crate::{Checksum, Hasher};
 
-impl RepositoryRecord {
+impl Dataset {
     /// crawling and print the metadata of dirs and files
     /// # Errors
     /// when crawl fails
@@ -31,7 +31,7 @@ impl RepositoryRecord {
         mp: MultiProgress,
     ) -> Result<(), Exn<CrawlerError>> {
         let root_dir = self.root_dir();
-        crawl(client.clone(), Arc::clone(&self.repo), root_dir, mp)
+        crawl(client.clone(), Arc::clone(&self.backend), root_dir, mp)
             .try_for_each_concurrent(10, |entry| async move {
                 match entry {
                     Entry::Dir(dir_meta) => {
@@ -236,7 +236,7 @@ pub trait DownloadExt {
 }
 
 #[async_trait]
-impl DownloadExt for RepositoryRecord {
+impl DownloadExt for Dataset {
     /// Downloads all files reachable from a repository root URL into a local directory,
     /// validating both checksum and file size for each downloaded file.
     ///
@@ -261,7 +261,7 @@ impl DownloadExt for RepositoryRecord {
     /// # Errors
     ///
     /// Returns an error if:
-    /// - Repository crawling fails (e.g. invalid URLs or metadata).
+    /// - Dataset crawling fails (e.g. invalid URLs or metadata).
     /// - A file cannot be downloaded due to network or I/O errors.
     /// - The destination directory cannot be created or written to.
     /// - File size or checksum validation fails for any file.
@@ -287,22 +287,27 @@ impl DownloadExt for RepositoryRecord {
             message: format!("cannot create dir at '{}'", path.display()),
             status: ErrorStatus::Permanent,
         })?;
-        crawl(client.clone(), Arc::clone(&self.repo), root_dir, mp.clone())
-            // NOTE: limit set to 0 as default for cli download,
-            // should set to 20 for polite crawling for every dataset, it limit the stream consumer rate.
-            .try_for_each_concurrent(limit, |entry| {
-                let dst_dir = dst_dir.as_ref().to_path_buf();
-                let mp = mp.clone();
-                async move {
-                    download_crawled_file_with_validation(client, entry, &dst_dir, mp).await?;
-                    Ok(())
-                }
-            })
-            .await
-            .or_raise(|| CrawlerError {
-                message: "crawl, download and validation failed".to_string(),
-                status: ErrorStatus::Permanent,
-            })?;
+        crawl(
+            client.clone(),
+            Arc::clone(&self.backend),
+            root_dir,
+            mp.clone(),
+        )
+        // NOTE: limit set to 0 as default for cli download,
+        // should set to 20 for polite crawling for every dataset, it limit the stream consumer rate.
+        .try_for_each_concurrent(limit, |entry| {
+            let dst_dir = dst_dir.as_ref().to_path_buf();
+            let mp = mp.clone();
+            async move {
+                download_crawled_file_with_validation(client, entry, &dst_dir, mp).await?;
+                Ok(())
+            }
+        })
+        .await
+        .or_raise(|| CrawlerError {
+            message: "crawl, download and validation failed".to_string(),
+            status: ErrorStatus::Permanent,
+        })?;
         Ok(())
     }
 }

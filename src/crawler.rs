@@ -6,7 +6,7 @@ use reqwest::Client;
 use async_stream::try_stream;
 use std::sync::Arc;
 
-use crate::{error::ErrorStatus, DirMeta, Entry, Repository};
+use crate::{error::ErrorStatus, DatasetBackend, DirMeta, Entry};
 
 #[derive(Debug)]
 pub struct CrawlerError {
@@ -45,7 +45,7 @@ pub fn crawl<R>(
     mp: impl ProgressManager,
 ) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>>
 where
-    R: Repository + 'static + ?Sized,
+    R: DatasetBackend + 'static + ?Sized,
 {
     Box::pin(try_stream! {
         // TODO: this is at boundary need to deal with error to retry.

@@ -7,7 +7,6 @@ def test_resolve_default():
         "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
     )
 
-    assert record.id() == "doi:10.7910/DVN/KBHLOD"
     assert (
         record.root_url()
         == "https://dataverse.harvard.edu/api/datasets/:persistentId/versions/:latest-published?persistentId=doi%3A10.7910%2FDVN%2FKBHLOD"
