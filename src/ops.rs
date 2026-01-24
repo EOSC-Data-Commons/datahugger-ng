@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
+use futures_core::stream::BoxStream;
 use futures_util::{StreamExt, TryStreamExt};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::sync::Arc;
@@ -309,5 +310,29 @@ impl DownloadExt for Dataset {
             status: ErrorStatus::Permanent,
         })?;
         Ok(())
+    }
+}
+
+pub trait CrawlExt {
+    fn crawl(
+        self,
+        client: &Client,
+        mp: impl ProgressManager,
+    ) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>>;
+}
+
+impl CrawlExt for Dataset {
+    fn crawl(
+        self,
+        client: &Client,
+        mp: impl ProgressManager,
+    ) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>> {
+        let root_dir = self.root_dir();
+        crawl(
+            client.clone(),
+            Arc::clone(&self.backend),
+            root_dir,
+            mp.clone(),
+        )
     }
 }

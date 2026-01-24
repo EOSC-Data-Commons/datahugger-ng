@@ -13,7 +13,10 @@ crate-type = ["cdylib"]
 datahugger = { path = ".." }
 exn = "0.2.1"
 indicatif = "0.18.3"
-pyo3 = { version = "0.27.2", features = ["extension-module", "abi3", "abi3-py310", "auto-initialize", "experimental-inspect"] }
+pyo3 = { version = "0.27", features = ["extension-module", "abi3", "abi3-py310", "auto-initialize", "experimental-inspect"] }
+pyo3-async-runtimes = { version = "0.27", features = ["attributes", "tokio-runtime"] }
+futures-util = "0.3.31"
+futures-core = "0.3.31"
 reqwest = "0.13.1"
 tokio = { version = "1.49.0", features = ["rt"] }
 

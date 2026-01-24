@@ -11,6 +11,7 @@ Support data repositories:
 | GitHub ✨(new)      | [github.com](https://github.com/) | Use a GitHub API token to get a higher rate limit | [example](#github---avoid-hitting-api-rate-limits-using-a-personal-access-token-pat) |
 | Hugging Face ✨(new)| [huggingface.co](https://huggingface.co/) | — | [example](#repository-without-limitations) |
 | arXiv              | [arxiv.org](https://arxiv.org/) | — | [example](#repository-without-limitations) |
+| Hal                | [hal.science](https://hal.science/) | — | [example](#repository-without-limitations) |
 | Zenodo             | [zenodo.org](https://zenodo.org/) | — | [example](#repository-without-limitations) |
 | Dryad              | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key) | [example](#datadryad-api-key-config-and-download) |
 | DataONE            | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md); requests to umbrella repositories may be slow | [example](#repository-without-limitations) |
@@ -50,10 +51,10 @@ You can use it as a python library.
 ```python
 from datahugger_ng import resolve
 
-record = resolve(
+ds = resolve(
     "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
 )
-record.download_with_validation(dst_dir=tmp_path)
+ds.download_with_validation(dst_dir=tmp_path, limit=20)
 
 assert sorted([i.name for i in tmp_path.iterdir()]) == [
     "ECM_matrix.py",
@@ -64,6 +65,26 @@ assert sorted([i.name for i in tmp_path.iterdir()]) == [
     "tutorial3.py",
     "tutorial4.py",
 ]
+```
+
+The download is very efficient because the underlying Rust implementation leverages all available CPU cores and maximizes your bandwidth.
+Use the `limit` parameter to control concurrency; by default, it is set to `0`, which means no limit.
+
+We also provide a low-level Python API for implementing custom operations after files are crawled. 
+Crawl datasets efficiently and asynchronously with our Rust-powered crawler -- fully utilizing all CPU cores and your network bandwidth.    
+Simply resolve a dataset and stream its entries with async for as they arrive:
+
+```python
+import asyncio
+from crawler import resolve
+
+async def main():
+    ds = resolve("https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD")
+    async for entry in ds.crawl():
+        // or any async operation on the returned entry
+        print("crawl:", entry)
+
+asyncio.run(main())
 ```
 
 ## Rust SDK
@@ -192,7 +213,7 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
     - [ ] at crate.io, show how to use generics to add new repos or new ops.
 - [ ] test python bindings in filemetrix/filefetcher.
 - [ ] doc on gh-pages?
-- [ ] python binding (crawl function) that spit out a stream for async use in python side.
+- [x] python binding (crawl function) that spit out a stream for async use in python side.
 - [ ] python binding allow to set HTTP client from a config, or set a token etc.
 - [ ] zip extract support.
 - [ ] onedata support through signposting, fairicat?

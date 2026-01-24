@@ -19,6 +19,6 @@ pub mod crawler;
 pub use crawler::crawl;
 
 mod ops;
-pub use crate::ops::DownloadExt;
+pub use crate::ops::{CrawlExt, DownloadExt};
 
 pub mod datasets;

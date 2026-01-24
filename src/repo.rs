@@ -154,8 +154,8 @@ pub enum Entry {
 
 #[derive(Debug, Clone)]
 pub struct DirMeta {
-    path: CrawlPath,
-    root_url: Url,
+    pub path: CrawlPath,
+    pub root_url: Url,
     pub api_url: Url,
 }
 
@@ -226,8 +226,8 @@ impl std::fmt::Display for Endpoint {
 
 #[derive(Debug)]
 pub struct FileMeta {
-    path: CrawlPath,
-    endpoint: Endpoint,
+    pub path: CrawlPath,
+    pub endpoint: Endpoint,
     pub download_url: Url,
     pub size: Option<u64>,
     pub checksum: Vec<Checksum>,
