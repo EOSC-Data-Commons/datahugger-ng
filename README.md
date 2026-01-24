@@ -14,7 +14,7 @@ Support data repositories:
 | Hal                | [hal.science](https://hal.science/) | — | [example](#repository-without-limitations) |
 | Zenodo             | [zenodo.org](https://zenodo.org/) | — | [example](#repository-without-limitations) |
 | Dryad              | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key) | [example](#datadryad-api-key-config-and-download) |
-| DataONE            | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md); requests to umbrella repositories may be slow | [example](#repository-without-limitations) |
+| DataONE            | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#repository-without-limitations) |
 
 
 
@@ -76,10 +76,12 @@ Simply resolve a dataset and stream its entries with async for as they arrive:
 
 ```python
 import asyncio
-from datahugger import resolve
+from datahugger_ng import resolve
 
 async def main():
-    ds = resolve("https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD")
+    ds = resolve(
+        "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
+    )
     async for entry in ds.crawl():
         # print or any async operation on the returned entry
         print("crawl:", entry)
@@ -192,7 +194,7 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
 - [x] clear interface for adding crawling results dealing operations beyond download.
 - [x] strong error handling mechanism and logging to avoid interruptions (using `exn` crate).
 - [x] Sharable client connection to reduce the cost of repeated reconnections.
-- [ ] do detail benchs to show its power (might not need, the cli download already ~1000 times faster for example dataset https://osf.io/3ua2c/).
+- [ ] do detail benchs to show its power (might not need, the cli download already *~1000* times faster for example for dataset https://osf.io/3ua2c/).
 - [x] single-pass streaming with computing checksum by plug a hasher in the pipeline.
 - [ ] all repos that already supported by py-datahugger
     - [x] Dataone (the repos itself are verry slow in responding http request).
@@ -225,7 +227,7 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
 - [x] cli that can do all py-datahugger do.
 - [ ] not only local FS, but s3 (using openDAL?)
 - [ ] seamephor, config that can intuitively estimate maximum resources been used (already partially taken care by for_each_concurrent limit).
-- [ ] suuports for less popular data repositories, implement when use cases coming (need your help!)
+- [ ] supports for less popular data repositories, implement when use cases coming (need your help!)
     - [ ] FigShareDataset (https://api.figshare.com/v2)
     - [ ] DSpaceDataset
     - [ ] SeaNoeDataset
