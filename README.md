@@ -246,6 +246,18 @@ devenv shell -v
 
 You can also use your own Rust setup, we don't enforce or test a specific Rust MSRV yet.
 
+### Make new Release
+
+```console
+# commit and push to main (can be done with a PR)
+git commit -am "release: version 0.1.0"
+git push
+
+# actually push the tag up (this triggers dist's CI)
+git tag v0.1.0
+git push --tags
+```
+
 ## License
 
 All contributions must retain this attribution.
