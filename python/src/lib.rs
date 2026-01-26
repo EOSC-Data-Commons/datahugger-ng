@@ -3,6 +3,20 @@
 // TODO: type alias
 #![allow(clippy::type_complexity)]
 
+// XXX: not safe deprecate init_ssl_cert_env_vars
+#[cfg(feature = "openssl-vendored")]
+fn probe_ssl_certs() {
+    openssl_probe::init_ssl_cert_env_vars();
+}
+
+#[cfg(not(feature = "openssl-vendored"))]
+fn probe_ssl_certs() {}
+
+#[pyfunction]
+pub fn main() {
+    probe_ssl_certs();
+}
+
 use datahugger::{
     crawler::{CrawlerError, ProgressManager},
     resolve as inner_resolve, CrawlExt, Dataset, DownloadExt, Entry,

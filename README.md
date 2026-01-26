@@ -17,12 +17,31 @@ Support data repositories:
 | DataONE            | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#repository-without-limitations) |
 
 
+### Install 
+
+prebuilt binaries via shell
+
+```console
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/unkcpz/rsdos/releases/download/v0.1.0/datahugger-installer.sh | sh
+```
+
+```console
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/unkcpz/rsdos/releases/download/v0.1.0/datahugger-installer.ps1 | iex"
+```
+
+```console
+brew install unkcpz/tap/datahugger
+```
+
+python library via
+
+```console
+pip install datahugger-ng
+```
 
 ## Usage
 
 ### CLI
-
-download the binary or brew, apt, curl..
 
 To download all data from a database, run:
 
@@ -47,6 +66,10 @@ See more examples at [CLI usage examples](#CLI-Examples).
 ### Python
 
 You can use it as a python library.
+
+```console
+pip install datahugger-ng
+```
 
 ```python
 from datahugger_ng import resolve
@@ -97,6 +120,14 @@ asyncio.run(main())
 ## Python SDK
 
 Python SDK mainly for downstream python libraries to implement extra operations on files (e.g. store metadata into DB).
+
+caveats:
+
+Following architecture not yet able to install from pypi.
+
+- target: aarch64
+- target: s390x
+
 
 ## CLI Examples
 
@@ -214,6 +245,7 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
     - [ ] a bit detail of data repo, shows if fairicat is support etc.
     - [ ] at crate.io, show how to use generics to add new repos or new ops.
 - [ ] test python bindings in filemetrix/filefetcher.
+- [ ] rust api doc on docs.rs
 - [ ] doc on gh-pages?
 - [x] python binding (crawl function) that spit out a stream for async use in python side.
 - [ ] python binding allow to set HTTP client from a config, or set a token etc.
@@ -247,6 +279,13 @@ devenv shell -v
 You can also use your own Rust setup, we don't enforce or test a specific Rust MSRV yet.
 
 ### Make new Release
+
+For pypi release, trigger manually at CI workflow [`pypi-publish`](https://github.com/EOSC-Data-Commons/datahugger-rs/actions/workflows/pypi-publish.yaml)
+For crates.io release, trigger manually at CI workflow [`crate-publish`](https://github.com/EOSC-Data-Commons/datahugger-rs/actions/workflows/crate-publish.yaml)
+To have final upload to crates.io and pypi triggered, the dispatch CI workflow need to run from tags.
+If run from branches, the build will be triggered but not the last step to do actual upload.
+
+For binary release
 
 ```console
 # commit and push to main (can be done with a PR)
