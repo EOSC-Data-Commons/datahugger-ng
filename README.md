@@ -280,12 +280,11 @@ You can also use your own Rust setup, we don't enforce or test a specific Rust M
 
 ### Make new Release
 
-For pypi release, trigger manually at CI workflow [`pypi-publish`](https://github.com/EOSC-Data-Commons/datahugger-rs/actions/workflows/pypi-publish.yaml)
-For crates.io release, trigger manually at CI workflow [`crate-publish`](https://github.com/EOSC-Data-Commons/datahugger-rs/actions/workflows/crate-publish.yaml)
-To have final upload to crates.io and pypi triggered, the dispatch CI workflow need to run from tags.
-If run from branches, the build will be triggered but not the last step to do actual upload.
+For pypi release:
+- update version number at `python/Cargo.toml`. The version don't need to sync with rust crate version.
+- trigger manually at CI workflow [`pypi-publish`](https://github.com/EOSC-Data-Commons/datahugger-rs/actions/workflows/pypi-publish.yaml)
 
-For binary release
+For binary release and for crates.io release, they share same version number.
 
 ```console
 # commit and push to main (can be done with a PR)
@@ -296,6 +295,9 @@ git push
 git tag v0.1.0
 git push --tags
 ```
+
+CI workflow of crates.io build can be trigger manually at CI workflow [`crate-publish`](https://github.com/EOSC-Data-Commons/datahugger-rs/actions/workflows/crate-publish.yaml).
+But it will not run the final crates.io upload.
 
 ## License
 
