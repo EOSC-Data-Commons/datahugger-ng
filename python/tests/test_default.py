@@ -42,7 +42,7 @@ def test_dataclass_constructor():
         None,
         [],
     )
-    assert str(entry.path_craw_rel) == "/tmp/x"
+    assert str(entry.path_craw_rel.as_posix()) == "/tmp/x"
     assert entry.download_url == "https://example.com/download_url"
     assert entry.size is None
     assert entry.checksum == []
