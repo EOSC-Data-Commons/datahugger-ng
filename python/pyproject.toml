@@ -10,7 +10,10 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
+description = "python binding of datahugger -- rust tool for fetching data and metadata from DOI or URL."
+readme = "README.md"
 dynamic = ["version"]
+license = "MIT AND Apache-2.0"
 
 [project.optional-dependencies]
 tests = [

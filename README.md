@@ -1,5 +1,13 @@
 # datahugger
 
+[![crates.io version](https://img.shields.io/crates/v/datahugger.svg)](https://crates.io/crates/datahugger)
+[![Rust Docs](https://img.shields.io/docsrs/datahugger?label=docs%20Rust)](https://docs.rs/datahugger)
+
+[![PyPI - Version](https://img.shields.io/pypi/v/datahugger-ng)](https://pypi.org/project/datahugger-ng/)
+[![Python Docs](https://img.shields.io/badge/docs-Python%20API-blue)](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/python/README.md)
+
+
+
 Tool for fetching data from DOI or URL.
 
 Support data repositories:
@@ -21,15 +29,15 @@ Support data repositories:
 
 prebuilt binaries via shell
 
-```console
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/unkcpz/rsdos/releases/download/v0.1.1/datahugger-installer.sh | sh
+```sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/EOSC-Data-Commons/datahugger-rs/releases/download/v0.1.1/datahugger-installer.sh | sh
 ```
 
-```console
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/unkcpz/rsdos/releases/download/v0.1.1/datahugger-installer.ps1 | iex"
+```sh
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/EOSC-Data-Commons/datahugger-rs/releases/download/v0.1.1/datahugger-installer.ps1 | iex"
 ```
 
-```console
+```sh
 brew install unkcpz/tap/datahugger
 ```
 
@@ -71,8 +79,10 @@ You can use it as a python library.
 pip install datahugger-ng
 ```
 
+Check [python API docs](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/python/README.md) for more examples.
+
 ```python
-from datahugger_ng import resolve
+from datahugger import resolve
 
 ds = resolve(
     "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
@@ -99,7 +109,7 @@ Simply resolve a dataset and stream its entries with async for as they arrive:
 
 ```python
 import asyncio
-from datahugger_ng import resolve
+from datahugger import resolve
 
 async def main():
     ds = resolve(
