@@ -18,8 +18,9 @@ pub fn main() {
 }
 
 use datahugger::{
+    crawl,
     crawler::{CrawlerError, ProgressManager},
-    resolve as inner_resolve, CrawlExt, Dataset, DownloadExt, Entry,
+    resolve as inner_resolve, CrawlExt, Dataset, DownloadExt, Entry, FileMeta,
 };
 use exn::Exn;
 use futures_core::stream::BoxStream;
@@ -31,9 +32,41 @@ use pyo3::{
 };
 use pyo3::{ffi::c_str, types::PyDict};
 use pyo3_async_runtimes::tokio::future_into_py;
-use reqwest::ClientBuilder;
+use reqwest::{Client, ClientBuilder};
 use std::{path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
+
+pub trait CrawlFileExt {
+    fn crawl_file(
+        self,
+        client: &Client,
+        mp: impl ProgressManager,
+    ) -> BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>>;
+}
+
+impl CrawlFileExt for Dataset {
+    fn crawl_file(
+        self,
+        client: &Client,
+        mp: impl ProgressManager,
+    ) -> BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>> {
+        let root_dir = self.root_dir();
+        crawl(
+            client.clone(),
+            Arc::clone(&self.backend),
+            root_dir,
+            mp.clone(),
+        )
+        .filter_map(|res| async move {
+            match res {
+                Ok(Entry::Dir(_)) => None,
+                Ok(Entry::File(f)) => Some(Ok(f)),
+                Err(e) => Some(Err(e)),
+            }
+        })
+        .boxed()
+    }
+}
 
 #[pyclass]
 #[pyo3(name = "Dataset")]
@@ -85,7 +118,7 @@ impl PyDataset {
         repo.root_url().as_str().into()
     }
 
-    fn crawl(self_: PyRef<'_, Self>) -> PyResult<PyCrawlStream> {
+    fn crawl(self_: PyRef<'_, Self>) -> PyResult<PyEntryStream> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
         let client = ClientBuilder::new()
             .user_agent(user_agent)
@@ -94,7 +127,20 @@ impl PyDataset {
         let mp = NoProgress;
 
         let stream = self_.0.clone().crawl(&client, mp);
-        let stream = PyCrawlStream::new(stream);
+        let stream = PyEntryStream::new(stream);
+        Ok(stream)
+    }
+
+    fn crawl_file(self_: PyRef<'_, Self>) -> PyResult<PyFileMetaStream> {
+        let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
+        let client = ClientBuilder::new()
+            .user_agent(user_agent)
+            .build()
+            .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let mp = NoProgress;
+
+        let stream = self_.0.clone().crawl_file(&client, mp);
+        let stream = PyFileMetaStream::new(stream);
         Ok(stream)
     }
 }
@@ -110,13 +156,26 @@ fn resolve(_py: Python, url: &str) -> PyResult<PyDataset> {
 }
 
 #[pyclass]
-struct PyCrawlStream {
+struct PyEntryStream {
     stream: Arc<Mutex<BoxStream<'static, Result<Entry, Exn<CrawlerError>>>>>,
 }
 
-impl PyCrawlStream {
+impl PyEntryStream {
     fn new(stream: BoxStream<'static, Result<Entry, Exn<CrawlerError>>>) -> Self {
-        PyCrawlStream {
+        PyEntryStream {
+            stream: Arc::new(Mutex::new(stream)),
+        }
+    }
+}
+
+#[pyclass]
+struct PyFileMetaStream {
+    stream: Arc<Mutex<BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>>>>,
+}
+
+impl PyFileMetaStream {
+    fn new(stream: BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>>) -> Self {
+        PyFileMetaStream {
             stream: Arc::new(Mutex::new(stream)),
         }
     }
@@ -138,7 +197,7 @@ impl PyEntryBase {
 #[pyo3(name = "DirEntry", extends=PyEntryBase)]
 struct PyDirEntry {
     #[pyo3(get)]
-    path_craw_rel: PathBuf,
+    path_crawl_rel: PathBuf,
     #[pyo3(get)]
     root_url: String,
     #[pyo3(get)]
@@ -149,7 +208,7 @@ struct PyDirEntry {
 #[pyo3(name = "FileEntry", extends=PyEntryBase)]
 struct PyFileEntry {
     #[pyo3(get, set)]
-    path_craw_rel: PathBuf,
+    path_crawl_rel: PathBuf,
     #[pyo3(get, set)]
     download_url: String,
     #[pyo3(get, set)]
@@ -162,14 +221,14 @@ struct PyFileEntry {
 impl PyFileEntry {
     #[new]
     fn new(
-        path_craw_rel: PathBuf,
+        path_crawl_rel: PathBuf,
         download_url: String,
         size: Option<u64>,
         checksum: Vec<(String, String)>,
     ) -> (Self, PyEntryBase) {
         (
             PyFileEntry {
-                path_craw_rel,
+                path_crawl_rel,
                 download_url,
                 size,
                 checksum,
@@ -193,7 +252,7 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                 py,
                 (
                     PyDirEntry {
-                        path_craw_rel: PathBuf::from(meta.path.as_str()),
+                        path_crawl_rel: PathBuf::from(meta.path.as_str()),
                         root_url: meta.root_url.as_str().to_string(),
                         api_url: meta.api_url.as_str().to_string(),
                     },
@@ -206,7 +265,7 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                 py,
                 (
                     PyFileEntry {
-                        path_craw_rel: PathBuf::from(meta.path.as_str()),
+                        path_crawl_rel: PathBuf::from(meta.path.as_str()),
                         download_url: meta.download_url.as_str().to_string(),
                         size: meta.size,
                         checksum: meta
@@ -231,10 +290,46 @@ impl<'py> IntoPyObject<'py> for PyEntry {
     }
 }
 
+#[derive(Debug)]
+struct PyFileMeta(FileMeta);
+
+impl<'py> IntoPyObject<'py> for PyFileMeta {
+    type Target = PyAny;
+    type Output = Bound<'py, PyAny>;
+    type Error = std::convert::Infallible;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let meta = self.0;
+        let obj = Py::new(
+            py,
+            (
+                PyFileEntry {
+                    path_crawl_rel: PathBuf::from(meta.path.as_str()),
+                    download_url: meta.download_url.as_str().to_string(),
+                    size: meta.size,
+                    checksum: meta
+                        .checksum
+                        .iter()
+                        .map(|cs| match cs {
+                            datahugger::Checksum::Md5(v) => ("md5".to_string(), v.clone()),
+                            datahugger::Checksum::Sha256(v) => ("sha256".to_string(), v.clone()),
+                        })
+                        .collect::<Vec<_>>(),
+                },
+                PyEntryBase,
+            ),
+        )
+        .map(pyo3::Py::into_any)
+        .expect("cannot construct the PyDirEntry");
+
+        Ok(obj.into_bound(py))
+    }
+}
+
 // learn from:
 // https://github.com/developmentseed/obstore/blob/5e4c8341241c3e1491601ea61dd0029f269f4d7e/obstore/src/get.rs#L226
 #[pymethods]
-impl PyCrawlStream {
+impl PyEntryStream {
     fn __aiter__(slf: PyRef<Self>) -> PyRef<Self> {
         slf
     }
@@ -278,6 +373,51 @@ async fn next_stream(
     }
 }
 
+#[pymethods]
+impl PyFileMetaStream {
+    fn __aiter__(slf: PyRef<Self>) -> PyRef<Self> {
+        slf
+    }
+
+    fn __iter__(slf: PyRef<Self>) -> PyRef<Self> {
+        slf
+    }
+
+    fn __anext__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let stream = self.stream.clone();
+
+        future_into_py(py, next_stream_file(stream, false))
+    }
+
+    fn __next__(&self, _py: Python<'_>) -> PyResult<PyFileMeta> {
+        let runtime = pyo3_async_runtimes::tokio::get_runtime();
+        let stream = self.stream.clone();
+        runtime.block_on(next_stream_file(stream, true))
+    }
+}
+
+async fn next_stream_file(
+    stream: Arc<Mutex<BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>>>>,
+    is_sync: bool,
+) -> PyResult<PyFileMeta> {
+    let mut stream = stream.lock().await;
+    match stream.next().await {
+        Some(Ok(fm)) => {
+            let frame = PyFileMeta(fm);
+            Ok(frame)
+        }
+        // TODO: Errors mapping to py types as well and return the PyCrawrError.
+        Some(Err(e)) => Err(PyRuntimeError::new_err(format!("{e:?}"))),
+        None => {
+            if is_sync {
+                Err(PyStopIteration::new_err("stream exhausted"))
+            } else {
+                Err(PyStopAsyncIteration::new_err("stream exhausted"))
+            }
+        }
+    }
+}
+
 #[pymodule]
 #[pyo3(name = "datahugger")]
 fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -288,7 +428,7 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Dir
     let dir = py.get_type::<PyDirEntry>();
     let ann = PyDict::new(py);
-    ann.set_item("path_craw_rel", py.get_type::<pyo3::types::PyString>())?;
+    ann.set_item("path_crawl_rel", py.get_type::<pyo3::types::PyString>())?;
     ann.set_item("root_url", py.get_type::<pyo3::types::PyString>())?;
     ann.set_item("api_url", py.get_type::<pyo3::types::PyString>())?;
     dir.setattr("__annotations__", ann)?;
@@ -298,7 +438,7 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // File
     let f = py.get_type::<PyFileEntry>();
     let ann = PyDict::new(py);
-    ann.set_item("path_craw_rel", py.get_type::<pyo3::types::PyString>())?;
+    ann.set_item("path_crawl_rel", py.get_type::<pyo3::types::PyString>())?;
     ann.set_item("download_url", py.get_type::<pyo3::types::PyString>())?;
     let size_type = py.eval(c_str!("int | None"), None, None)?;
     ann.set_item("size", size_type)?;

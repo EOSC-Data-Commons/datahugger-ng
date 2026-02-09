@@ -7,6 +7,7 @@ pub use crate::repo::Dataset;
 pub use crate::repo::DatasetBackend;
 pub use crate::repo::DirMeta;
 pub use crate::repo::Entry;
+pub use crate::repo::FileMeta;
 pub use crate::repo::Hasher;
 
 mod helper;

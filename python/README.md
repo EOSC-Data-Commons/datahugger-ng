@@ -13,16 +13,6 @@ A key design goal is that dataset crawling can be consumed **both synchronously 
 
 ## Core Concepts
 
-### Entries
-
-Datasets are composed of entries, which can be either directories (`DirEntry`) or files (`FileEntry`).
-All entries inherit from a common base type.
-
-```python
-class Entry:
-    """Base entry for files and directories."""
-```
-
 ### `DirEntry`
 
 Represents a directory in the dataset.
@@ -30,14 +20,14 @@ Represents a directory in the dataset.
 ```python
 @dataclass
 class DirEntry(Entry):
-    path_craw_rel: pathlib.Path
+    path_crawl_rel: pathlib.Path
     root_url: str
     api_url: str
 ```
 
 #### Fields
 
-- `path_craw_rel`
+- `path_crawl_rel`
   Path of the directory relative to the dataset root.
 
 - `root_url`
@@ -53,7 +43,7 @@ Represents a file in the dataset.
 ```python
 @dataclass
 class FileEntry(Entry):
-    path_craw_rel: pathlib.Path
+    path_crawl_rel: pathlib.Path
     download_url: str
     size: int | None
     checksum: list[tuple[str, str]]
@@ -61,7 +51,7 @@ class FileEntry(Entry):
 
 #### Fields
 
-- `path_craw_rel`
+- `path_crawl_rel`
   Path of the file relative to the dataset root.
 
 - `download_url`
@@ -96,7 +86,8 @@ The central abstraction representing a remote dataset.
 
 ```python
 class Dataset:
-    def crawl(self) -> SyncAsyncIterator[Entry]: ...
+    def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry]: ...
+    def crawl_file(self) -> SyncAsyncIterator[FileEntry]: ...
     def download_with_validation(
         self, dst_dir: pathlib.Path, limit: int = 0
     ) -> None: ...
@@ -107,10 +98,10 @@ class Dataset:
 ### `Dataset.crawl()`
 
 ```python
-def crawl(self) -> SyncAsyncIterator[Entry]
+def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry]
 ```
 
-Returns a stream of dataset entries (directories and files).
+Returns a stream of dataset entries (optional type that can be either `DirEntry` or `FileEntry`).
 
 The returned object supports **both**:
 
@@ -188,9 +179,9 @@ dataset = resolve("https://example.com/dataset")
 
 for entry in dataset.crawl():
     if isinstance(entry, FileEntry):
-        print("File:", entry.path_craw_rel)
+        print("File:", entry.path_crawl_rel)
     elif isinstance(entry, DirEntry):
-        print("Dir:", entry.path_craw_rel)
+        print("Dir:", entry.path_crawl_rel)
 ```
 
 ### Crawl a dataset asynchronously

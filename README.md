@@ -115,7 +115,7 @@ async def main():
     ds = resolve(
         "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
     )
-    async for entry in ds.crawl():
+    async for entry in ds.crawl_file():
         # print or any async operation on the returned entry
         print("crawl:", entry)
 
@@ -131,7 +131,9 @@ asyncio.run(main())
 
 Python SDK mainly for downstream python libraries to implement extra operations on files (e.g. store metadata into DB).
 
-caveats:
+See [python api doc](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/python/README.md) for more details.
+
+#### caveats:
 
 Following architecture not yet able to install from pypi.
 

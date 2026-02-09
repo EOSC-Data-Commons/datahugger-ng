@@ -42,7 +42,7 @@ def test_dataclass_constructor():
         None,
         [],
     )
-    assert str(entry.path_craw_rel.as_posix()) == "/tmp/x"
+    assert str(entry.path_crawl_rel.as_posix()) == "/tmp/x"
     assert entry.download_url == "https://example.com/download_url"
     assert entry.size is None
     assert entry.checksum == []
@@ -56,6 +56,9 @@ def test_crawl_blocking():
         "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
     )
     for i in ds.crawl():
+        print(i)
+
+    for i in ds.crawl_file():
         print(i)
 
 
@@ -72,7 +75,7 @@ async def test_crawl_async():
             await asyncio.sleep(0.1)
 
     async def crawl_task():
-        async for i in ds.crawl():
+        async for i in ds.crawl_file():
             print("crawl:", i)
 
     # run both concurrently
