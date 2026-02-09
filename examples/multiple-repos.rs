@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // "https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/DHJ45U",
     ];
 
-    let user_agent = format!("datahugger-rs-cli/{}", env!("CARGO_PKG_VERSION"));
+    let user_agent = format!("datahugger-ng-cli/{}", env!("CARGO_PKG_VERSION"));
     let client = ClientBuilder::new().user_agent(user_agent).build()?;
     let futures = repos.into_iter().map(|repo| {
         let client = client.clone();

@@ -488,11 +488,11 @@ mod tests {
         assert_eq!(qr.id.as_str(), "doi:10.5061/dryad.mj8m0");
 
         // github
-        // let url = "https://github.com/EOSC-Data-Commons/datahugger-rs";
+        // let url = "https://github.com/EOSC-Data-Commons/datahugger-ng";
         // let qr = resolve(url).await.unwrap();
         // let qr = qr.backend.as_any().downcast_ref::<GitHub>().unwrap();
         // assert_eq!(qr.owner.as_str(), "EOSE-Data-Commons");
-        // assert_eq!(qr.repo.as_str(), "datahugger-rs");
+        // assert_eq!(qr.repo.as_str(), "datahugger-ng");
         // assert_eq!(
         //     qr.branch_or_commit.as_str(),
         //     "<commit number that can change because by default is the commit of default branch>"
