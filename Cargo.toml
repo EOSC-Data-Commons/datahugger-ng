@@ -25,7 +25,7 @@ async-trait = "0.1.89"
 bytes = "1.11.0"
 clap = { version = "4.5.56", features = ["derive"] }
 digest = "0.10.7"
-exn = "0.2.1"
+exn = "0.3.0"
 futures-core = "0.3.31"
 futures-util = "0.3.31"
 hex = "0.4.3"
