@@ -4,7 +4,7 @@
 [![Rust Docs](https://img.shields.io/docsrs/datahugger?label=docs%20Rust)](https://docs.rs/datahugger)
 
 [![PyPI - Version](https://img.shields.io/pypi/v/datahugger-ng)](https://pypi.org/project/datahugger-ng/)
-[![Python Docs](https://img.shields.io/badge/docs-Python%20API-blue)](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/python/README.md)
+[![Python Docs](https://img.shields.io/badge/docs-Python%20API-blue)](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/python/README.md)
 
 
 
@@ -14,7 +14,7 @@ Support data repositories:
 
 | Source             | Website                         | Notes | Examples |
 |--------------------|---------------------------------|-------| ---------|
-| Dataverse          | [dataverse.org](https://dataverse.org/) | [Supported Dataverse repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataverse-repo-list.md) | [example](#repository-without-limitations) |
+| Dataverse          | [dataverse.org](https://dataverse.org/) | [Supported Dataverse repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataverse-repo-list.md) | [example](#repository-without-limitations) |
 | OSF                | [osf.io](https://osf.io/)       | — | [example](#repository-without-limitations) |
 | GitHub ✨(new)      | [github.com](https://github.com/) | Use a GitHub API token to get a higher rate limit | [example](#github---avoid-hitting-api-rate-limits-using-a-personal-access-token-pat) |
 | Hugging Face ✨(new)| [huggingface.co](https://huggingface.co/) | — | [example](#repository-without-limitations) |
@@ -22,7 +22,7 @@ Support data repositories:
 | Hal                | [hal.science](https://hal.science/) | — | [example](#repository-without-limitations) |
 | Zenodo             | [zenodo.org](https://zenodo.org/) | — | [example](#repository-without-limitations) |
 | Dryad              | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key) | [example](#datadryad-api-key-config-and-download) |
-| DataONE            | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#repository-without-limitations) |
+| DataONE            | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#repository-without-limitations) |
 
 
 ### Install 
@@ -30,11 +30,11 @@ Support data repositories:
 prebuilt binaries via shell
 
 ```console
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/EOSC-Data-Commons/datahugger-rs/releases/download/v0.1.1/datahugger-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.1.1/datahugger-installer.sh | sh
 ```
 
 ```console
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/EOSC-Data-Commons/datahugger-rs/releases/download/v0.1.1/datahugger-installer.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.1.1/datahugger-installer.ps1 | iex"
 ```
 
 ```console
@@ -83,7 +83,7 @@ You can use it as a python library.
 pip install datahugger-ng
 ```
 
-Check [python API docs](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/python/README.md) for more examples.
+Check [python API docs](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/python/README.md) for more examples.
 
 ```python
 from datahugger import resolve
@@ -135,7 +135,7 @@ asyncio.run(main())
 
 Python SDK mainly for downstream python libraries to implement extra operations on files (e.g. store metadata into DB).
 
-See [python api doc](https://github.com/EOSC-Data-Commons/datahugger-rs/blob/master/python/README.md) for more details.
+See [python api doc](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/python/README.md) for more details.
 
 #### caveats:
 
@@ -152,11 +152,11 @@ Following architecture not yet able to install from pypi.
 To get higher rate limits, export your [GitHub PAT](https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api) before downloading:
 If you use `gh auth token` to get token if you use `gh` to login in CLI.
 
-https://github.com/EOSC-Data-Commons/datahugger-rs
+https://github.com/EOSC-Data-Commons/datahugger-ng
 
 ```bash
 export GITHUB_TOKEN="your_personal_access_token" 
-datahugger download https://github.com/EOSC-Data-Commons/datahugger-rs --to /tmp/github_download/
+datahugger download https://github.com/EOSC-Data-Commons/datahugger-ng --to /tmp/github_download/
 ```
 ### Datadryad API key config and download
 
@@ -299,7 +299,7 @@ You can also use your own Rust setup, we don't enforce or test a specific Rust M
 
 For pypi release:
 - update version number at `python/Cargo.toml`. The version don't need to sync with rust crate version.
-- trigger manually at CI workflow [`pypi-publish`](https://github.com/EOSC-Data-Commons/datahugger-rs/actions/workflows/pypi-publish.yaml)
+- trigger manually at CI workflow [`pypi-publish`](https://github.com/EOSC-Data-Commons/datahugger-ng/actions/workflows/pypi-publish.yaml)
 
 For binary release and for crates.io release, they share same version number.
 
@@ -313,7 +313,7 @@ git tag v0.1.0
 git push --tags
 ```
 
-CI workflow of crates.io build can be trigger manually at CI workflow [`crate-publish`](https://github.com/EOSC-Data-Commons/datahugger-rs/actions/workflows/crate-publish.yaml).
+CI workflow of crates.io build can be trigger manually at CI workflow [`crate-publish`](https://github.com/EOSC-Data-Commons/datahugger-ng/actions/workflows/crate-publish.yaml).
 But it will not run the final crates.io upload.
 
 ## License

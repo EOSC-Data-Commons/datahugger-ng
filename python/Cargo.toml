@@ -1,9 +1,9 @@
 [package]
 name = "datahuggerpy"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 authors = ["Jusong Yu <jusong.yu@pm.me>"]
-homepage = "https://github.com/EOSC-Data-Commons/datahugger-rs"
+homepage = "https://github.com/EOSC-Data-Commons/datahugger-ng"
 
 [lib]
 name = "datahugger"

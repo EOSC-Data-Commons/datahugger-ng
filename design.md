@@ -1,4 +1,4 @@
-# datahugger-rs
+# datahugger-ng
 
 - keep folder hierachy.
 - async
