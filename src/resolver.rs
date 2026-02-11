@@ -191,6 +191,30 @@ async fn github_get_default_branch_commit(
     Ok(commit_sha)
 }
 
+
+pub async fn resolve_doi_to_url(doi: &str) -> Result<String,  Box<dyn std::error::Error>> {
+    println!("DOI {}", doi);
+
+    let client = ClientBuilder::new()
+        .use_native_tls()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
+
+    let res = client
+        .get(format!("https://doi.org/{}", doi))
+        .send()
+        .await?;
+
+    let location = res
+        .headers()
+        .get("Location")
+        .ok_or("No Location header in response")?
+        .to_str()?
+        .to_string();
+
+    Ok(location)
+}
+
 /// # Errors
 /// ???
 #[allow(clippy::too_many_lines)]

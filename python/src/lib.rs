@@ -20,7 +20,7 @@ pub fn main() {
 use datahugger::{
     crawl,
     crawler::{CrawlerError, ProgressManager},
-    resolve as inner_resolve, CrawlExt, Dataset, DownloadExt, Entry, FileMeta,
+    resolve as inner_resolve, resolve_doi_to_url as inner_resolve_doi_to_url, CrawlExt, Dataset, DownloadExt, Entry, FileMeta,
 };
 use exn::Exn;
 use futures_core::stream::BoxStream;
@@ -143,6 +143,16 @@ impl PyDataset {
         let stream = PyFileMetaStream::new(stream);
         Ok(stream)
     }
+}
+
+#[pyfunction]
+#[pyo3(signature = (doi, /))]
+fn resolve_doi_to_url(_py: Python, doi: &str) -> PyResult<String> {
+    let rt = tokio::runtime::Runtime::new().unwrap(); // create a runtime
+    let url = rt
+        .block_on(inner_resolve_doi_to_url(doi))
+        .map_err(|err| PyRuntimeError::new_err(format!("{err}")))?;
+    Ok(url)
 }
 
 #[pyfunction]
@@ -422,6 +432,7 @@ async fn next_stream_file(
 #[pyo3(name = "datahugger")]
 fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(resolve, m)?)?;
+    m.add_function(wrap_pyfunction!(resolve_doi_to_url, m)?)?;
     m.add_class::<PyDataset>()?;
     m.add_class::<PyEntryBase>()?;
 

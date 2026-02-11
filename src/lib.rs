@@ -15,6 +15,7 @@ pub use crate::helper::json_extract;
 
 mod resolver;
 pub use crate::resolver::resolve;
+pub use crate::resolver::resolve_doi_to_url;
 
 pub mod crawler;
 pub use crawler::crawl;
