@@ -208,6 +208,13 @@ pub async fn resolve_doi_to_url(
     doi: &str,
     base_url: Option<&str>,
 ) -> Result<String, Exn<ResolveError>> {
+    // check if doi is valid
+    if !(doi.starts_with("10.") && doi.contains('/')) {
+        exn::bail!(ResolveError {
+            message: format!("Invalid DOI: '{doi}'"),
+        });
+    }
+
     let base_url = base_url.unwrap_or("https://doi.org");
 
     let client = ClientBuilder::new()
@@ -577,6 +584,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_resolve_doi_to_url() {
+        // test valid doi and mock HTTP call
         let mock_server = MockServer::start().await;
 
         Mock::given(method("GET"))
@@ -585,7 +593,6 @@ mod tests {
                 "Location",
                 "https://dataverse.nl/citation?persistentId=doi:10.34894/0B7ZLK",
             ))
-            // Mounting the mock on the mock server - it's now effective!
             .mount(&mock_server)
             .await;
 
@@ -597,6 +604,17 @@ mod tests {
         assert_eq!(
             url,
             "https://dataverse.nl/citation?persistentId=doi:10.34894/0B7ZLK"
+        );
+
+        // test an invalid DOI
+        let res =
+            resolve_doi_to_url("https://dpoi.org/10.34894/0B7ZLK", Some(&mock_server.uri())).await;
+
+        assert!(res.is_err());
+
+        assert_eq!(
+            res.unwrap_err().message,
+            "Invalid DOI: 'https://dpoi.org/10.34894/0B7ZLK'"
         );
     }
 }
