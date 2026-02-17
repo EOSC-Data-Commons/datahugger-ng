@@ -151,7 +151,7 @@ impl PyDataset {
 fn resolve_doi_to_url(_py: Python, doi: &str) -> PyResult<String> {
     let rt = tokio::runtime::Runtime::new().unwrap(); // create a runtime
     let url = rt
-        .block_on(inner_resolve_doi_to_url(doi, None))
+        .block_on(inner_resolve_doi_to_url(doi))
         .map_err(|err| PyRuntimeError::new_err(format!("{err}")))?;
     Ok(url)
 }

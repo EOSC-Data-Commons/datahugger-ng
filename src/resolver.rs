@@ -204,7 +204,7 @@ async fn github_get_default_branch_commit(
     Ok(commit_sha)
 }
 
-pub async fn resolve_doi_to_url(
+async fn resolve_doi_to_url_with_base(
     doi: &str,
     base_url: Option<&str>,
 ) -> Result<String, Exn<ResolveError>> {
@@ -249,6 +249,10 @@ pub async fn resolve_doi_to_url(
     };
 
     Ok(location)
+}
+
+pub async fn resolve_doi_to_url(doi: &str) -> Result<String, Exn<ResolveError>> {
+    resolve_doi_to_url_with_base(doi, None).await
 }
 
 /// # Errors
@@ -596,7 +600,7 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let res = resolve_doi_to_url("10.34894/0B7ZLK", Some(&mock_server.uri())).await;
+        let res = resolve_doi_to_url_with_base("10.34894/0B7ZLK", Some(&mock_server.uri())).await;
 
         assert!(res.is_ok());
 
@@ -607,8 +611,11 @@ mod tests {
         );
 
         // test an invalid DOI
-        let res =
-            resolve_doi_to_url("https://dpoi.org/10.34894/0B7ZLK", Some(&mock_server.uri())).await;
+        let res = resolve_doi_to_url_with_base(
+            "https://dpoi.org/10.34894/0B7ZLK",
+            Some(&mock_server.uri()),
+        )
+        .await;
 
         assert!(res.is_err());
 
