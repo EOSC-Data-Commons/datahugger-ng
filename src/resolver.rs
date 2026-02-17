@@ -20,9 +20,6 @@ use crate::{
 use std::collections::HashSet;
 use std::sync::LazyLock;
 
-use wiremock::matchers::{method, path};
-use wiremock::{Mock, MockServer, ResponseTemplate};
-
 #[derive(Debug)]
 pub struct DispatchError {
     pub message: String,
@@ -495,6 +492,9 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
     #[tokio::test]
     async fn test_resolve_dataverse_default() {
         // dataset
