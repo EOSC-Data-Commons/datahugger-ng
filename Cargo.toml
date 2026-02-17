@@ -41,6 +41,7 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 url = "2.5.8"
 xmltree = "0.12.0"
+wiremock = "0.6.5"
 
 # The profile that 'dist' will build with
 [profile.dist]

@@ -20,6 +20,9 @@ use crate::{
 use std::collections::HashSet;
 use std::sync::LazyLock;
 
+use wiremock::matchers::{method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
+
 #[derive(Debug)]
 pub struct DispatchError {
     pub message: String,
@@ -204,7 +207,12 @@ async fn github_get_default_branch_commit(
     Ok(commit_sha)
 }
 
-pub async fn resolve_doi_to_url(doi: &str) -> Result<String, Exn<ResolveError>> {
+pub async fn resolve_doi_to_url(
+    doi: &str,
+    base_url: Option<&str>,
+) -> Result<String, Exn<ResolveError>> {
+    let base_url = base_url.unwrap_or("https://doi.org");
+
     let client = ClientBuilder::new()
         .use_native_tls()
         .redirect(reqwest::redirect::Policy::none())
@@ -213,7 +221,7 @@ pub async fn resolve_doi_to_url(doi: &str) -> Result<String, Exn<ResolveError>> 
             message: String::from("Could not build reqwest client"),
         })?;
 
-    let res = match client.get(format!("https://doi.org/{}", doi)).send().await {
+    let res = match client.get(format!("{}/{}", base_url, doi)).send().await {
         Ok(res) => res,
         Err(err) => {
             exn::bail!(ResolveError {
@@ -565,5 +573,30 @@ mod tests {
         let qr = resolve(url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<Zenodo>().unwrap();
         assert_eq!(qr.id.as_str(), "17867222");
+    }
+
+    #[tokio::test]
+    async fn test_resolve_doi_to_url() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/10.34894/0B7ZLK"))
+            .respond_with(ResponseTemplate::new(301).append_header(
+                "Location",
+                "https://dataverse.nl/citation?persistentId=doi:10.34894/0B7ZLK",
+            ))
+            // Mounting the mock on the mock server - it's now effective!
+            .mount(&mock_server)
+            .await;
+
+        let res = resolve_doi_to_url("10.34894/0B7ZLK", Some(&mock_server.uri())).await;
+
+        assert!(res.is_ok());
+
+        let url = res.unwrap();
+        assert_eq!(
+            url,
+            "https://dataverse.nl/citation?persistentId=doi:10.34894/0B7ZLK"
+        );
     }
 }
