@@ -71,10 +71,18 @@ jobs:
       - name: "cargo release publish"
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         run: |-
-          cargo release \
-            publish \
-            --workspace \
-            --all-features \
-            --allow-branch master \
-            --no-confirm \
-            --execute
+            if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+              cargo release publish \
+                --workspace \
+                --all-features \
+                --no-confirm \
+                --execute
+            else
+              cargo release \
+                publish \
+                --workspace \
+                --all-features \
+                --allow-branch master \
+                --no-confirm \
+                --execute
+            fi
