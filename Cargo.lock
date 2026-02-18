@@ -127,17 +127,7 @@ version = "1.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e84ce723ab67259cfeb9877c6a639ee9eb7a27b28123abd71db7f0d5d0cc9d86"
 dependencies = [
- "aws-lc-sys 0.36.0",
- "zeroize",
-]
-
-[[package]]
-name = "aws-lc-rs"
-version = "1.16.0"
-source = "git+https://github.com/aws/aws-lc-rs.git?rev=198d9ba#198d9bab79ecc56925292f9590fb5a747d2f2781"
-dependencies = [
- "aws-lc-sys 0.37.1",
- "untrusted 0.7.1",
+ "aws-lc-sys",
  "zeroize",
 ]
 
@@ -146,17 +136,6 @@ name = "aws-lc-sys"
 version = "0.36.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43a442ece363113bd4bd4c8b18977a7798dd4d3c3383f34fb61936960e8f4ad8"
-dependencies = [
- "cc",
- "cmake",
- "dunce",
- "fs_extra",
-]
-
-[[package]]
-name = "aws-lc-sys"
-version = "0.37.1"
-source = "git+https://github.com/aws/aws-lc-rs.git?rev=198d9ba#198d9bab79ecc56925292f9590fb5a747d2f2781"
 dependencies = [
  "cc",
  "cmake",
@@ -352,12 +331,11 @@ dependencies = [
 
 [[package]]
 name = "datahugger"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "async-recursion",
  "async-stream",
  "async-trait",
- "aws-lc-rs 1.16.0",
  "bytes",
  "clap",
  "digest",
@@ -1259,7 +1237,7 @@ version = "0.11.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1906b49b0c3bc04b5fe5d86a77925ae6524a19b816ae38ce1e426255f1d8a31"
 dependencies = [
- "aws-lc-rs 1.15.3",
+ "aws-lc-rs",
  "bytes",
  "getrandom 0.3.4",
  "lru-slab",
@@ -1418,7 +1396,7 @@ dependencies = [
  "cfg-if",
  "getrandom 0.2.17",
  "libc",
- "untrusted 0.9.0",
+ "untrusted",
  "windows-sys 0.52.0",
 ]
 
@@ -1447,7 +1425,7 @@ version = "0.23.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c665f33d38cea657d9614f766881e4d510e0eda4239891eea56b4cadcf01801b"
 dependencies = [
- "aws-lc-rs 1.15.3",
+ "aws-lc-rs",
  "once_cell",
  "rustls-pki-types",
  "rustls-webpki",
@@ -1510,10 +1488,10 @@ version = "0.103.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7df23109aa6c1567d1c575b9952556388da57401e4ace1d15f79eedad0d8f53"
 dependencies = [
- "aws-lc-rs 1.15.3",
+ "aws-lc-rs",
  "ring",
  "rustls-pki-types",
- "untrusted 0.9.0",
+ "untrusted",
 ]
 
 [[package]]
@@ -2019,12 +1997,6 @@ name = "unit-prefix"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81e544489bf3d8ef66c953931f56617f423cd4b5494be343d9b9d3dda037b9a3"
-
-[[package]]
-name = "untrusted"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
 name = "untrusted"

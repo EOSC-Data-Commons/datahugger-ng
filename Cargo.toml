@@ -1,6 +1,6 @@
 [package]
 name = "datahugger"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Tool for fetching data and metadata from DOI or URL."
 authors = ["Jusong Yu <jusong.yu@pm.me>"]
