@@ -147,13 +147,16 @@ impl PyDataset {
 }
 
 #[pyfunction]
-#[pyo3(signature = (doi, /))]
-fn resolve_doi_to_url(_py: Python, doi: &str) -> PyResult<String> {
-    let rt = tokio::runtime::Runtime::new().unwrap(); // create a runtime
-    let url = rt
-        .block_on(inner_resolve_doi_to_url(doi))
+#[pyo3(signature = (dois, /))]
+fn resolve_dois_to_urls(_py: Python, dois: Vec<String>) -> PyResult<Vec<String>> {
+    let rt =  tokio::runtime::Runtime::new().unwrap();
+    let futures = dois.iter().map(|doi| inner_resolve_doi_to_url(doi));
+    let results = rt
+        .block_on(futures::future::join_all(futures))
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
         .map_err(|err| PyRuntimeError::new_err(format!("{err}")))?;
-    Ok(url)
+    Ok(results)
 }
 
 #[pyfunction]
@@ -433,7 +436,7 @@ async fn next_stream_file(
 #[pyo3(name = "datahugger")]
 fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(resolve, m)?)?;
-    m.add_function(wrap_pyfunction!(resolve_doi_to_url, m)?)?;
+    m.add_function(wrap_pyfunction!(resolve_dois_to_urls, m)?)?;
     m.add_class::<PyDataset>()?;
     m.add_class::<PyEntryBase>()?;
 
