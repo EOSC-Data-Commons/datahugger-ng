@@ -2,7 +2,7 @@ import asyncio
 import pathlib
 import pytest
 from pathlib import Path
-from datahugger import FileEntry, resolve
+from datahugger import FileEntry, resolve, resolve_dois_to_urls
 
 
 def test_resolve_default():
@@ -14,6 +14,18 @@ def test_resolve_default():
         ds.root_url()
         == "https://dataverse.harvard.edu/api/datasets/:persistentId/versions/:latest-published?persistentId=doi%3A10.7910%2FDVN%2FKBHLOD"
     )
+
+
+def test_resolve_doi_to_url_blocking():
+    urls = resolve_dois_to_urls(
+        ["10.34894/0B7ZLK", "10.17026/DANS-2AC-ETD6", "10.17026/DANS-2BA-UAVX"]
+    )
+
+    assert urls == [
+        "https://dataverse.nl/citation?persistentId=doi:10.34894/0B7ZLK",
+        "https://phys-techsciences.datastations.nl/citation?persistentId=doi:10.17026/DANS-2AC-ETD6",
+        "https://phys-techsciences.datastations.nl/citation?persistentId=doi:10.17026/DANS-2BA-UAVX",
+    ]
 
 
 def test_download(tmp_path: Path):

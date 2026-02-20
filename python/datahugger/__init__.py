@@ -1,8 +1,8 @@
-from .datahugger import resolve, resolve_doi_to_url, DirEntry, FileEntry, Dataset
+from .datahugger import resolve, resolve_dois_to_urls, DirEntry, FileEntry, Dataset
 
 __all__ = (
     "resolve",
-    "resolve_doi_to_url",
+    "resolve_dois_to_urls",
     "DirEntry",
     "FileEntry",
     "Dataset",

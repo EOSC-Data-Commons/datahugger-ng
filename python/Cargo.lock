@@ -359,6 +359,7 @@ version = "0.3.0"
 dependencies = [
  "datahugger",
  "exn",
+ "futures",
  "futures-core",
  "futures-util",
  "indicatif",
