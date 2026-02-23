@@ -244,7 +244,10 @@ async fn resolve_doi_to_url_with_base(
     Ok(location)
 }
 
-pub async fn resolve_doi_to_url(client: &reqwest::Client, doi: &str) -> Result<String, Exn<ResolveError>> {
+pub async fn resolve_doi_to_url(
+    client: &reqwest::Client,
+    doi: &str,
+) -> Result<String, Exn<ResolveError>> {
     resolve_doi_to_url_with_base(client, doi, None).await
 }
 
@@ -495,8 +498,8 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
     use super::*;
+    use std::time::Duration;
 
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -595,13 +598,15 @@ mod tests {
             .await;
 
         let client = reqwest::Client::builder()
-        .use_native_tls()
+            .use_native_tls()
             .redirect(reqwest::redirect::Policy::none())
             .timeout(Duration::from_secs(5))
             .build()
             .unwrap();
 
-        let res = resolve_doi_to_url_with_base(&client, "10.34894/0B7ZLK", Some(&mock_server.uri())).await;
+        let res =
+            resolve_doi_to_url_with_base(&client, "10.34894/0B7ZLK", Some(&mock_server.uri()))
+                .await;
 
         assert!(res.is_ok());
 
