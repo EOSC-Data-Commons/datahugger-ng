@@ -23,7 +23,7 @@ async-recursion = "1.1.1"
 async-stream = "0.3.6"
 async-trait = "0.1.89"
 bytes = "1.11.1"
-clap = { version = "4.5.57", features = ["derive"] }
+clap = { version = "4.5.60", features = ["derive"] }
 digest = "0.10.7"
 exn = "0.3.0"
 futures-core = "0.3.31"
