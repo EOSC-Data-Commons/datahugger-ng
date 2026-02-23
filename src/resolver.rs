@@ -245,7 +245,7 @@ async fn resolve_doi_to_url_with_base(
 }
 
 pub async fn resolve_doi_to_url(client: &reqwest::Client, doi: &str) -> Result<String, Exn<ResolveError>> {
-    resolve_doi_to_url_with_base(&client, &doi, None).await
+    resolve_doi_to_url_with_base(client, doi, None).await
 }
 
 /// # Errors
