@@ -205,6 +205,7 @@ async fn github_get_default_branch_commit(
 }
 
 async fn resolve_doi_to_url_with_base(
+    client: &reqwest::Client,
     doi: &str,
     base_url: Option<&str>,
 ) -> Result<String, Exn<ResolveError>> {
@@ -216,14 +217,6 @@ async fn resolve_doi_to_url_with_base(
     }
 
     let base_url = base_url.unwrap_or("https://doi.org");
-
-    let client = ClientBuilder::new()
-        .use_native_tls()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .or_raise(|| ResolveError {
-            message: String::from("Could not build reqwest client"),
-        })?;
 
     let res = match client.get(format!("{}/{}", base_url, doi)).send().await {
         Ok(res) => res,
@@ -251,8 +244,8 @@ async fn resolve_doi_to_url_with_base(
     Ok(location)
 }
 
-pub async fn resolve_doi_to_url(doi: &str) -> Result<String, Exn<ResolveError>> {
-    resolve_doi_to_url_with_base(doi, None).await
+pub async fn resolve_doi_to_url(client: &reqwest::Client, doi: &str) -> Result<String, Exn<ResolveError>> {
+    resolve_doi_to_url_with_base(&client, &doi, None).await
 }
 
 /// # Errors
@@ -502,6 +495,7 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
     use super::*;
 
     use wiremock::matchers::{method, path};
@@ -600,7 +594,14 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let res = resolve_doi_to_url_with_base("10.34894/0B7ZLK", Some(&mock_server.uri())).await;
+        let client = reqwest::Client::builder()
+        .use_native_tls()
+            .redirect(reqwest::redirect::Policy::none())
+            .timeout(Duration::from_secs(5))
+            .build()
+            .unwrap();
+
+        let res = resolve_doi_to_url_with_base(&client, "10.34894/0B7ZLK", Some(&mock_server.uri())).await;
 
         assert!(res.is_ok());
 
@@ -612,6 +613,7 @@ mod tests {
 
         // test an invalid DOI
         let res = resolve_doi_to_url_with_base(
+            &client,
             "https://dpoi.org/10.34894/0B7ZLK",
             Some(&mock_server.uri()),
         )

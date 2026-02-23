@@ -2,7 +2,7 @@ import asyncio
 import pathlib
 import pytest
 from pathlib import Path
-from datahugger import FileEntry, resolve, resolve_dois_to_urls
+from datahugger import FileEntry, resolve, DOIResolver
 
 
 def test_resolve_default():
@@ -16,8 +16,13 @@ def test_resolve_default():
     )
 
 
-def test_resolve_doi_to_url_blocking():
-    urls = resolve_dois_to_urls(
+def test_resolve_doi_blocking():
+    doi_resolver = DOIResolver(timeout=5)
+
+    url = doi_resolver.resolve("10.34894/0B7ZLK")
+    assert url == "https://dataverse.nl/citation?persistentId=doi:10.34894/0B7ZLK"
+
+    urls = doi_resolver.resolve_many(
         ["10.34894/0B7ZLK", "10.17026/DANS-2AC-ETD6", "10.17026/DANS-2BA-UAVX"]
     )
 

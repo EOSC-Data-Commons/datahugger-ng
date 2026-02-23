@@ -35,6 +35,7 @@ use pyo3::{ffi::c_str, types::PyDict};
 use pyo3_async_runtimes::tokio::future_into_py;
 use reqwest::{Client, ClientBuilder};
 use std::{path::PathBuf, sync::Arc};
+use std::time::Duration;
 use tokio::sync::Mutex;
 
 pub trait CrawlFileExt {
@@ -146,17 +147,43 @@ impl PyDataset {
     }
 }
 
-#[pyfunction]
-#[pyo3(signature = (dois, /))]
-fn resolve_dois_to_urls(_py: Python, dois: Vec<String>) -> PyResult<Vec<String>> {
-    let rt =  tokio::runtime::Runtime::new().unwrap();
-    let futures = dois.iter().map(|doi| inner_resolve_doi_to_url(doi));
-    let results = rt
-        .block_on(futures::future::join_all(futures))
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|err| PyRuntimeError::new_err(format!("{err}")))?;
-    Ok(results)
+#[pyclass]
+struct DOIResolver {
+    runtime: tokio::runtime::Runtime,
+    client: reqwest::Client,
+}
+
+#[pymethods]
+impl DOIResolver {
+    #[new]
+    #[pyo3(signature = (timeout=None))]
+    fn new(timeout: Option<u64>) -> Self {
+        let timeout = timeout.unwrap_or(5);
+        Self {
+            runtime: tokio::runtime::Runtime::new().unwrap(),
+            client: reqwest::Client::builder()
+                .use_native_tls()
+                .redirect(reqwest::redirect::Policy::none())
+                .timeout(Duration::from_secs(timeout))
+                .build()
+                .unwrap()
+        }
+    }
+
+    fn resolve(&self, doi: String) -> PyResult<String> {
+        self.runtime
+            .block_on(inner_resolve_doi_to_url(&self.client, &doi))
+            .map_err(|err| PyRuntimeError::new_err(format!("{err}")))
+    }
+
+    fn resolve_many(&self, dois: Vec<String>) -> PyResult<Vec<String>> {
+        let futures = dois.iter().map(|doi| inner_resolve_doi_to_url(&self.client, doi));
+        self.runtime
+            .block_on(futures::future::join_all(futures))
+            .into_iter()
+            .collect::<Result<Vec<String>, _>>()
+            .map_err(|err| PyRuntimeError::new_err(format!("{err}")))
+    }
 }
 
 #[pyfunction]
@@ -436,7 +463,7 @@ async fn next_stream_file(
 #[pyo3(name = "datahugger")]
 fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(resolve, m)?)?;
-    m.add_function(wrap_pyfunction!(resolve_dois_to_urls, m)?)?;
+    m.add_class::<DOIResolver>()?;
     m.add_class::<PyDataset>()?;
     m.add_class::<PyEntryBase>()?;
 
