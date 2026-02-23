@@ -30,10 +30,11 @@ impl Dataset {
         &self,
         client: &Client,
         mp: MultiProgress,
+        limit: usize,
     ) -> Result<(), Exn<CrawlerError>> {
         let root_dir = self.root_dir();
         crawl(client.clone(), Arc::clone(&self.backend), root_dir, mp)
-            .try_for_each_concurrent(10, |entry| async move {
+            .try_for_each_concurrent(limit, |entry| async move {
                 match entry {
                     Entry::Dir(dir_meta) => {
                         println!("{dir_meta}");

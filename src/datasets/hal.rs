@@ -123,6 +123,7 @@ impl DatasetBackend for HalScience {
                 download_url,
                 None,
                 vec![],
+                Some(mime::APPLICATION_PDF),
             );
             entries.push(Entry::File(file));
         }

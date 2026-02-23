@@ -85,6 +85,7 @@ impl DatasetBackend for Zenodo {
             let name: String = json_extract(filej, "key").or_raise(|| RepoError {
                 message: "fail to extracting 'path' as String from json".to_string(),
             })?;
+            let guess = mime_guess::from_path(&name);
             let size: u64 = json_extract(filej, "size").or_raise(|| RepoError {
                 message: "fail to extracting 'size' as u64 from json".to_string(),
             })?;
@@ -130,6 +131,7 @@ impl DatasetBackend for Zenodo {
                 download_url,
                 Some(size),
                 vec![checksum],
+                guess.first(),
             );
             entries.push(Entry::File(file));
         }

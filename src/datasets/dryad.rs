@@ -139,6 +139,12 @@ impl DatasetBackend for DataDryad {
             let size: u64 = json_extract(filej, "size").or_raise(|| RepoError {
                 message: "fail to extracting 'size' as u64 from json".to_string(),
             })?;
+            let mime_type: String = json_extract(filej, "mimeType").or_raise(|| RepoError {
+                message: "fail to extracting 'mimeType' as String from json".to_string(),
+            })?;
+            let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
+                message: format!("fail to parse the '{}' to proper mime type", mime_type),
+            })?;
             let download_url_path: String =
                 json_extract(filej, "_links.stash:download.href").or_raise(|| RepoError {
                    message: format!("fail to extracting '_links.stash:download' as String from json, at parsing {files_api_url}")
@@ -174,6 +180,7 @@ impl DatasetBackend for DataDryad {
                 download_url,
                 Some(size),
                 vec![checksum],
+                Some(mime_type),
             );
             entries.push(Entry::File(file));
         }

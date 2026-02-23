@@ -36,7 +36,7 @@ impl DataverseDataset {
 #[async_trait]
 impl DatasetBackend for DataverseDataset {
     fn root_url(&self) -> Url {
-        // "https://datavers.example/api/datasets/:persistentId/versions/:latest-poblished/?persistentId=doi:10.7910/DVN/KBHLOD"
+        // "https://dataverse.harvard.edu/api/datasets/:persistentId/versions/:latest-published/?persistentId=doi:10.7910/DVN/KBHLOD"
         // Safe to unwrap:
         // - the base URL is a hard-coded, valid absolute URL
         let mut url = self.base_url.clone();
@@ -105,6 +105,14 @@ impl DatasetBackend for DataverseDataset {
             let size: u64 = json_extract(filej, "dataFile.filesize").or_raise(|| RepoError {
                 message: "fail to extracting 'dataFile.filesize' as u64 from json".to_string(),
             })?;
+            let mime_type: String =
+                json_extract(filej, "dataFile.contentType").or_raise(|| RepoError {
+                    message: "fail to extracting 'dataFile.contentType' as String from json"
+                        .to_string(),
+                })?;
+            let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
+                message: format!("fail to parse the '{}' to proper mime type", mime_type),
+            })?;
             let download_url = "https://dataverse.harvard.edu/api/access/datafile/";
             let download_url = Url::from_str(download_url).or_raise(|| RepoError {
                 message: format!("cannot parse '{download_url}' download base url"),
@@ -123,6 +131,7 @@ impl DatasetBackend for DataverseDataset {
                 download_url,
                 Some(size),
                 vec![checksum],
+                Some(mime_type),
             );
             entries.push(Entry::File(file));
         }
@@ -217,6 +226,14 @@ impl DatasetBackend for DataverseFile {
         let size: u64 = json_extract(filej, "dataFile.filesize").or_raise(|| RepoError {
             message: "fail to extracting 'dataFile.filesize' as u64 from json".to_string(),
         })?;
+        let mime_type: String =
+            json_extract(filej, "dataFile.contentType").or_raise(|| RepoError {
+                message: "fail to extracting 'dataFile.contentType' as String from json"
+                    .to_string(),
+            })?;
+        let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
+            message: format!("fail to parse the '{}' to proper mime type", mime_type),
+        })?;
         let download_url = "https://dataverse.harvard.edu/api/access/datafile/";
         let download_url = Url::from_str(download_url).or_raise(|| RepoError {
             message: format!("cannot parse '{download_url}' download base url"),
@@ -239,6 +256,7 @@ impl DatasetBackend for DataverseFile {
             download_url,
             Some(size),
             vec![checksum],
+            Some(mime_type),
         );
         let entries = vec![Entry::File(file)];
 

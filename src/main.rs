@@ -21,6 +21,23 @@ struct Cli {
 enum Commands {
     /// Download files of dataset
     Download(DownloadArgs),
+
+    /// Inspect files of dataset
+    Inspect(InspectArgs),
+}
+
+#[derive(Args)]
+struct InspectArgs {
+    /// URL of the data record to download.
+    url: String,
+
+    /// Maximum number of concurrency.
+    ///
+    /// This limit helps avoid overwhelming the network or filesystem.
+    /// A value of `0` (the default) disables the limit.
+    /// For a single dataset record, leaving this unlimited is usually fine.
+    #[arg(short, long, default_value_t = 0)]
+    limit: usize,
 }
 
 #[derive(Args)]
@@ -98,6 +115,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .await
                 .map_err(|err| {
                     eprintln!("download failed: {err:?}");
+                    std::process::exit(1);
+                });
+        }
+        Commands::Inspect(args) => {
+            let url = &args.url;
+            let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
+            let mut headers = HeaderMap::new();
+            if let Ok(token) = std::env::var("GITHUB_TOKEN") {
+                headers.insert(
+                    AUTHORIZATION,
+                    HeaderValue::from_str(&format!("token {token}"))?,
+                );
+            }
+            if let Ok(token) = std::env::var("DRYAD_API_TOKEN") {
+                headers.insert(
+                    AUTHORIZATION,
+                    HeaderValue::from_str(&format!("Bearer {token}"))?,
+                );
+            }
+            headers.insert(USER_AGENT, HeaderValue::from_str(&user_agent)?);
+            let client = ClientBuilder::new()
+                .user_agent(user_agent)
+                .default_headers(headers)
+                .use_native_tls()
+                .build()?;
+            let repo = match resolve(url).await {
+                Ok(repo) => repo,
+                Err(err) => {
+                    eprintln!("failed to resolve '{url}': {err:?}");
+                    std::process::exit(1);
+                }
+            };
+
+            let mp = MultiProgress::new();
+            let _ = repo
+                .print_meta(&client, mp, args.limit)
+                .await
+                .map_err(|err| {
+                    eprintln!("inspect failed: {err:?}");
                     std::process::exit(1);
                 });
         }
