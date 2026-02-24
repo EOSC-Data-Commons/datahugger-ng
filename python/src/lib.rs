@@ -157,9 +157,8 @@ struct DOIResolver {
 #[pymethods]
 impl DOIResolver {
     #[new]
-    #[pyo3(signature = (timeout=None))]
-    fn new(timeout: Option<u64>) -> PyResult<Self> {
-        let timeout = timeout.unwrap_or(5);
+    #[pyo3(signature = (timeout=5))]
+    fn new(timeout: u64) -> PyResult<Self> {
         Ok(Self {
             runtime: tokio::runtime::Runtime::new()
                 .map_err(|err| PyRuntimeError::new_err(format!("failed to create runtime: {err}")))?,
