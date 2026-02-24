@@ -158,17 +158,18 @@ struct DOIResolver {
 impl DOIResolver {
     #[new]
     #[pyo3(signature = (timeout=None))]
-    fn new(timeout: Option<u64>) -> Self {
+    fn new(timeout: Option<u64>) -> PyResult<Self> {
         let timeout = timeout.unwrap_or(5);
-        Self {
-            runtime: tokio::runtime::Runtime::new().unwrap(),
+        Ok(Self {
+            runtime: tokio::runtime::Runtime::new()
+                .map_err(|err| PyRuntimeError::new_err(format!("failed to create runtime: {err}")))?,
             client: Client::builder()
                 .use_native_tls()
                 .timeout(Duration::from_secs(timeout))
-                .redirect(Policy::limited(5)) // limit number of redirects (relevant if follow_redirects is set to true)
+                .redirect(Policy::limited(5))
                 .build()
-                .unwrap()
-        }
+                .map_err(|err| PyRuntimeError::new_err(format!("failed to create client: {err}")))?,
+        })
     }
 
     #[pyo3(signature = (doi, follow_redirects=None))]
