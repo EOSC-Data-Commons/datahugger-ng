@@ -39,7 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // repo.download_with_validation(&client, "./dummy_tests", mp, 0)
             //     .await
 
-            repo.print_meta(&client, mp).await
+            repo.print_meta(&client, mp, 0).await
         }
     });
 

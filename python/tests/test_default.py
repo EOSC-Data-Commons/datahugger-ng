@@ -67,10 +67,7 @@ def test_download(tmp_path: Path):
 
 def test_dataclass_constructor():
     entry = FileEntry(
-        pathlib.Path("/tmp/x"),
-        "https://example.com/download_url",
-        None,
-        [],
+        pathlib.Path("/tmp/x"), "https://example.com/download_url", None, [], None
     )
     assert str(entry.path_crawl_rel.as_posix()) == "/tmp/x"
     assert entry.download_url == "https://example.com/download_url"

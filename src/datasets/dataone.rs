@@ -17,6 +17,9 @@ use crate::{
 // XXX: read about https://dataoneorg.github.io/api-documentation/design/DataPackage.html?utm_source=chatgpt.com
 // not planned because Dataone is extremly slow in HTTP response.
 // XXX: potentially it support: https://dataoneorg.github.io/api-documentation/apis/MN_APIs.html#MNPackage.getPackage
+// TODO: dataone return OAI-MPH for the whole dataset on request, which contains more then what I
+// paresd below. The mime-type and the size in principle can get from there, but it is slow and I
+// don't know the API endpoint to get those.
 #[derive(Debug)]
 pub struct Dataone {
     pub base_url: Url,
@@ -137,8 +140,14 @@ impl DatasetBackend for Dataone {
                             ),
                         };
 
-                        let file =
-                            FileMeta::new(dir.join(&name), endpoint, download_url, size, vec![]);
+                        let file = FileMeta::new(
+                            dir.join(&name),
+                            endpoint,
+                            download_url,
+                            size,
+                            vec![],
+                            None,
+                        );
                         entries.push(Entry::File(file));
                     }
                 }

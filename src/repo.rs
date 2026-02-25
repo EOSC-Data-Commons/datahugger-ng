@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use exn::Exn;
+use mime::Mime;
 use reqwest::Client;
 use url::Url;
 
@@ -224,6 +225,9 @@ impl std::fmt::Display for Endpoint {
     }
 }
 
+/// The ``mimetype`` of ``FileMeta`` is get from API response instead of from content resolver
+/// therefore it is not guranted to be correct conform with the content. For example the github
+/// file type is deducted from file extension using `mime-guess` crate.
 #[derive(Debug)]
 pub struct FileMeta {
     pub path: CrawlPath,
@@ -231,34 +235,53 @@ pub struct FileMeta {
     pub download_url: Url,
     pub size: Option<u64>,
     pub checksum: Vec<Checksum>,
+    pub mimetype: Option<Mime>,
 }
+
+// TODO: `FileMetaByScan` will include the full accurate mimetype and size and checksum.
 
 impl std::fmt::Display for FileMeta {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let checksum_str = self
-            .checksum
-            .iter()
-            .map(|c| format!("{c}"))
-            .collect::<Vec<_>>();
-        write!(
-            f,
-            "FileMeta (at: {}, endpoint: {}, download_url: {}, size: {}, checksum: {})",
-            self.path,
-            self.endpoint,
-            self.download_url,
-            self.size.map_or("<Null>".to_string(), |s| format!("{s}")),
-            checksum_str.join(","),
-        )
+        let size_str = self
+            .size
+            .map_or("<unknown>".to_string(), |s| format!("{s} bytes"));
+
+        let checksum_str = if self.checksum.is_empty() {
+            "<none>".to_string()
+        } else {
+            self.checksum
+                .iter()
+                .map(|c| format!("{c}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+
+        let mimetype_str = self
+            .mimetype
+            .as_ref()
+            .map_or("<unknown>".to_string(), std::string::ToString::to_string);
+
+        writeln!(f, "📄 FileMeta:")?;
+        writeln!(f, "  Path       : {}", self.path)?;
+        writeln!(f, "  Endpoint   : {}", self.endpoint)?;
+        writeln!(f, "  Download   : {}", self.download_url)?;
+        writeln!(f, "  Size       : {size_str}")?;
+        writeln!(f, "  Mime Type  : {mimetype_str}")?;
+        writeln!(f, "  Checksums  : {checksum_str}")?;
+
+        Ok(())
     }
 }
 
 impl FileMeta {
+    #[must_use]
     pub fn new(
         path: CrawlPath,
         endpoint: Endpoint,
         download_url: Url,
         size: Option<u64>,
         checksum: Vec<Checksum>,
+        mimetype: Option<Mime>,
     ) -> Self {
         FileMeta {
             path,
@@ -266,11 +289,14 @@ impl FileMeta {
             download_url,
             size,
             checksum,
+            mimetype,
         }
     }
+    #[must_use]
     pub fn relative(&self) -> CrawlPath {
         self.path.relative()
     }
+    #[must_use]
     pub fn endpoint(&self) -> Endpoint {
         self.endpoint.clone()
     }

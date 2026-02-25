@@ -113,6 +113,7 @@ impl DatasetBackend for HuggingFace {
                         })?;
                     let checksum = Checksum::Sha256(checksum);
                     let path = dir.join(path);
+                    let guess = mime_guess::from_path(&path);
 
                     let download_url = self.download_url(path.relative().as_str());
 
@@ -125,6 +126,7 @@ impl DatasetBackend for HuggingFace {
                         download_url,
                         Some(size),
                         vec![checksum],
+                        guess.first(),
                     );
 
                     entries.push(Entry::File(file));

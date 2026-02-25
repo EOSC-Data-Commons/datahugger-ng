@@ -122,6 +122,7 @@ impl DatasetBackend for GitHub {
                         path.relative()
                     );
                     let download_url = Url::parse(&download_url).unwrap();
+                    let guess = mime_guess::from_path(&path);
 
                     let file = FileMeta::new(
                         path,
@@ -132,6 +133,7 @@ impl DatasetBackend for GitHub {
                         download_url,
                         Some(size),
                         vec![],
+                        guess.first(),
                     );
                     entries.push(Entry::File(file));
                 }

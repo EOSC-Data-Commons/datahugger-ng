@@ -86,6 +86,7 @@ impl DatasetBackend for OSF {
             let kind: String = json_extract(filej, "attributes.kind").or_raise(|| RepoError {
                 message: "fail to extracting 'attributes.kind' as String from json".to_string(),
             })?;
+            let guess = mime_guess::from_path(&name);
             match kind.as_ref() {
                 "file" => {
                     let size: u64 =
@@ -113,6 +114,7 @@ impl DatasetBackend for OSF {
                         download_url,
                         Some(size),
                         vec![checksum],
+                        guess.first(),
                     );
                     entries.push(Entry::File(file));
                 }

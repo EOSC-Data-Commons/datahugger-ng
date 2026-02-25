@@ -259,6 +259,8 @@ struct PyFileEntry {
     size: Option<u64>,
     #[pyo3(get, set)]
     checksum: Vec<(String, String)>,
+    #[pyo3(get, set)]
+    mimetype: Option<String>,
 }
 
 #[pymethods]
@@ -269,6 +271,7 @@ impl PyFileEntry {
         download_url: String,
         size: Option<u64>,
         checksum: Vec<(String, String)>,
+        mimetype: Option<String>,
     ) -> (Self, PyEntryBase) {
         (
             PyFileEntry {
@@ -276,6 +279,7 @@ impl PyFileEntry {
                 download_url,
                 size,
                 checksum,
+                mimetype,
             },
             PyEntryBase::new(),
         )
@@ -322,6 +326,10 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                                 }
                             })
                             .collect::<Vec<_>>(),
+                        mimetype: match meta.mimetype {
+                            Some(mime) => Some(mime.to_string()),
+                            _ => None
+                        }
                     },
                     PyEntryBase,
                 ),
@@ -359,6 +367,10 @@ impl<'py> IntoPyObject<'py> for PyFileMeta {
                             datahugger::Checksum::Sha256(v) => ("sha256".to_string(), v.clone()),
                         })
                         .collect::<Vec<_>>(),
+                    mimetype: match meta.mimetype {
+                        Some(mime) => Some(mime.to_string()),
+                        _ => None
+                    }
                 },
                 PyEntryBase,
             ),
@@ -489,6 +501,8 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     ann.set_item("size", size_type)?;
     let checksum_type = py.eval(c_str!("list[tuple[str, str]]"), None, None)?;
     ann.set_item("checksum", checksum_type)?;
+    let mimetype_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("mimetype", mimetype_type)?;
     f.setattr("__annotations__", ann)?;
     py.import("dataclasses")?
         .getattr("dataclass")?
