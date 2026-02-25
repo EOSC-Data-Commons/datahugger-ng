@@ -114,6 +114,7 @@ impl DatasetBackend for HalScience {
                 .ok_or_else(|| RepoError {
                     message: format!("didn't get filename from '{download_url}'"),
                 })?;
+            let guess = mime_guess::from_path(filename);
             let download_url = Url::from_str(download_url).or_raise(|| RepoError {
                 message: format!("invalid download url '{download_url}'"),
             })?;
@@ -123,7 +124,7 @@ impl DatasetBackend for HalScience {
                 download_url,
                 None,
                 vec![],
-                Some(mime::APPLICATION_PDF),
+                guess.first(),
             );
             entries.push(Entry::File(file));
         }
