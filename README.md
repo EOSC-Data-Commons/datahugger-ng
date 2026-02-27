@@ -316,6 +316,10 @@ git push --tags
 CI workflow of crates.io build can be trigger manually at CI workflow [`crate-publish`](https://github.com/EOSC-Data-Commons/datahugger-ng/actions/workflows/crate-publish.yaml).
 But it will not run the final crates.io upload.
 
+## Ack
+
+- this project was originally inspired by https://github.com/J535D165/datahugger.
+
 ## License
 
 All contributions must retain this attribution.
