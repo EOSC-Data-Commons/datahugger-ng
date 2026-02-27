@@ -11,6 +11,36 @@ A key design goal is that dataset crawling can be consumed **both synchronously 
 * Crawl its contents as a stream of entries (files or directories)
 * Download and validate dataset contents using a blocking API backed by an async runtime
 
+### `DOIResolver`
+
+Resolves Digital Object Identifiers (DOIs) to their target URLs using the DOI resolution service (e.g. `https://doi.org/<doi>`).
+
+```python
+from datahugger import DOIResolver
+
+doi_resolver = DOIResolver(timeout=30)
+
+url = doi_resolver.resolve("10.34894/0B7ZLK", False)
+assert url == "https://dataverse.nl/citation?persistentId=doi:10.34894/0B7ZLK"
+
+# or for multiple resolving in one call
+urls = doi_resolver.resolve_many(
+    ["10.34894/0B7ZLK", "10.17026/DANS-2AC-ETD6", "10.17026/DANS-2BA-UAVX"], False
+)
+```
+
+Parameters
+
+* `doi` or list of `doi` in `resolve_many`
+  The DOI to resolve (e.g. `"10.1000/xyz123"`).
+  The `https://doi.org/` prefix should not be included.
+
+* `follow_redirects`
+  Whether HTTP redirects should be followed.
+
+  * `True`: Returns the final landing page URL (default).
+  * `False`: Returns the first redirect target.
+
 ## Core Concepts
 
 ### `DirEntry`
@@ -47,6 +77,7 @@ class FileEntry(Entry):
     download_url: str
     size: int | None
     checksum: list[tuple[str, str]]
+    TODO <- here the mimetype will be added.
 ```
 
 #### Fields

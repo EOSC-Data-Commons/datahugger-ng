@@ -40,20 +40,20 @@ class Dataset(object):
 def resolve(url: str, /) -> Dataset: ...
 
 class DOIResolver:
-    def __init__(self, timeout=5) -> None:
+    def __init__(self, timeout: int = 5) -> None:
         """Create a new DOIResolver instance.
 
         Args:
             timeout: HTTP timeout in seconds. Defaults to 5.
         """
-    def resolve(self, doi: str, follow_redirects=True) -> str:
+    def resolve(self, doi: str, follow_redirects: bool = True) -> str:
         """Resolve a single DOI to a URL.
 
         Args:
             doi: The DOI to resolve, e.g. '10.1000/xyz123'.
             follow_redirects: Whether to follow redirects. Defaults to True.
         """
-    def resolve_many(self, dois: list[str], follow_redirects=True) -> list[str]:
+    def resolve_many(self, dois: list[str], follow_redirects: bool = True) -> list[str]:
         """Resolve multiple DOIs to URLs.
 
         Args:

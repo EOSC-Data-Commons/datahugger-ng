@@ -113,12 +113,12 @@ Simply resolve a dataset and stream its entries with `async for` and deal with e
 
 ```python
 import asyncio
-from datahugger import resolve
+from datahugger import resolve, DOIResolver
 
 async def main():
-    ds = resolve(
-        "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
-    )
+    doi_resolver = DOIResolver(timeout=30)
+    url = doi_resolver.resolve("10.34894/0B7ZLK")
+    ds = resolve(url)
     async for entry in ds.crawl_file():
         # print or any async operation on the returned entry
         print("crawl:", entry)
@@ -239,7 +239,7 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
 - [x] clear interface for adding crawling results dealing operations beyond download.
 - [x] strong error handling mechanism and logging to avoid interruptions (using `exn` crate).
 - [x] Sharable client connection to reduce the cost of repeated reconnections.
-- [ ] automatically resolve doi into dateset source url.
+- [x] automatically resolve doi into dateset source url.
 - [ ] do detail benchs to show its power (might not need, the cli download already *~1000* times faster for example for dataset https://osf.io/3ua2c/).
 - [x] single-pass streaming with computing checksum by plug a hasher in the pipeline.
 - [ ] all repos that already supported by py-datahugger
