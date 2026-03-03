@@ -6,6 +6,7 @@ updates:
       interval: "weekly"
     exclude-paths:
       - ".github/workflows/release.yml"
+      - ".github/workflows/pypi-publish.yaml"
   - package-ecosystem: cargo
     directory: "/"
     schedule:
