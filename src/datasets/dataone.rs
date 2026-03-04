@@ -50,25 +50,25 @@ impl DatasetBackend for Dataone {
     }
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
-            .get(dir.api_url.clone())
+            .get(dir.api_url().clone())
             .send()
             .await
             .or_raise(|| RepoError {
-                message: format!("fail at client sent GET {}", dir.api_url),
+                message: format!("fail at client sent GET {}", dir.api_url()),
             })?;
         let resp = resp.error_for_status().map_err(|err| match err.status() {
             Some(StatusCode::NOT_FOUND) => RepoError {
-                message: format!("resource not found when GET {}", dir.api_url),
+                message: format!("resource not found when GET {}", dir.api_url()),
             },
             Some(status_code) => RepoError {
                 message: format!(
                     "fail GET {}, with state code: {}",
-                    dir.api_url,
+                    dir.api_url(),
                     status_code.as_str()
                 ),
             },
             None => RepoError {
-                message: format!("fail GET {}, network / protocol error", dir.api_url,),
+                message: format!("fail GET {}, network / protocol error", dir.api_url(),),
             },
         })?;
         // TODO: I use xmltree at the moment, which load full xml and then the parsed tree in
@@ -107,7 +107,7 @@ impl DatasetBackend for Dataone {
                             .ok_or_raise(|| RepoError {
                                 message: format!(
                                     "not found download url at {}, through 'physical.distribution.online.url.function.download",
-                                    dir.api_url.as_str()),
+                                    dir.api_url().as_str()),
                             })?;
                         let download_url = Url::from_str(&download_url).map_err(|_| RepoError {
                             message: format!("{download_url} is not a valid download url"),
@@ -133,7 +133,7 @@ impl DatasetBackend for Dataone {
                             .transpose()?;
 
                         let endpoint = Endpoint {
-                            parent_url: dir.api_url.clone(),
+                            parent_url: dir.api_url().clone(),
                             key: Some(
                                 "dataset.physical.distribution.online.url[@function='download']"
                                     .to_string(),
@@ -147,6 +147,7 @@ impl DatasetBackend for Dataone {
                             size,
                             vec![],
                             None,
+                            true,
                         );
                         entries.push(Entry::File(file));
                     }

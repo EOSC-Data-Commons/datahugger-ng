@@ -142,6 +142,11 @@ static DATAVERSE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
         "datos.pucp.edu.pe",
         "datos.uchile.cl",
         "opendata.pku.edu.cn",
+        "archaeology.datastations.nl",
+        "ssh.datastations.nl",
+        "lifesciences.datastations.nl",
+        "phys-techsciences.datastations.nl",
+        "dataverse.nl",
     ])
 });
 

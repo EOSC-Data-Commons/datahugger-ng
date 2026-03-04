@@ -33,10 +33,10 @@ use pyo3::{
 };
 use pyo3::{ffi::c_str, types::PyDict};
 use pyo3_async_runtimes::tokio::future_into_py;
-use reqwest::{Client, ClientBuilder};
-use std::{path::PathBuf, sync::Arc};
-use std::time::Duration;
 use reqwest::redirect::Policy;
+use reqwest::{Client, ClientBuilder};
+use std::time::Duration;
+use std::{path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 
 pub trait CrawlFileExt {
@@ -160,27 +160,36 @@ impl DOIResolver {
     #[pyo3(signature = (timeout=5))]
     fn new(timeout: u64) -> PyResult<Self> {
         Ok(Self {
-            runtime: tokio::runtime::Runtime::new()
-                .map_err(|err| PyRuntimeError::new_err(format!("failed to create runtime: {err}")))?,
+            runtime: tokio::runtime::Runtime::new().map_err(|err| {
+                PyRuntimeError::new_err(format!("failed to create runtime: {err}"))
+            })?,
             client: Client::builder()
                 .use_native_tls()
                 .timeout(Duration::from_secs(timeout))
                 .redirect(Policy::limited(5)) // limit number of redirects (relevant if follow_redirects is set to true)
                 .build()
-                .map_err(|err| PyRuntimeError::new_err(format!("failed to create client: {err}")))?,
+                .map_err(|err| {
+                    PyRuntimeError::new_err(format!("failed to create client: {err}"))
+                })?,
         })
     }
 
     #[pyo3(signature = (doi, follow_redirects=true))]
     fn resolve(&self, doi: String, follow_redirects: bool) -> PyResult<String> {
         self.runtime
-            .block_on(inner_resolve_doi_to_url(&self.client, &doi, follow_redirects))
+            .block_on(inner_resolve_doi_to_url(
+                &self.client,
+                &doi,
+                follow_redirects,
+            ))
             .map_err(|err| PyRuntimeError::new_err(format!("{err}")))
     }
 
     #[pyo3(signature = (dois, follow_redirects=true))]
     fn resolve_many(&self, dois: Vec<String>, follow_redirects: bool) -> PyResult<Vec<String>> {
-        let futures = dois.iter().map(|doi| inner_resolve_doi_to_url(&self.client, doi, follow_redirects));
+        let futures = dois
+            .iter()
+            .map(|doi| inner_resolve_doi_to_url(&self.client, doi, follow_redirects));
         self.runtime
             .block_on(futures::future::join_all(futures))
             .into_iter()
@@ -300,9 +309,9 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                 py,
                 (
                     PyDirEntry {
-                        path_crawl_rel: PathBuf::from(meta.path.as_str()),
-                        root_url: meta.root_url.as_str().to_string(),
-                        api_url: meta.api_url.as_str().to_string(),
+                        path_crawl_rel: PathBuf::from(meta.path().as_str()),
+                        root_url: meta.root_url().as_str().to_string(),
+                        api_url: meta.api_url().as_str().to_string(),
                     },
                     PyEntryBase,
                 ),
@@ -313,23 +322,21 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                 py,
                 (
                     PyFileEntry {
-                        path_crawl_rel: PathBuf::from(meta.path.as_str()),
-                        download_url: meta.download_url.as_str().to_string(),
-                        size: meta.size,
+                        path_crawl_rel: PathBuf::from(meta.path().as_str()),
+                        download_url: meta.download_url().as_str().to_string(),
+                        size: meta.size(),
                         checksum: meta
-                            .checksum
+                            .checksum()
                             .iter()
                             .map(|cs| match cs {
                                 datahugger::Checksum::Md5(v) => ("md5".to_string(), v.clone()),
                                 datahugger::Checksum::Sha256(v) => {
                                     ("sha256".to_string(), v.clone())
                                 }
+                                datahugger::Checksum::Sha1(v) => ("sha1".to_string(), v.clone()),
                             })
                             .collect::<Vec<_>>(),
-                        mimetype: match meta.mimetype {
-                            Some(mime) => Some(mime.to_string()),
-                            _ => None
-                        }
+                        mimetype: meta.mimetype().map(|mime| mime.to_string()),
                     },
                     PyEntryBase,
                 ),
@@ -356,21 +363,19 @@ impl<'py> IntoPyObject<'py> for PyFileMeta {
             py,
             (
                 PyFileEntry {
-                    path_crawl_rel: PathBuf::from(meta.path.as_str()),
-                    download_url: meta.download_url.as_str().to_string(),
-                    size: meta.size,
+                    path_crawl_rel: PathBuf::from(meta.path().as_str()),
+                    download_url: meta.download_url().as_str().to_string(),
+                    size: meta.size(),
                     checksum: meta
-                        .checksum
+                        .checksum()
                         .iter()
                         .map(|cs| match cs {
                             datahugger::Checksum::Md5(v) => ("md5".to_string(), v.clone()),
                             datahugger::Checksum::Sha256(v) => ("sha256".to_string(), v.clone()),
+                            datahugger::Checksum::Sha1(v) => ("sha1".to_string(), v.clone()),
                         })
                         .collect::<Vec<_>>(),
-                    mimetype: match meta.mimetype {
-                        Some(mime) => Some(mime.to_string()),
-                        _ => None
-                    }
+                    mimetype: meta.mimetype().map(|mime| mime.to_string()),
                 },
                 PyEntryBase,
             ),

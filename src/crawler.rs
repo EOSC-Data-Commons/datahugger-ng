@@ -56,7 +56,7 @@ where
                 .expect("indicatif template error"),
         );
         pb.enable_steady_tick(std::time::Duration::from_millis(100));
-        pb.set_message(format!("listing files of {}", dir.api_url.as_str()));
+        pb.set_message(format!("listing files of {}", dir.api_url().as_str()));
         let entries = dataset_backend.list(&client, dir.clone())
             .await
             .or_raise(||

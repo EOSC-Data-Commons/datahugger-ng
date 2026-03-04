@@ -57,6 +57,7 @@ impl DatasetBackend for Arxiv {
             vec![],
             // the mime-type of arxiv.org/pdf/ is surely a valid PDF
             Some(mime::APPLICATION_PDF),
+            true,
         );
 
         Ok(vec![Entry::File(file)])

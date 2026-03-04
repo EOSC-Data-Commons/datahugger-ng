@@ -84,18 +84,30 @@ where
                     .expect("indicatif template error"),
             );
             pb.enable_steady_tick(std::time::Duration::from_millis(100));
-            pb.set_message(format!("Connecting... {}", file_meta.download_url.as_str()));
+            pb.set_message(format!(
+                "Connecting... {}",
+                file_meta.download_url().as_str()
+            ));
+
+            if !file_meta.is_downloadable() {
+                pb.set_message(format!(
+                    "{} is not downloadable",
+                    file_meta.download_url().as_str()
+                ));
+                return Ok(());
+            }
+
             let resp = client
-                .get(file_meta.download_url.clone())
+                .get(file_meta.download_url())
                 .send()
                 .await
                 .or_raise(|| CrawlerError {
-                    message: format!("fail to send http GET to {}", file_meta.download_url),
+                    message: format!("fail to send http GET to {}", file_meta.download_url()),
                     status: ErrorStatus::Temporary,
                 })?
                 .error_for_status()
                 .or_raise(|| CrawlerError {
-                    message: format!("fail to send http GET to {}", file_meta.download_url),
+                    message: format!("fail to send http GET to {}", file_meta.download_url()),
                     // Temporary??
                     status: ErrorStatus::Temporary,
                 })?;
@@ -127,17 +139,18 @@ where
                 })?;
 
             let checksum = file_meta
-                .checksum
+                .checksum()
                 .iter()
                 .find(|c| matches!(c, Checksum::Sha256(_)))
-                .or_else(|| file_meta.checksum.first());
-            let expected_size = file_meta.size;
+                .or_else(|| file_meta.checksum().first());
+            let expected_size = file_meta.size();
             let (mut hasher, expected_checksum) = if let Some(checksum) = checksum {
                 match checksum {
                     Checksum::Sha256(value) => {
                         (Some(Hasher::Sha256(sha2::Sha256::new())), Some(value))
                     }
                     Checksum::Md5(value) => (Some(Hasher::Md5(md5::Md5::new())), Some(value)),
+                    Checksum::Sha1(value) => (Some(Hasher::Sha1(sha1::Sha1::new())), Some(value)),
                 }
             } else {
                 warn!("unable to find expected checksum to verify");
@@ -197,7 +210,9 @@ where
 
                 if checksum != *expected_checksum {
                     exn::bail!(CrawlerError {
-                        message: format!("size wrong, expect {expected_checksum}, got {checksum}"),
+                        message: format!(
+                            "checksum wrong, expect {expected_checksum}, got {checksum}"
+                        ),
                         status: ErrorStatus::Permanent
                     })
                 }

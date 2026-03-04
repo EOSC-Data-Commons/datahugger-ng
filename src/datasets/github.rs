@@ -68,7 +68,7 @@ impl DatasetBackend for GitHub {
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
-            .get(dir.api_url.clone())
+            .get(dir.api_url().clone())
             .send()
             .await
             .map_err(|e| RepoError {
@@ -84,11 +84,11 @@ impl DatasetBackend for GitHub {
         }
 
         let resp = resp.error_for_status().map_err(|e| RepoError {
-            message: format!("HTTP error GET {}: {}", dir.api_url, e),
+            message: format!("HTTP error GET {}: {}", dir.api_url(), e),
         })?;
 
         let json: JsonValue = resp.json().await.map_err(|e| RepoError {
-            message: format!("Failed to parse JSON from {}: {}", dir.api_url, e),
+            message: format!("Failed to parse JSON from {}: {}", dir.api_url(), e),
         })?;
 
         let tree = json
@@ -127,13 +127,14 @@ impl DatasetBackend for GitHub {
                     let file = FileMeta::new(
                         path,
                         Endpoint {
-                            parent_url: dir.api_url.clone(),
+                            parent_url: dir.api_url().clone(),
                             key: Some(format!("tree.{i}")),
                         },
                         download_url,
                         Some(size),
                         vec![],
                         guess.first(),
+                        true,
                     );
                     entries.push(Entry::File(file));
                 }

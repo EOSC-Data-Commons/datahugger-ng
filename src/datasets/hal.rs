@@ -65,29 +65,29 @@ impl DatasetBackend for HalScience {
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
-            .get(dir.api_url.clone())
+            .get(dir.api_url().clone())
             .send()
             .await
             .or_raise(|| RepoError {
-                message: format!("fail at client sent GET {}", dir.api_url),
+                message: format!("fail at client sent GET {}", dir.api_url()),
             })?;
         let resp = resp.error_for_status().map_err(|err| match err.status() {
             Some(StatusCode::NOT_FOUND) => RepoError {
-                message: format!("resource not found when GET {}", dir.api_url),
+                message: format!("resource not found when GET {}", dir.api_url()),
             },
             Some(status_code) => RepoError {
                 message: format!(
                     "fail GET {}, with state code: {}",
-                    dir.api_url,
+                    dir.api_url(),
                     status_code.as_str()
                 ),
             },
             None => RepoError {
-                message: format!("fail GET {}, network / protocol error", dir.api_url,),
+                message: format!("fail GET {}, network / protocol error", dir.api_url(),),
             },
         })?;
         let resp: JsonValue = resp.json().await.or_raise(|| RepoError {
-            message: format!("fail GET {}, unable to convert to json", dir.api_url,),
+            message: format!("fail GET {}, unable to convert to json", dir.api_url(),),
         })?;
         let files = resp
             .get("response")
@@ -102,7 +102,7 @@ impl DatasetBackend for HalScience {
         let mut entries = Vec::with_capacity(files.len());
         for (idx, filej) in files.iter().enumerate() {
             let endpoint = Endpoint {
-                parent_url: dir.api_url.clone(),
+                parent_url: dir.api_url(),
                 key: Some(format!("response.docs.0.files_s.{idx}")),
             };
             let JsonValue::String(download_url) = filej else {
@@ -125,6 +125,7 @@ impl DatasetBackend for HalScience {
                 None,
                 vec![],
                 guess.first(),
+                true,
             );
             entries.push(Entry::File(file));
         }

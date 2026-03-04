@@ -63,7 +63,7 @@ impl DatasetBackend for HuggingFace {
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
-            .get(dir.api_url.clone())
+            .get(dir.api_url())
             .send()
             .await
             .map_err(|e| RepoError {
@@ -77,11 +77,11 @@ impl DatasetBackend for HuggingFace {
         }
 
         let resp = resp.error_for_status().map_err(|e| RepoError {
-            message: format!("HTTP error GET {}: {e}", dir.api_url),
+            message: format!("HTTP error GET {}: {e}", dir.api_url()),
         })?;
 
         let json: JsonValue = resp.json().await.map_err(|e| RepoError {
-            message: format!("Failed to parse JSON from {}: {e}", dir.api_url),
+            message: format!("Failed to parse JSON from {}: {e}", dir.api_url()),
         })?;
 
         let files = json.as_array().ok_or_else(|| RepoError {
@@ -104,12 +104,12 @@ impl DatasetBackend for HuggingFace {
             match kind.as_str() {
                 "file" => {
                     let size: u64 = json_extract(filej, "size").or_raise(|| RepoError {
-                        message: format!("Missing size from {}", dir.api_url),
+                        message: format!("Missing size from {}", dir.api_url()),
                     })?;
                     let checksum: String = json_extract(filej, "lfs.oid")
                         .or_else(|_| json_extract(filej, "oid"))
                         .or_raise(|| RepoError {
-                            message: format!("Missing 'lfs.oid' from {}", dir.api_url),
+                            message: format!("Missing 'lfs.oid' from {}", dir.api_url()),
                         })?;
                     let checksum = Checksum::Sha256(checksum);
                     let path = dir.join(path);
@@ -120,13 +120,14 @@ impl DatasetBackend for HuggingFace {
                     let file = FileMeta::new(
                         path,
                         Endpoint {
-                            parent_url: dir.api_url.clone(),
+                            parent_url: dir.api_url(),
                             key: Some(format!("filej.{i}")),
                         },
                         download_url,
                         Some(size),
                         vec![checksum],
                         guess.first(),
+                        true,
                     );
 
                     entries.push(Entry::File(file));

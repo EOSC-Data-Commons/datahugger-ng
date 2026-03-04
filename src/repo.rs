@@ -128,6 +128,7 @@ impl CrawlPath {
 pub enum Hasher {
     Md5(md5::Md5),
     Sha256(sha2::Sha256),
+    Sha1(sha1::Sha1),
 }
 
 impl Hasher {
@@ -135,6 +136,7 @@ impl Hasher {
         match self {
             Hasher::Md5(h) => h.update(data),
             Hasher::Sha256(h) => h.update(data),
+            Hasher::Sha1(h) => h.update(data),
         }
     }
 
@@ -143,6 +145,7 @@ impl Hasher {
         match self {
             Hasher::Md5(h) => h.finalize().to_vec(),
             Hasher::Sha256(h) => h.finalize().to_vec(),
+            Hasher::Sha1(h) => h.finalize().to_vec(),
         }
     }
 }
@@ -155,9 +158,9 @@ pub enum Entry {
 
 #[derive(Debug, Clone)]
 pub struct DirMeta {
-    pub path: CrawlPath,
-    pub root_url: Url,
-    pub api_url: Url,
+    path: CrawlPath,
+    root_url: Url,
+    api_url: Url,
 }
 
 impl std::fmt::Display for DirMeta {
@@ -192,8 +195,18 @@ impl DirMeta {
     }
 
     #[must_use]
+    pub fn path(&self) -> CrawlPath {
+        self.path.clone()
+    }
+
+    #[must_use]
     pub fn root_url(&self) -> Url {
         self.root_url.clone()
+    }
+
+    #[must_use]
+    pub fn api_url(&self) -> Url {
+        self.api_url.clone()
     }
 
     #[must_use]
@@ -225,20 +238,56 @@ impl std::fmt::Display for Endpoint {
     }
 }
 
-/// The ``mimetype`` of ``FileMeta`` is get from API response instead of from content resolver
-/// therefore it is not guranted to be correct conform with the content. For example the github
-/// file type is deducted from file extension using `mime-guess` crate.
+// TODO: `FileMetaByScan` will include the full accurate mimetype and size and checksum.
+
+/// Metadata describing a crawled file.
+///
+/// The `mimetype` is taken directly from the API response and is not
+/// validated against the file contents. As a result, it may be incorrect.
+/// For example, some APIs infer MIME types from file extensions rather
+/// than inspecting the actual data.
 #[derive(Debug)]
 pub struct FileMeta {
-    pub path: CrawlPath,
-    pub endpoint: Endpoint,
-    pub download_url: Url,
-    pub size: Option<u64>,
-    pub checksum: Vec<Checksum>,
-    pub mimetype: Option<Mime>,
+    path: CrawlPath,
+    endpoint: Endpoint,
+    download_url: Url,
+    size: Option<u64>,
+    checksum: Vec<Checksum>,
+    mimetype: Option<Mime>,
+    downloadable: bool,
 }
 
-// TODO: `FileMetaByScan` will include the full accurate mimetype and size and checksum.
+impl FileMeta {
+    /// Returns whether the file can be downloaded.
+    pub fn is_downloadable(&self) -> bool {
+        self.downloadable
+    }
+
+    /// Returns the crawl path of the file.
+    pub fn path(&self) -> CrawlPath {
+        self.path.clone()
+    }
+
+    /// Returns the download URL of the file.
+    pub fn download_url(&self) -> Url {
+        self.download_url.clone()
+    }
+
+    /// Returns the checksums associated with the file.
+    pub fn checksum(&self) -> &[Checksum] {
+        &self.checksum
+    }
+
+    /// Returns the file size in bytes if known.
+    pub fn size(&self) -> Option<u64> {
+        self.size
+    }
+
+    /// Returns the mimetype in bytes if known.
+    pub fn mimetype(&self) -> Option<Mime> {
+        self.mimetype.clone()
+    }
+}
 
 impl std::fmt::Display for FileMeta {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -282,6 +331,7 @@ impl FileMeta {
         size: Option<u64>,
         checksum: Vec<Checksum>,
         mimetype: Option<Mime>,
+        downloadable: bool,
     ) -> Self {
         FileMeta {
             path,
@@ -290,6 +340,7 @@ impl FileMeta {
             size,
             checksum,
             mimetype,
+            downloadable,
         }
     }
     #[must_use]
@@ -304,10 +355,11 @@ impl FileMeta {
 
 // XXX: github blob didnt validate, it use sha1 but compute (maybe) with 'blob {}' as prefix of
 // content. I lean to not validate github downloads for simplicity. Only do it when requests come.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Checksum {
     Md5(String),
     Sha256(String),
+    Sha1(String),
 }
 
 impl std::fmt::Display for Checksum {
@@ -315,6 +367,7 @@ impl std::fmt::Display for Checksum {
         match self {
             Checksum::Md5(h) => write!(f, "(md5: {h})"),
             Checksum::Sha256(h) => write!(f, "(sha256: {h})"),
+            Checksum::Sha1(h) => write!(f, "(sha1: {h})"),
         }
     }
 }
