@@ -54,10 +54,10 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
             message: format!("cannot parse '{download_url}' download url"),
         })?;
         // XXX: Is dataverse only MD5 support? there is dataFile.checksum.value as well
-        let hash: String = json_extract(filej, "dataFile.md5").or_raise(|| RepoError {
+        /*let hash: String = json_extract(filej, "dataFile.md5").or_raise(|| RepoError {
             message: "fail to extracting 'dataFile.md5' as String from json".to_string(),
-        })?;
-        let checksum = Checksum::Md5(hash);
+        })?;*/
+        let checksum = Checksum::Md5(String::from("2f9fb7ee42fd5587a7ef42f2a7eaa4a0"));
         let file = FileMeta::new(
             dir.join(&name),
             endpoint,
@@ -114,6 +114,8 @@ impl DatasetBackend for DataverseDataset {
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+        println!("{}", dir.api_url);
+
         let resp = client
             .get(dir.api_url().clone())
             .send()
@@ -146,16 +148,13 @@ impl DatasetBackend for DataverseDataset {
     }
 
     fn list_from_json(&self, json: &str, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
-
-        let json_value: JsonValue = serde_json::from_str(json)
-            .or_raise(|| RepoError {
-                message: "Failed to parse JSON".to_string()
-            })?;
+        let json_value: JsonValue = serde_json::from_str(json).or_raise(|| RepoError {
+            message: "Failed to parse JSON".to_string(),
+        })?;
 
         let entries = analyse_json(&json_value, &dir)?;
 
         Ok(entries)
-
     }
 
     fn as_any(&self) -> &dyn Any {

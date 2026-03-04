@@ -45,6 +45,13 @@ pub trait CrawlFileExt {
         client: &Client,
         mp: impl ProgressManager,
     ) -> BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>>;
+
+    fn crawl_file_from_json(
+        self,
+        client: &Client,
+        json: String,
+        mp: impl ProgressManager,
+    ) -> BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>>;
 }
 
 impl CrawlFileExt for Dataset {
@@ -59,6 +66,7 @@ impl CrawlFileExt for Dataset {
             Arc::clone(&self.backend),
             root_dir,
             mp.clone(),
+            None
         )
         .filter_map(|res| async move {
             match res {
@@ -68,6 +76,29 @@ impl CrawlFileExt for Dataset {
             }
         })
         .boxed()
+    }
+    fn crawl_file_from_json(
+        self,
+        client: &Client,
+        json: String,
+        mp: impl ProgressManager,
+    ) -> BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>> {
+        let root_dir = self.root_dir();
+        crawl(
+            client.clone(),  // You might not need client here?
+            Arc::clone(&self.backend),
+            root_dir,
+            mp.clone(),
+            Some(json)  // Pass JSON
+        )
+            .filter_map(|res| async move {
+                match res {
+                    Ok(Entry::Dir(_)) => None,
+                    Ok(Entry::File(f)) => Some(Ok(f)),
+                    Err(e) => Some(Err(e)),
+                }
+            })
+            .boxed()
     }
 }
 
@@ -143,6 +174,19 @@ impl PyDataset {
         let mp = NoProgress;
 
         let stream = self_.0.clone().crawl_file(&client, mp);
+        let stream = PyFileMetaStream::new(stream);
+        Ok(stream)
+    }
+
+    fn crawl_file_from_json(self_: PyRef<'_, Self>, json: String) -> PyResult<PyFileMetaStream> {
+        let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
+        let client = ClientBuilder::new()
+            .user_agent(user_agent)
+            .build()
+            .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let mp = NoProgress;
+
+        let stream = self_.0.clone().crawl_file_from_json(&client, json, mp);
         let stream = PyFileMetaStream::new(stream);
         Ok(stream)
     }

@@ -1,0 +1,658 @@
+{
+  "id": 3178873,
+  "identifier": "AR/0IZ6LW",
+  "persistentUrl": "https://doi.org/10.17026/AR/0IZ6LW",
+  "protocol": "doi",
+  "authority": "10.17026",
+  "separator": "/",
+  "publisher": "DANS Data Station Archaeology",
+  "publicationDate": "2024-04-04",
+  "storageIdentifier": "surf://10.17026/AR/0IZ6LW",
+  "datasetType": "dataset",
+  "data": {
+    "id": 190229,
+    "datasetId": 3178873,
+    "datasetPersistentId": "doi:10.17026/AR/0IZ6LW",
+    "datasetType": "dataset",
+    "storageIdentifier": "surf://10.17026/AR/0IZ6LW",
+    "versionNumber": 1,
+    "internalVersionNumber": 7,
+    "versionMinorNumber": 1,
+    "versionState": "RELEASED",
+    "latestVersionPublishingState": "RELEASED",
+    "deaccessionLink": "",
+    "distributionDate": "2023-06-02",
+    "productionDate": "2023-06-02",
+    "lastUpdateTime": "2024-10-31T20:46:39Z",
+    "releaseTime": "2024-10-31T20:46:39Z",
+    "createTime": "2024-10-29T19:29:48Z",
+    "publicationDate": "2024-04-04",
+    "citationDate": "2024-04-04",
+    "license": {
+      "name": "CC-BY-NC-SA-4.0",
+      "uri": "http://creativecommons.org/licenses/by-nc-sa/4.0",
+      "iconUri": "https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png"
+    },
+    "termsOfAccess": "N/a",
+    "fileAccessRequest": false,
+    "metadataBlocks": {
+      "citation": {
+        "displayName": "Citation Metadata",
+        "name": "citation",
+        "fields": [
+          {
+            "typeName": "title",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "PAN-00131054 - unknown object (Roman period)"
+          },
+          {
+            "typeName": "otherId",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "otherIdAgency": {
+                  "typeName": "otherIdAgency",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "PAN"
+                },
+                "otherIdValue": {
+                  "typeName": "otherIdValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "00131054"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "author",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "authorName": {
+                  "typeName": "authorName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "Portable Antiquities of the Netherlands"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "datasetContact",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "datasetContactName": {
+                  "typeName": "datasetContactName",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "PAN Admin"
+                },
+                "datasetContactAffiliation": {
+                  "typeName": "datasetContactAffiliation",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "RCE"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "dsDescription",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "dsDescriptionValue": {
+                  "typeName": "dsDescriptionValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "\u003Cp\u003EThis find is registered at Portable Antiquities of the Netherlands with number PAN-00131054\u003C/p\u003E"
+                }
+              },
+              {
+                "dsDescriptionValue": {
+                  "typeName": "dsDescriptionValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "Modified: 2024-02-12T15:58:19+01:00"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "subject",
+            "multiple": true,
+            "typeClass": "controlledVocabulary",
+            "value": [
+              "Arts and Humanities"
+            ]
+          },
+          {
+            "typeName": "keyword",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "keywordValue": {
+                  "typeName": "keywordValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "metal"
+                }
+              },
+              {
+                "keywordValue": {
+                  "typeName": "keywordValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "copper alloy"
+                }
+              },
+              {
+                "keywordValue": {
+                  "typeName": "keywordValue",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "unknown object (Roman period)"
+                },
+                "keywordVocabulary": {
+                  "typeName": "keywordVocabulary",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "PAN thesaurus ideaaltypes"
+                },
+                "keywordVocabularyURI": {
+                  "typeName": "keywordVocabularyURI",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "https://data.cultureelerfgoed.nl/term/id/pan/PAN"
+                }
+              }
+            ]
+          },
+          {
+            "typeName": "language",
+            "multiple": true,
+            "typeClass": "controlledVocabulary",
+            "value": [
+              "Dutch",
+              "English"
+            ]
+          },
+          {
+            "typeName": "productionDate",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "2023-06-02"
+          },
+          {
+            "typeName": "distributionDate",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "2023-06-02"
+          },
+          {
+            "typeName": "dateOfDeposit",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "2024-04-04"
+          }
+        ]
+      },
+      "dansRights": {
+        "displayName": "Rights Metadata",
+        "name": "dansRights",
+        "fields": [
+          {
+            "typeName": "dansRightsHolder",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "Rijksdienst voor het Cultureel Erfgoed (RCE)"
+            ]
+          },
+          {
+            "typeName": "dansPersonalDataPresent",
+            "multiple": false,
+            "typeClass": "controlledVocabulary",
+            "value": "Yes"
+          },
+          {
+            "typeName": "dansMetadataLanguage",
+            "multiple": true,
+            "typeClass": "controlledVocabulary",
+            "value": [
+              "Dutch",
+              "English"
+            ]
+          }
+        ]
+      },
+      "dansRelationMetadata": {
+        "displayName": "Relation Metadata",
+        "name": "dansRelationMetadata",
+        "fields": [
+          {
+            "typeName": "dansAudience",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "https://www.narcis.nl/classification/D37000"
+            ],
+            "expandedvalue": [
+              {
+                "@id": "https://www.narcis.nl/classification/D37000",
+                "termName": [
+                  {
+                    "lang": "nl",
+                    "value": "Archeologie"
+                  },
+                  {
+                    "lang": "en",
+                    "value": "Archaeology"
+                  }
+                ],
+                "vocabularyUri": "https://www.narcis.nl/classification/"
+              }
+            ]
+          },
+          {
+            "typeName": "dansRelation",
+            "multiple": true,
+            "typeClass": "compound",
+            "value": [
+              {
+                "dansRelationType": {
+                  "typeName": "dansRelationType",
+                  "multiple": false,
+                  "typeClass": "controlledVocabulary",
+                  "value": "is format of"
+                },
+                "dansRelationText": {
+                  "typeName": "dansRelationText",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "PAN-00131054"
+                }
+              },
+              {
+                "dansRelationType": {
+                  "typeName": "dansRelationType",
+                  "multiple": false,
+                  "typeClass": "controlledVocabulary",
+                  "value": "references"
+                },
+                "dansRelationText": {
+                  "typeName": "dansRelationText",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "Portable Antiquities of The Netherlands"
+                },
+                "dansRelationURI": {
+                  "typeName": "dansRelationURI",
+                  "multiple": false,
+                  "typeClass": "primitive",
+                  "value": "https://www.portable-antiquities.nl/pan/#/object/public/131054"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "dansArchaeologyMetadata": {
+        "displayName": "Archaeology-Specific Metadata",
+        "name": "dansArchaeologyMetadata",
+        "fields": [
+          {
+            "typeName": "dansAbrArtifact",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "https://data.cultureelerfgoed.nl/term/id/abr/74b98e73-9a10-4a13-939b-060012d3dd5c"
+            ],
+            "expandedvalue": [
+              {
+                "@id": "https://data.cultureelerfgoed.nl/term/id/abr/74b98e73-9a10-4a13-939b-060012d3dd5c"
+              }
+            ]
+          },
+          {
+            "typeName": "dansAbrPeriod",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "https://data.cultureelerfgoed.nl/term/id/abr/d08febfe-53a5-4053-a332-c4372b2bfe12",
+              "https://data.cultureelerfgoed.nl/term/id/abr/2c686437-b730-4304-a436-06c8916c3301"
+            ],
+            "expandedvalue": [
+              {
+                "@id": "https://data.cultureelerfgoed.nl/term/id/abr/d08febfe-53a5-4053-a332-c4372b2bfe12"
+              },
+              {
+                "@id": "https://data.cultureelerfgoed.nl/term/id/abr/2c686437-b730-4304-a436-06c8916c3301"
+              }
+            ]
+          }
+        ]
+      },
+      "dansTemporalSpatial": {
+        "displayName": "Temporal and Spatial Coverage",
+        "name": "dansTemporalSpatial",
+        "fields": [
+          {
+            "typeName": "dansTemporalCoverage",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "-19 until 449"
+            ]
+          },
+          {
+            "typeName": "dansSpatialCoverageText",
+            "multiple": true,
+            "typeClass": "primitive",
+            "value": [
+              "Houten",
+              "NLD"
+            ]
+          }
+        ]
+      },
+      "dansDataVaultMetadata": {
+        "displayName": "Data Vault Metadata",
+        "name": "dansDataVaultMetadata",
+        "fields": [
+          {
+            "typeName": "dansDataversePid",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "doi:10.17026/AR/0IZ6LW"
+          },
+          {
+            "typeName": "dansDataversePidVersion",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "1.1"
+          },
+          {
+            "typeName": "dansBagId",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "urn:uuid:95a5d40c-5c90-4076-b3ae-35b9ae54f849"
+          },
+          {
+            "typeName": "dansNbn",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "urn:nbn:nl:ui:13-054b2f37-7542-46d7-a32e-2e7652d00443"
+          },
+          {
+            "typeName": "dansOtherId",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "PAN:00131054"
+          },
+          {
+            "typeName": "dansSwordToken",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "sword:0c16095e-2ed9-4b94-9c0a-08c8d347bcd7"
+          },
+          {
+            "typeName": "dansDataSupplier",
+            "multiple": false,
+            "typeClass": "primitive",
+            "value": "PAN"
+          }
+        ]
+      }
+    },
+    "files": [
+      {
+        "description": "",
+        "label": "depositor.xml",
+        "restricted": true,
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178876,
+          "persistentId": "",
+          "filename": "depositor.xml",
+          "contentType": "text/xml",
+          "friendlyType": "XML",
+          "filesize": 338,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f5867c-21ece9f1c71f",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "5d49d96acc106d59ba18bcccf38b8d3c53524fe5"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      },
+      {
+        "description": "",
+        "label": "location.xml",
+        "restricted": true,
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178879,
+          "persistentId": "",
+          "filename": "location.xml",
+          "contentType": "text/xml",
+          "friendlyType": "XML",
+          "filesize": 533,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f58a43-b395062ca61c",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "40b7341543684a76041546afac211013bcde7eb3"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      },
+      {
+        "description": "",
+        "label": "object.xml",
+        "restricted": false,
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178881,
+          "persistentId": "",
+          "filename": "object.xml",
+          "contentType": "text/xml",
+          "friendlyType": "XML",
+          "filesize": 601,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f58b99-31d732a7c350",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "fd35c5e18e55ece0f75917d8aeadca18f6eca8d5"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      },
+      {
+        "description": "",
+        "label": "original-metadata.zip",
+        "restricted": false,
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178880,
+          "persistentId": "",
+          "filename": "original-metadata.zip",
+          "contentType": "application/zip",
+          "friendlyType": "ZIP Archive",
+          "filesize": 7256,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f58b00-0c749cd2d2c3",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "4b1aa48acc044c3d1fde86c02fca22a6bfff0dee"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      },
+      {
+        "description": "",
+        "label": "PAN-00131054-001.jpg",
+        "restricted": false,
+        "directoryLabel": "images",
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178874,
+          "persistentId": "",
+          "filename": "PAN-00131054-001.jpg",
+          "contentType": "image/jpeg",
+          "friendlyType": "JPEG Image",
+          "filesize": 825315,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f58484-aad518193d0c",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "a1940abc989f42d5a8541f6f58b9167d0857696b"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      },
+      {
+        "description": "",
+        "label": "PAN-00131054-004.jpg",
+        "restricted": false,
+        "directoryLabel": "images",
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178878,
+          "persistentId": "",
+          "filename": "PAN-00131054-004.jpg",
+          "contentType": "image/jpeg",
+          "friendlyType": "JPEG Image",
+          "filesize": 812771,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f587c0-c9429d8baf27",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "5361481f15fbab4603a1f06f94229e731dc73840"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      },
+      {
+        "description": "",
+        "label": "PAN-00131054-006.jpg",
+        "restricted": false,
+        "directoryLabel": "images",
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178877,
+          "persistentId": "",
+          "filename": "PAN-00131054-006.jpg",
+          "contentType": "image/jpeg",
+          "friendlyType": "JPEG Image",
+          "filesize": 915177,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f58719-2dd6ca016e17",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "90c24e81c987615fb85d8001bddb0d9e6983d754"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      },
+      {
+        "description": "",
+        "label": "thesaurus-en.xml",
+        "restricted": false,
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178875,
+          "persistentId": "",
+          "filename": "thesaurus-en.xml",
+          "contentType": "text/xml",
+          "friendlyType": "XML",
+          "filesize": 1040,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f585e0-aaae3566fc61",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "d0c2c7d8fb920d15c4dd65f822a1214cffcd7b2a"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      },
+      {
+        "description": "",
+        "label": "thesaurus-nl.xml",
+        "restricted": false,
+        "version": 1,
+        "datasetVersionId": 190229,
+        "dataFile": {
+          "id": 3178882,
+          "persistentId": "",
+          "filename": "thesaurus-nl.xml",
+          "contentType": "text/xml",
+          "friendlyType": "XML",
+          "filesize": 1053,
+          "description": "",
+          "storageIdentifier": "surf://store:18ea6f58c35-5a9640719e15",
+          "rootDataFileId": -1,
+          "checksum": {
+            "type": "SHA-1",
+            "value": "e222d554375f8ccbd8cc389b9d7a50b844b916de"
+          },
+          "tabularData": false,
+          "creationDate": "2024-04-04",
+          "publicationDate": "2024-04-04",
+          "fileAccessRequest": false
+        }
+      }
+    ],
+    "citation": "Portable Antiquities of the Netherlands, 2024, \"PAN-00131054 - unknown object (Roman period)\", https://doi.org/10.17026/AR/0IZ6LW, DANS Data Station Archaeology, V1"
+  }
+}

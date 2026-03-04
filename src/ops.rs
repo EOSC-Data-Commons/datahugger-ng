@@ -33,7 +33,7 @@ impl Dataset {
         limit: usize,
     ) -> Result<(), Exn<CrawlerError>> {
         let root_dir = self.root_dir();
-        crawl(client.clone(), Arc::clone(&self.backend), root_dir, mp)
+        crawl(client.clone(), Arc::clone(&self.backend), root_dir, mp, None)
             .try_for_each_concurrent(limit, |entry| async move {
                 match entry {
                     Entry::Dir(dir_meta) => {
@@ -321,6 +321,7 @@ impl DownloadExt for Dataset {
             Arc::clone(&self.backend),
             root_dir,
             mp.clone(),
+            None
         )
         // NOTE: limit set to 0 as default for cli download,
         // should set to 20 for polite crawling for every dataset, it limit the stream consumer rate.
@@ -361,6 +362,7 @@ impl CrawlExt for Dataset {
             Arc::clone(&self.backend),
             root_dir,
             mp.clone(),
+            None
         )
     }
 }
