@@ -3,6 +3,7 @@ import pathlib
 import pytest
 from pathlib import Path
 from datahugger import FileEntry, resolve, DOIResolver
+import requests
 
 
 def test_resolve_default():
@@ -86,6 +87,32 @@ def test_crawl_blocking():
         print(i)
 
     for i in ds.crawl_file():
+        print(i)
+
+
+def test_crawl_file_from_json_blocking():
+    ds = resolve(
+        "https://archaeology.datastations.nl/dataset.xhtml?persistentId=doi:10.17026/AR/0IZ6LW"
+    )
+
+    for i in ds.crawl():
+        print(i)
+
+    for i in ds.crawl_file():
+        print(i)
+
+    try:
+        response = requests.get(
+            "https://archaeology.datastations.nl/api/datasets/:persistentId/versions/:latest-published?persistentId=doi:10.17026/AR/0IZ6LW"
+        )
+        response.raise_for_status()
+        dataverse_json = response.text
+
+    except Exception as e:
+        print("fetching JSON failed")
+        raise e
+
+    for i in ds.crawl_file_from_json(dataverse_json):
         print(i)
 
 

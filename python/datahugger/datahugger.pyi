@@ -32,9 +32,12 @@ class Dataset(object):
     def download_with_validation(self, dst_dir: pathlib.Path, limit: int = 0) -> None:
         """blocking call, using rust's async runtime"""
     def crawl_file(self) -> SyncAsyncIterator[FileEntry]:
-        """return a stream that can be either sync or async iterator over `FileEntry`"""
+        """returns a stream that can be either sync or async iterator over `FileEntry`"""
+    def crawl_file_from_json(self, json: str) -> SyncAsyncIterator[FileEntry]:
+        """returns a stream that can be either sync or async iterator over `FileEntry`"""
+
     def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry]:
-        """return a stream that can be either sync or async iterator over `FileEntry | DirEntry`"""
+        """returns a stream that can be either sync or async iterator over `FileEntry | DirEntry`"""
     def root_url(self) -> str: ...
 
 def resolve(url: str, /) -> Dataset: ...

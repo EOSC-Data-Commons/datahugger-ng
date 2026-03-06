@@ -388,6 +388,9 @@ impl std::error::Error for RepoError {}
 #[async_trait]
 pub trait DatasetBackend: Send + Sync + Any {
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>>;
+    fn list_from_json(&self, _json: &str, _dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+        todo!("list_from_json not yet implemented for this backend")
+    }
     fn root_url(&self) -> Url;
     fn as_any(&self) -> &dyn Any;
 }

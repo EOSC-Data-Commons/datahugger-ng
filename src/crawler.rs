@@ -40,10 +40,11 @@ impl ProgressManager for MultiProgress {
 /// indicatif template error
 // TODO: return fused BoxStream??
 pub fn crawl<D>(
-    client: Client,
+    client: Option<Client>,
     dataset_backend: Arc<D>,
     dir: DirMeta,
     mp: impl ProgressManager,
+    json: Option<String>, // cannot be a borrowed &str due to static lifetime requirement
 ) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>>
 where
     D: DatasetBackend + 'static + ?Sized,
@@ -57,13 +58,26 @@ where
         );
         pb.enable_steady_tick(std::time::Duration::from_millis(100));
         pb.set_message(format!("listing files of {}", dir.api_url().as_str()));
-        let entries = dataset_backend.list(&client, dir.clone())
-            .await
-            .or_raise(||
-                CrawlerError{
+
+        let entries = if let Some(json_str) = json {
+            dataset_backend.list_from_json(&json_str, dir.clone())  // borrow here
+                .or_raise(|| CrawlerError {
+                    message: format!("cannot parse json entries of '{dir}'"),
+                    status: ErrorStatus::Persistent,
+                })?
+        } else {
+            let client = client.as_ref().ok_or_else(|| CrawlerError {
+        message: "client required when json is not provided".to_string(),
+        status: ErrorStatus::Persistent,
+    })?;
+            dataset_backend.list(client, dir.clone())
+                .await
+                .or_raise(|| CrawlerError {
                     message: format!("cannot list all entries of '{dir}', after retry"),
                     status: ErrorStatus::Persistent,
-                })?;
+                })?
+        };
+
         pb.finish_and_clear();
 
         for entry in entries {
@@ -82,7 +96,7 @@ where
                     pb.set_message(format!("Crawling {}...", sub_dir.relative()));
                     yield Entry::Dir(sub_dir.clone());
                     let client = client.clone();
-                    let sub_stream = crawl(client, Arc::clone(&dataset_backend), sub_dir, mp.clone());
+                    let sub_stream = crawl(client, Arc::clone(&dataset_backend), sub_dir, mp.clone(), None);
                     for await item in sub_stream {
                         yield item?;
                     }
