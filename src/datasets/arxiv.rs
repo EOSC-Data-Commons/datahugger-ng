@@ -63,7 +63,7 @@ impl DatasetBackend for Arxiv {
             true,
         );
 
-        Ok(vec![Entry::File(file)])
+        Ok(vec![Entry::File(Box::new(file))])
     }
 
     fn as_any(&self) -> &dyn Any {

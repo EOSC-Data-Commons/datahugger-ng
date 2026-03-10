@@ -110,7 +110,7 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
             Some(version.to_string()),
             downloadable,
         );
-        entries.push(Entry::File(file));
+        entries.push(Entry::File(Box::new(file)));
     }
 
     Ok(entries)
@@ -329,7 +329,7 @@ impl DatasetBackend for DataverseFile {
             None,
             downloadable,
         );
-        let entries = vec![Entry::File(file)];
+        let entries = vec![Entry::File(Box::new(file))];
 
         Ok(entries)
     }

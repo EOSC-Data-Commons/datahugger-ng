@@ -153,7 +153,7 @@ impl Hasher {
 #[derive(Debug)]
 pub enum Entry {
     Dir(DirMeta),
-    File(FileMeta),
+    File(Box<FileMeta>),
 }
 
 #[derive(Debug, Clone)]

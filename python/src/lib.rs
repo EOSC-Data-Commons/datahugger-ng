@@ -70,7 +70,7 @@ impl CrawlFileExt for Dataset {
         .filter_map(|res| async move {
             match res {
                 Ok(Entry::Dir(_)) => None,
-                Ok(Entry::File(f)) => Some(Ok(f)),
+                Ok(Entry::File(f)) => Some(Ok(*f)),
                 Err(e) => Some(Err(e)),
             }
         })
@@ -92,7 +92,7 @@ impl CrawlFileExt for Dataset {
             .filter_map(|res| async move {
                 match res {
                     Ok(Entry::Dir(_)) => None,
-                    Ok(Entry::File(f)) => Some(Ok(f)),
+                    Ok(Entry::File(f)) => Some(Ok(*f)),
                     Err(e) => Some(Err(e)),
                 }
             })

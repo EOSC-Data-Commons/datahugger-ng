@@ -139,7 +139,7 @@ impl DatasetBackend for GitHub {
                         None,
                         true,
                     );
-                    entries.push(Entry::File(file));
+                    entries.push(Entry::File(Box::new(file)));
                 }
                 "tree" => {
                     let tree_url: String = json_extract(filej, "url").or_raise(|| RepoError {

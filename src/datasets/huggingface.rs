@@ -133,7 +133,7 @@ impl DatasetBackend for HuggingFace {
                         true,
                     );
 
-                    entries.push(Entry::File(file));
+                    entries.push(Entry::File(Box::new(file)));
                 }
                 "directory" => {
                     let mut api_url = dir.root_url();
