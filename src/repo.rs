@@ -248,6 +248,7 @@ impl std::fmt::Display for Endpoint {
 /// than inspecting the actual data.
 #[derive(Debug)]
 pub struct FileMeta {
+    filename: Option<String>,
     path: CrawlPath,
     endpoint: Endpoint,
     download_url: Url,
@@ -258,6 +259,10 @@ pub struct FileMeta {
 }
 
 impl FileMeta {
+    pub fn filename(&self) -> Option<&str> {
+        self.filename.as_deref()
+    }
+
     /// Returns whether the file can be downloaded.
     pub fn is_downloadable(&self) -> bool {
         self.downloadable
@@ -323,8 +328,10 @@ impl std::fmt::Display for FileMeta {
 }
 
 impl FileMeta {
+    #[allow(clippy::too_many_arguments)]
     #[must_use]
     pub fn new(
+        filename: Option<String>,
         path: CrawlPath,
         endpoint: Endpoint,
         download_url: Url,
@@ -334,6 +341,7 @@ impl FileMeta {
         downloadable: bool,
     ) -> Self {
         FileMeta {
+            filename,
             path,
             endpoint,
             download_url,

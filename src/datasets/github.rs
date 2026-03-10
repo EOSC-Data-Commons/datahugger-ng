@@ -125,6 +125,7 @@ impl DatasetBackend for GitHub {
                     let guess = mime_guess::from_path(&path);
 
                     let file = FileMeta::new(
+                        None,
                         path,
                         Endpoint {
                             parent_url: dir.api_url().clone(),

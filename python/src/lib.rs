@@ -297,6 +297,8 @@ struct PyDirEntry {
 #[pyo3(name = "FileEntry", extends=PyEntryBase)]
 struct PyFileEntry {
     #[pyo3(get, set)]
+    filename: Option<String>,
+    #[pyo3(get, set)]
     path_crawl_rel: PathBuf,
     #[pyo3(get, set)]
     download_url: String,
@@ -312,6 +314,7 @@ struct PyFileEntry {
 impl PyFileEntry {
     #[new]
     fn new(
+        filename: Option<String>,
         path_crawl_rel: PathBuf,
         download_url: String,
         size: Option<u64>,
@@ -320,6 +323,7 @@ impl PyFileEntry {
     ) -> (Self, PyEntryBase) {
         (
             PyFileEntry {
+                filename,
                 path_crawl_rel,
                 download_url,
                 size,
@@ -358,6 +362,7 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                 py,
                 (
                     PyFileEntry {
+                        filename: meta.filename().map(|s| s.to_string()),
                         path_crawl_rel: PathBuf::from(meta.path().as_str()),
                         download_url: meta.download_url().as_str().to_string(),
                         size: meta.size(),
@@ -399,6 +404,7 @@ impl<'py> IntoPyObject<'py> for PyFileMeta {
             py,
             (
                 PyFileEntry {
+                    filename: meta.filename().map(|s| s.to_string()),
                     path_crawl_rel: PathBuf::from(meta.path().as_str()),
                     download_url: meta.download_url().as_str().to_string(),
                     size: meta.size(),
@@ -536,6 +542,8 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // File
     let f = py.get_type::<PyFileEntry>();
     let ann = PyDict::new(py);
+    let filename_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("filename", filename_type)?;
     ann.set_item("path_crawl_rel", py.get_type::<pyo3::types::PyString>())?;
     ann.set_item("download_url", py.get_type::<pyo3::types::PyString>())?;
     let size_type = py.eval(c_str!("int | None"), None, None)?;

@@ -94,6 +94,7 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
             }
         };
         let file = FileMeta::new(
+            Some(name),
             dst_path,
             endpoint,
             download_url,
@@ -310,6 +311,7 @@ impl DatasetBackend for DataverseFile {
             key: Some("data".to_string()),
         };
         let file = FileMeta::new(
+            Some(name.clone()),
             dir.join(&name),
             endpoint,
             download_url,

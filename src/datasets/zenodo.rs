@@ -130,6 +130,7 @@ impl DatasetBackend for Zenodo {
                 }),
             };
             let file = FileMeta::new(
+                None,
                 dir.join(&name),
                 endpoint,
                 download_url,

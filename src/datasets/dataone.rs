@@ -141,6 +141,7 @@ impl DatasetBackend for Dataone {
                         };
 
                         let file = FileMeta::new(
+                            None,
                             dir.join(&name),
                             endpoint,
                             download_url,

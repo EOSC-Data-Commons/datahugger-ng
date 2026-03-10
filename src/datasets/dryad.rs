@@ -175,6 +175,7 @@ impl DatasetBackend for DataDryad {
                 })
             };
             let file = FileMeta::new(
+                None,
                 dir.join(&name),
                 endpoint,
                 download_url,

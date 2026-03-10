@@ -119,6 +119,7 @@ impl DatasetBackend for HalScience {
                 message: format!("invalid download url '{download_url}'"),
             })?;
             let file = FileMeta::new(
+                None,
                 dir.join(&format!("{filename}.pdf")),
                 endpoint,
                 download_url,

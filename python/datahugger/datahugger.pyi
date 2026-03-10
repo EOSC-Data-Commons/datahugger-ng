@@ -22,6 +22,7 @@ class DirEntry(Entry):
 
 @dataclass
 class FileEntry(Entry):
+    filename: str | None
     path_crawl_rel: pathlib.Path
     download_url: str
     size: int | None

@@ -50,6 +50,7 @@ impl DatasetBackend for Arxiv {
             key: Some(name.to_string()),
         };
         let file = FileMeta::new(
+            None,
             dir.join(&format!("{name}.pdf")),
             endpoint,
             download_url,
