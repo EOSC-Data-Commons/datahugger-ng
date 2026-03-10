@@ -299,6 +299,8 @@ struct PyFileEntry {
     #[pyo3(get, set)]
     filename: Option<String>,
     #[pyo3(get, set)]
+    file_identifier: Option<String>,
+    #[pyo3(get, set)]
     path_crawl_rel: PathBuf,
     #[pyo3(get, set)]
     download_url: String,
@@ -308,6 +310,8 @@ struct PyFileEntry {
     checksum: Vec<(String, String)>,
     #[pyo3(get, set)]
     mimetype: Option<String>,
+    #[pyo3(get, set)]
+    version: Option<String>,
 }
 
 #[pymethods]
@@ -315,20 +319,24 @@ impl PyFileEntry {
     #[new]
     fn new(
         filename: Option<String>,
+        file_identifier: Option<String>,
         path_crawl_rel: PathBuf,
         download_url: String,
         size: Option<u64>,
         checksum: Vec<(String, String)>,
         mimetype: Option<String>,
+        version: Option<String>,
     ) -> (Self, PyEntryBase) {
         (
             PyFileEntry {
                 filename,
+                file_identifier,
                 path_crawl_rel,
                 download_url,
                 size,
                 checksum,
                 mimetype,
+                version
             },
             PyEntryBase::new(),
         )
@@ -363,6 +371,7 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                 (
                     PyFileEntry {
                         filename: meta.filename().map(|s| s.to_string()),
+                        file_identifier: meta.file_identifier().map(|s| s.to_string()),
                         path_crawl_rel: PathBuf::from(meta.path().as_str()),
                         download_url: meta.download_url().as_str().to_string(),
                         size: meta.size(),
@@ -378,6 +387,7 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                             })
                             .collect::<Vec<_>>(),
                         mimetype: meta.mimetype().map(|mime| mime.to_string()),
+                        version: meta.version().map(|v| v.to_string()),
                     },
                     PyEntryBase,
                 ),
@@ -405,6 +415,7 @@ impl<'py> IntoPyObject<'py> for PyFileMeta {
             (
                 PyFileEntry {
                     filename: meta.filename().map(|s| s.to_string()),
+                    file_identifier: meta.file_identifier().map(|s| s.to_string()),
                     path_crawl_rel: PathBuf::from(meta.path().as_str()),
                     download_url: meta.download_url().as_str().to_string(),
                     size: meta.size(),
@@ -418,6 +429,7 @@ impl<'py> IntoPyObject<'py> for PyFileMeta {
                         })
                         .collect::<Vec<_>>(),
                     mimetype: meta.mimetype().map(|mime| mime.to_string()),
+                    version: meta.version().map(|v| v.to_string()),
                 },
                 PyEntryBase,
             ),
@@ -544,6 +556,8 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let ann = PyDict::new(py);
     let filename_type = py.eval(c_str!("str | None"), None, None)?;
     ann.set_item("filename", filename_type)?;
+    let file_identifier_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("file_identifier", file_identifier_type)?;
     ann.set_item("path_crawl_rel", py.get_type::<pyo3::types::PyString>())?;
     ann.set_item("download_url", py.get_type::<pyo3::types::PyString>())?;
     let size_type = py.eval(c_str!("int | None"), None, None)?;
@@ -552,6 +566,8 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     ann.set_item("checksum", checksum_type)?;
     let mimetype_type = py.eval(c_str!("str | None"), None, None)?;
     ann.set_item("mimetype", mimetype_type)?;
+    let version_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("version", version_type)?;
     f.setattr("__annotations__", ann)?;
     py.import("dataclasses")?
         .getattr("dataclass")?

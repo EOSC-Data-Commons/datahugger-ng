@@ -249,18 +249,24 @@ impl std::fmt::Display for Endpoint {
 #[derive(Debug)]
 pub struct FileMeta {
     filename: Option<String>,
+    file_identifier: Option<String>,
     path: CrawlPath,
     endpoint: Endpoint,
     download_url: Url,
     size: Option<u64>,
     checksum: Vec<Checksum>,
     mimetype: Option<Mime>,
+    version: Option<String>,
     downloadable: bool,
 }
 
 impl FileMeta {
     pub fn filename(&self) -> Option<&str> {
         self.filename.as_deref()
+    }
+
+    pub fn file_identifier(&self) -> Option<&str> {
+        self.file_identifier.as_deref()
     }
 
     /// Returns whether the file can be downloaded.
@@ -286,6 +292,10 @@ impl FileMeta {
     /// Returns the file size in bytes if known.
     pub fn size(&self) -> Option<u64> {
         self.size
+    }
+
+    pub fn version(&self) -> Option<&str> {
+        self.version.as_deref()
     }
 
     /// Returns the mimetype in bytes if known.
@@ -332,22 +342,26 @@ impl FileMeta {
     #[must_use]
     pub fn new(
         filename: Option<String>,
+        file_identifier: Option<String>,
         path: CrawlPath,
         endpoint: Endpoint,
         download_url: Url,
         size: Option<u64>,
         checksum: Vec<Checksum>,
         mimetype: Option<Mime>,
+        version: Option<String>,
         downloadable: bool,
     ) -> Self {
         FileMeta {
             filename,
+            file_identifier,
             path,
             endpoint,
             download_url,
             size,
             checksum,
             mimetype,
+            version,
             downloadable,
         }
     }

@@ -110,12 +110,14 @@ impl DatasetBackend for OSF {
                     let checksum = Checksum::Sha256(hash);
                     let file = FileMeta::new(
                         None,
+                        None,
                         dir.join(&name),
                         endpoint,
                         download_url,
                         Some(size),
                         vec![checksum],
                         guess.first(),
+                        None,
                         true,
                     );
                     entries.push(Entry::File(file));

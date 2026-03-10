@@ -126,6 +126,7 @@ impl DatasetBackend for GitHub {
 
                     let file = FileMeta::new(
                         None,
+                        None,
                         path,
                         Endpoint {
                             parent_url: dir.api_url().clone(),
@@ -135,6 +136,7 @@ impl DatasetBackend for GitHub {
                         Some(size),
                         vec![],
                         guess.first(),
+                        None,
                         true,
                     );
                     entries.push(Entry::File(file));

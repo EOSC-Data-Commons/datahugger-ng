@@ -120,12 +120,14 @@ impl DatasetBackend for HalScience {
             })?;
             let file = FileMeta::new(
                 None,
+                None,
                 dir.join(&format!("{filename}.pdf")),
                 endpoint,
                 download_url,
                 None,
                 vec![],
                 guess.first(),
+                None,
                 true,
             );
             entries.push(Entry::File(file));

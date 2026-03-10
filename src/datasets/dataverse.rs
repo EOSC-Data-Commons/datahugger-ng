@@ -50,6 +50,11 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
             message: format!("fail to parse the '{}' to proper mime type", mime_type),
         })?;
+
+        let version: u64 = json_extract(filej, "version").or_raise(|| RepoError {
+            message: "fail to extracting 'version' as u64 from json".to_string(),
+        })?;
+
         let download_url = dir
             .api_url()
             .join("/api/access/datafile/")
@@ -95,12 +100,14 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         };
         let file = FileMeta::new(
             Some(name),
+            Some(id.to_string()),
             dst_path,
             endpoint,
             download_url,
             Some(size),
             vec![checksum],
             Some(mime_type),
+            Some(version.to_string()),
             downloadable,
         );
         entries.push(Entry::File(file));
@@ -312,12 +319,14 @@ impl DatasetBackend for DataverseFile {
         };
         let file = FileMeta::new(
             Some(name.clone()),
+            Some(id.to_string()),
             dir.join(&name),
             endpoint,
             download_url,
             Some(size),
             vec![checksum],
             Some(mime_type),
+            None,
             downloadable,
         );
         let entries = vec![Entry::File(file)];

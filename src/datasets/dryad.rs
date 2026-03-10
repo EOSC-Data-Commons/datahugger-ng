@@ -176,12 +176,14 @@ impl DatasetBackend for DataDryad {
             };
             let file = FileMeta::new(
                 None,
+                None,
                 dir.join(&name),
                 endpoint,
                 download_url,
                 Some(size),
                 vec![checksum],
                 Some(mime_type),
+                None,
                 true,
             );
             entries.push(Entry::File(file));
