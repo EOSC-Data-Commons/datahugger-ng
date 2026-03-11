@@ -99,25 +99,8 @@ def test_crawl_blocking():
         print(i)
 
 
-def test_dans(tmp_path: Path):
-    doi_resolver = DOIResolver(timeout=30)
-
-    url = doi_resolver.resolve("10.17026/AR/00EN8T")
-
-    print(url)
-
-    ds = resolve(url)
-    for i in ds.crawl():
-        print(i)
-
-    print(tmp_path)
-
-    ds.download_with_validation(tmp_path)
-
-
-def test_resolve_local():
+def test_resolve_local(tmp_path: Path):
     try:
-
         response = requests.get(
             "https://archaeology.datastations.nl/api/datasets/:persistentId/versions/:latest-published?persistentId=doi:10.17026/AR/0IZ6LW",
             timeout=60,
