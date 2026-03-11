@@ -102,7 +102,7 @@ def test_crawl_blocking():
 def test_resolve_local(tmp_path: Path):
     try:
         response = requests.get(
-            "https://archaeology.datastations.nl/api/datasets/:persistentId/versions/:latest-published?persistentId=doi:10.17026/AR/0IZ6LW",
+            "https://dataverse.harvard.edu/api/datasets/:persistentId/versions/:latest-published?persistentId=doi:10.7910/DVN/KBHLOD",
             timeout=60,
         )
         response.raise_for_status()
@@ -113,7 +113,7 @@ def test_resolve_local(tmp_path: Path):
         raise e
 
     ds = resolve(
-        "https://archaeology.datastations.nl/dataset.xhtml?persistentId=doi:10.17026/AR/0IZ6LW",
+        "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD",
         dataverse,
     )
 
