@@ -184,6 +184,8 @@ impl DatasetBackend for DataDryad {
                 vec![checksum],
                 Some(mime_type),
                 None,
+                None,
+                None,
                 true,
             );
             entries.push(Entry::File(Box::new(file)));

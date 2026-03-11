@@ -150,6 +150,8 @@ impl DatasetBackend for Dataone {
                             vec![],
                             None,
                             None,
+                            None,
+                            None,
                             true,
                         );
                         entries.push(Entry::File(Box::new(file)));

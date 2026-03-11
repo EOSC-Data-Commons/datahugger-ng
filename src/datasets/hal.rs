@@ -128,6 +128,8 @@ impl DatasetBackend for HalScience {
                 vec![],
                 guess.first(),
                 None,
+                None,
+                None,
                 true,
             );
             entries.push(Entry::File(Box::new(file)));

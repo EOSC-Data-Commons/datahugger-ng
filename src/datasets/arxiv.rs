@@ -60,6 +60,8 @@ impl DatasetBackend for Arxiv {
             // the mime-type of arxiv.org/pdf/ is surely a valid PDF
             Some(mime::APPLICATION_PDF),
             None,
+            None,
+            None,
             true,
         );
 

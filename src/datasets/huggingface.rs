@@ -130,6 +130,8 @@ impl DatasetBackend for HuggingFace {
                         vec![checksum],
                         guess.first(),
                         None,
+                        None,
+                        None,
                         true,
                     );
 

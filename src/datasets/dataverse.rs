@@ -42,6 +42,16 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         let size: u64 = json_extract(filej, "dataFile.filesize").or_raise(|| RepoError {
             message: "fail to extracting 'dataFile.filesize' as u64 from json".to_string(),
         })?;
+        let creation_date: String =
+            json_extract(filej, "dataFile.creationDate").or_raise(|| RepoError {
+                message: "fail to extracting 'dataFile.creationDate' as String from json"
+                    .to_string(),
+            })?;
+        let last_modification_date: String = json_extract(filej, "dataFile.lastUpdateTime")
+            .or_raise(|| RepoError {
+                message: "fail to extracting 'dataFile.lastUpdateTime' as String from json"
+                    .to_string(),
+            })?;
         let mime_type: String =
             json_extract(filej, "dataFile.contentType").or_raise(|| RepoError {
                 message: "fail to extracting 'dataFile.contentType' as String from json"
@@ -108,6 +118,8 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
             vec![checksum],
             Some(mime_type),
             Some(version.to_string()),
+            Some(creation_date),
+            Some(last_modification_date),
             downloadable,
         );
         entries.push(Entry::File(Box::new(file)));
@@ -326,6 +338,8 @@ impl DatasetBackend for DataverseFile {
             Some(size),
             vec![checksum],
             Some(mime_type),
+            None,
+            None,
             None,
             downloadable,
         );

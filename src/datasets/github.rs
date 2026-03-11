@@ -137,6 +137,8 @@ impl DatasetBackend for GitHub {
                         vec![],
                         guess.first(),
                         None,
+                        None,
+                        None,
                         true,
                     );
                     entries.push(Entry::File(Box::new(file)));

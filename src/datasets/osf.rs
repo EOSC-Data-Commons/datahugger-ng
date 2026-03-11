@@ -118,6 +118,8 @@ impl DatasetBackend for OSF {
                         vec![checksum],
                         guess.first(),
                         None,
+                        None,
+                        None,
                         true,
                     );
                     entries.push(Entry::File(Box::new(file)));

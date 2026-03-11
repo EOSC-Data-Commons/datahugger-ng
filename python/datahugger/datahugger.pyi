@@ -29,6 +29,9 @@ class FileEntry(Entry):
     size: int | None
     checksum: list[tuple[str, str]]
     mimetype: str | None
+    version: str | None
+    creation_date: str | None
+    last_modification_date: str | None
 
 class Dataset(object):
     def download_with_validation(self, dst_dir: pathlib.Path, limit: int = 0) -> None:

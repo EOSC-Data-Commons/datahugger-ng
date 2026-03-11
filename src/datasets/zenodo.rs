@@ -139,6 +139,8 @@ impl DatasetBackend for Zenodo {
                 vec![checksum],
                 guess.first(),
                 None,
+                None,
+                None,
                 true,
             );
             entries.push(Entry::File(Box::new(file)));

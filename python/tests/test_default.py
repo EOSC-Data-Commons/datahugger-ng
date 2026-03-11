@@ -76,6 +76,8 @@ def test_dataclass_constructor():
         [],
         None,
         None,
+        None,
+        None,
     )
     assert str(entry.path_crawl_rel.as_posix()) == "/tmp/x"
     assert entry.download_url == "https://example.com/download_url"
@@ -97,23 +99,46 @@ def test_crawl_blocking():
         print(i)
 
 
+def test_dans(tmp_path: Path):
+    doi_resolver = DOIResolver(timeout=30)
+
+    url = doi_resolver.resolve("10.17026/AR/00EN8T")
+
+    print(url)
+
+    ds = resolve(url)
+    for i in ds.crawl():
+        print(i)
+
+    print(tmp_path)
+
+    ds.download_with_validation(tmp_path)
+
+
 def test_crawl_file_from_json_blocking():
     ds = resolve(
         "https://archaeology.datastations.nl/dataset.xhtml?persistentId=doi:10.17026/AR/0IZ6LW"
     )
 
+    """
     for i in ds.crawl():
         print(i)
 
     for i in ds.crawl_file():
         print(i)
+    """
 
     try:
+        print("request")
+
         response = requests.get(
-            "https://archaeology.datastations.nl/api/datasets/:persistentId/versions/:latest-published?persistentId=doi:10.17026/AR/0IZ6LW"
+            "https://archaeology.datastations.nl/api/datasets/:persistentId/versions/:latest-published?persistentId=doi:10.17026/AR/0IZ6LW",
+            timeout=60,
         )
         response.raise_for_status()
         dataverse_json = response.text
+
+        print(response.status_code)
 
     except Exception as e:
         print("fetching JSON failed")

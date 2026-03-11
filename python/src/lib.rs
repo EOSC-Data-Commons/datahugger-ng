@@ -312,6 +312,10 @@ struct PyFileEntry {
     mimetype: Option<String>,
     #[pyo3(get, set)]
     version: Option<String>,
+    #[pyo3(get, set)]
+    creation_date: Option<String>,
+    #[pyo3(get, set)]
+    last_modification_date: Option<String>,
 }
 
 #[pymethods]
@@ -326,6 +330,8 @@ impl PyFileEntry {
         checksum: Vec<(String, String)>,
         mimetype: Option<String>,
         version: Option<String>,
+        creation_date: Option<String>,
+        last_modification_date: Option<String>,
     ) -> (Self, PyEntryBase) {
         (
             PyFileEntry {
@@ -336,7 +342,9 @@ impl PyFileEntry {
                 size,
                 checksum,
                 mimetype,
-                version
+                version,
+                creation_date,
+                last_modification_date,
             },
             PyEntryBase::new(),
         )
@@ -388,6 +396,8 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                             .collect::<Vec<_>>(),
                         mimetype: meta.mimetype().map(|mime| mime.to_string()),
                         version: meta.version().map(|v| v.to_string()),
+                        creation_date: meta.creation_date().map(|v| v.to_string()),
+                        last_modification_date: meta.last_modification_date().map(|v| v.to_string()),
                     },
                     PyEntryBase,
                 ),
@@ -430,6 +440,8 @@ impl<'py> IntoPyObject<'py> for PyFileMeta {
                         .collect::<Vec<_>>(),
                     mimetype: meta.mimetype().map(|mime| mime.to_string()),
                     version: meta.version().map(|v| v.to_string()),
+                    creation_date: meta.creation_date().map(|v| v.to_string()),
+                    last_modification_date: meta.last_modification_date().map(|v| v.to_string()),
                 },
                 PyEntryBase,
             ),
@@ -568,6 +580,10 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     ann.set_item("mimetype", mimetype_type)?;
     let version_type = py.eval(c_str!("str | None"), None, None)?;
     ann.set_item("version", version_type)?;
+    let creation_date_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("creation_date", creation_date_type)?;
+    let last_modification_date_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("last_modification_date", last_modification_date_type)?;
     f.setattr("__annotations__", ann)?;
     py.import("dataclasses")?
         .getattr("dataclass")?

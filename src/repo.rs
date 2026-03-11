@@ -257,6 +257,8 @@ pub struct FileMeta {
     checksum: Vec<Checksum>,
     mimetype: Option<Mime>,
     version: Option<String>,
+    creation_date: Option<String>,
+    last_modification_date: Option<String>,
     downloadable: bool,
 }
 
@@ -301,6 +303,14 @@ impl FileMeta {
     /// Returns the mimetype in bytes if known.
     pub fn mimetype(&self) -> Option<Mime> {
         self.mimetype.clone()
+    }
+
+    pub fn creation_date(&self) -> Option<&str> {
+        self.creation_date.as_deref()
+    }
+
+    pub fn last_modification_date(&self) -> Option<&str> {
+        self.last_modification_date.as_deref()
     }
 }
 
@@ -350,6 +360,8 @@ impl FileMeta {
         checksum: Vec<Checksum>,
         mimetype: Option<Mime>,
         version: Option<String>,
+        creation_date: Option<String>,
+        last_modification_date: Option<String>,
         downloadable: bool,
     ) -> Self {
         FileMeta {
@@ -362,6 +374,8 @@ impl FileMeta {
             checksum,
             mimetype,
             version,
+            creation_date,
+            last_modification_date,
             downloadable,
         }
     }
