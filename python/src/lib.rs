@@ -17,6 +17,7 @@ pub fn main() {
     probe_ssl_certs();
 }
 
+use datahugger::datasets::DataverseJsonSrcDataset;
 use datahugger::{
     crawl,
     crawler::{CrawlerError, ProgressManager},
@@ -35,11 +36,10 @@ use pyo3::{ffi::c_str, types::PyDict};
 use pyo3_async_runtimes::tokio::future_into_py;
 use reqwest::redirect::Policy;
 use reqwest::{Client, ClientBuilder, Url};
+use std::collections::HashMap;
 use std::time::Duration;
 use std::{path::PathBuf, sync::Arc};
-use std::collections::HashMap;
 use tokio::sync::Mutex;
-use datahugger::datasets::DataverseJsonSrcDataset;
 
 pub trait CrawlFileExt {
     fn crawl_file(
@@ -47,7 +47,6 @@ pub trait CrawlFileExt {
         client: &Client,
         mp: impl ProgressManager,
     ) -> BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>>;
-
 }
 
 impl CrawlFileExt for Dataset {
@@ -100,39 +99,45 @@ struct PyDataverseJsonSrcDataset(Dataset);
 impl PyDataverseJsonSrcDataset {
     #[new]
     fn new(url: String, content: String) -> PyResult<Self> {
-        let url = Url::parse(&url)
-            .map_err(|e| PyRuntimeError::new_err(format!("Invalid URL: {}", e)))?;
+        let url =
+            Url::parse(&url).map_err(|e| PyRuntimeError::new_err(format!("Invalid URL: {}", e)))?;
 
-        let mut segments = url.path_segments()
+        let mut segments = url
+            .path_segments()
             .ok_or_else(|| PyRuntimeError::new_err(format!("'{}' cannot be base", url)))?;
 
-        let typ = segments.next()
+        let typ = segments
+            .next()
             .ok_or_else(|| PyRuntimeError::new_err(format!("'{}' no segments found", url)))?;
 
         let queries = url.query_pairs().collect::<HashMap<_, _>>();
 
-        let id = queries.get("persistentId")
+        let id = queries
+            .get("persistentId")
             .ok_or_else(|| PyRuntimeError::new_err("query doesn't contain 'persistentId'"))?
             .to_string();
 
-        let _typ = typ.strip_suffix(".xhtml")
+        let _typ = typ
+            .strip_suffix(".xhtml")
             .ok_or_else(|| PyRuntimeError::new_err("segment not in format *.xhtml"))?;
 
         let scheme = url.scheme();
-        let host_str = url.host_str()
+        let host_str = url
+            .host_str()
             .ok_or_else(|| PyRuntimeError::new_err("URL has no host"))?;
 
         let base_url_str = format!("{}://{}", scheme, host_str);
-        let base_url = Url::parse(&base_url_str)
-            .map_err(|e| PyRuntimeError::new_err(format!("'{}' is not valid url: {}", base_url_str, e)))?;
+        let base_url = Url::parse(&base_url_str).map_err(|e| {
+            PyRuntimeError::new_err(format!("'{}' is not valid url: {}", base_url_str, e))
+        })?;
 
         let version = ":latest-published".to_string();
 
-        Ok(PyDataverseJsonSrcDataset(
-            Dataset {
-                backend: Arc::new(DataverseJsonSrcDataset::new(id, &base_url, version, content))
-            }
-        ))
+        Ok(PyDataverseJsonSrcDataset(Dataset {
+            backend: Arc::new(DataverseJsonSrcDataset::new(
+                id, &base_url, version, content,
+            )),
+        }))
     }
     fn crawl_file(&self) -> PyResult<PyFileMetaStream> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
@@ -146,7 +151,6 @@ impl PyDataverseJsonSrcDataset {
         let stream = PyFileMetaStream::new(stream);
         Ok(stream)
     }
-
 }
 
 #[pymethods]
@@ -344,6 +348,7 @@ struct PyFileEntry {
 
 #[pymethods]
 impl PyFileEntry {
+    #[allow(clippy::too_many_arguments)]
     #[new]
     fn new(
         filename: Option<String>,
@@ -421,7 +426,9 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                         mimetype: meta.mimetype().map(|mime| mime.to_string()),
                         version: meta.version().map(|v| v.to_string()),
                         creation_date: meta.creation_date().map(|v| v.to_string()),
-                        last_modification_date: meta.last_modification_date().map(|v| v.to_string()),
+                        last_modification_date: meta
+                            .last_modification_date()
+                            .map(|v| v.to_string()),
                     },
                     PyEntryBase,
                 ),
