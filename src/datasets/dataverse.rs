@@ -171,7 +171,6 @@ impl DatasetBackend for DataverseDataset {
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
-        println!("{}", dir.api_url());
 
         let resp = client
             .get(dir.api_url().clone())
