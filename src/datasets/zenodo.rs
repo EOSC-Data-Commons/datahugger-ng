@@ -137,7 +137,7 @@ impl DatasetBackend for Zenodo {
             let created: String = json_extract(filej, "created").or_raise(|| RepoError {
                 message: "fail to extracting 'created' as String from json".to_string(),
             })?;
-            let updated: String = json_extract(filej, "created").or_raise(|| RepoError {
+            let updated: String = json_extract(filej, "updated").or_raise(|| RepoError {
                 message: "fail to extracting 'updated' as String from json".to_string(),
             })?;
             let file = FileMeta::new(
