@@ -72,7 +72,6 @@ impl DatasetBackend for Zenodo {
         let resp: JsonValue = resp.json().await.or_raise(|| RepoError {
             message: format!("fail GET {}, unable to convert to json", dir.api_url(),),
         })?;
-
         let files = resp
             .get("entries")
             .and_then(JsonValue::as_array)
@@ -88,6 +87,12 @@ impl DatasetBackend for Zenodo {
             };
             let name: String = json_extract(filej, "key").or_raise(|| RepoError {
                 message: "fail to extracting 'path' as String from json".to_string(),
+            })?;
+            let file_id: String = json_extract(filej, "file_id").or_raise(|| RepoError {
+                message: "fail to extract 'file_id' from json".to_string(),
+            })?;
+            let version: String = json_extract(filej, "version_id").or_raise(|| RepoError {
+                message: "fail to extract 'version_id' from json".to_string(),
             })?;
             let guess = mime_guess::from_path(&name);
             let size: u64 = json_extract(filej, "size").or_raise(|| RepoError {
@@ -129,18 +134,24 @@ impl DatasetBackend for Zenodo {
                     message: "checksum field is wrong".to_string()
                 }),
             };
+            let created: String = json_extract(filej, "created").or_raise(|| RepoError {
+                message: "fail to extracting 'created' as String from json".to_string(),
+            })?;
+            let updated: String = json_extract(filej, "created").or_raise(|| RepoError {
+                message: "fail to extracting 'updated' as String from json".to_string(),
+            })?;
             let file = FileMeta::new(
-                None,
-                None,
+                Some(name.clone()),
+                Some(file_id),
                 dir.join(&name),
                 endpoint,
                 download_url,
                 Some(size),
                 vec![checksum],
                 guess.first(),
-                None,
-                None,
-                None,
+                Some(version),
+                Some(created),
+                Some(updated),
                 true,
             );
             entries.push(Entry::File(file));
