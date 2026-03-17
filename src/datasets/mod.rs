@@ -7,6 +7,7 @@ mod hal;
 mod huggingface;
 mod osf;
 mod zenodo;
+mod local;
 
 pub use arxiv::Arxiv;
 pub use dataone::Dataone;
@@ -17,3 +18,4 @@ pub use hal::HalScience;
 pub use huggingface::HuggingFace;
 pub use osf::OSF;
 pub use zenodo::Zenodo;
+// pub use local::Local;

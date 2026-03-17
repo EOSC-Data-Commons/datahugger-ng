@@ -48,6 +48,7 @@ pub fn crawl<D>(
 where
     D: DatasetBackend + 'static + ?Sized,
 {
+    // TODO: how different this is compare to stream::iter(entries)....try_flatten()  ? 
     Box::pin(try_stream! {
         // TODO: this is at boundary need to deal with error to retry.
         let pb = mp.insert(0, ProgressBar::new_spinner());

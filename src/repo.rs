@@ -424,8 +424,26 @@ impl std::error::Error for RepoError {}
 
 #[async_trait]
 pub trait DatasetBackend: Send + Sync + Any {
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>>;
+    // TODO: this is actually a bit useless abstraction, should be removed. It is now used through
+    // -> Dataset -> crawl
     fn root_url(&self) -> Url;
+
+    /// The implementation `list` should not do recursive inspection but only list all files+dirs
+    /// in the current level of dir. The recursive call is taking care by downstream caller, e.g.
+    /// `crawler`. That is why this method is called "list" not "walk" or "flatten", it correspond to the
+    /// intuitive API with the targetting DatasetBackend.
+    /// The reason of not doing recursive is the source root dir can contain large amount of files
+    /// and here the the memory usage to carry it in a `Vec<Entry>` will bloat. Meanwhile, list the
+    /// current level will not block the crawling call to wait all files are returned but can start
+    /// downstream streaming process immediately. This is the advantage that the trait
+    /// implementation do not need to care too much about streaming but to just return a blob of
+    /// files as a `Vec<Entry>`. It means the concurrent granulity is managed in the dir level not in file
+    /// level.
+    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>>;
+
+    /// `as_any` is called for the generic data type returned from resolve so it can be downcasted
+    /// to the concrete type. It is useful if want to get information of concrete type such in the
+    /// unit test.
     fn as_any(&self) -> &dyn Any;
 }
 
