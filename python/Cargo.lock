@@ -327,7 +327,7 @@ dependencies = [
 
 [[package]]
 name = "datahugger"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "async-recursion",
  "async-stream",
@@ -358,7 +358,7 @@ dependencies = [
 
 [[package]]
 name = "datahuggerpy"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "datahugger",
  "exn",
