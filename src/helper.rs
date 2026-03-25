@@ -1,4 +1,4 @@
-use exn::{Result, ResultExt};
+use exn::{Exn, Result, ResultExt};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
@@ -59,38 +59,48 @@ pub fn json_extract<T>(value: &Value, path: &str) -> Result<T, JsonExtractError>
 where
     T: DeserializeOwned,
 {
+    json_extract_opt(value, path)?.ok_or_else(|| {
+        Exn::new(JsonExtractError {
+            message: format!("path '{path}' not found"),
+            status: ErrorStatus::Permanent,
+        })
+    })
+}
+
+pub fn json_extract_opt<T>(value: &Value, path: &str) -> Result<Option<T>, JsonExtractError>
+where
+    T: DeserializeOwned,
+{
     let mut current = value;
 
+    // Navigate the path - return None if path doesn't exist
     for key in path.split('.').filter(|s| !s.is_empty()) {
         current = match current {
-            Value::Object(map) => map.get(key).ok_or(JsonExtractError {
-                message: format!("'{key}' not found in object at path '{path}'"),
-                status: ErrorStatus::Permanent,
-            })?,
+            Value::Object(map) => match map.get(key) {
+                Some(v) => v,
+                None => return Ok(None), // Path doesn't exist
+            },
             Value::Array(arr) => {
                 let idx = key.parse::<usize>().or_raise(|| JsonExtractError {
                     message: format!("key '{key}' cannot parse to an index at path '{path}'"),
                     status: ErrorStatus::Permanent,
                 })?;
-                arr.get(idx).ok_or(JsonExtractError {
-                    message: format!("array index {idx} out of bounds"),
-                    status: ErrorStatus::Permanent,
-                })?
+                match arr.get(idx) {
+                    Some(v) => v,
+                    None => return Ok(None), // Index out of bounds
+                }
             }
-            _ => Err(JsonExtractError {
-                message: format!(
-                    "key '{key}' cannot descend into non-container value at path '{path}'"
-                ),
-                status: ErrorStatus::Permanent,
-            })?,
+            _ => return Ok(None), // Can't descend into non-container
         };
     }
+
+    // Path exists, try to deserialize - error if wrong type
     let value: T = serde_json::from_value::<T>(current.clone()).or_raise(|| JsonExtractError {
         message: format!("failed to deserialize value at path '{path}'"),
         status: ErrorStatus::Permanent,
     })?;
 
-    Ok(value)
+    Ok(Some(value))
 }
 
 #[cfg(test)]

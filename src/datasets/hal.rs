@@ -9,6 +9,7 @@ use reqwest::{Client, StatusCode};
 use std::{any::Any, str::FromStr};
 
 use crate::{
+    json_extract,
     repo::{Endpoint, FileMeta, RepoError},
     DatasetBackend, DirMeta, Entry,
 };
@@ -58,7 +59,7 @@ impl DatasetBackend for HalScience {
         url.query_pairs_mut()
             .append_pair("q", &format!("halId_s:{}", self.id))
             .append_pair("wt", "json")
-            .append_pair("fl", "halId_s,fileMain_s,files_s,fileType_s");
+            .append_pair("fl", "halId_s,fileMain_s,files_s,fileType_s,producedDate_tdate,modifiedDate_tdate,version_i");
 
         url
     }
@@ -92,22 +93,20 @@ impl DatasetBackend for HalScience {
         let files = resp
             .get("response")
             .and_then(|d| d.get("docs"))
-            .and_then(|docs| docs.get(0))
-            .and_then(|d| d.get("files_s"))
             .and_then(JsonValue::as_array)
             .ok_or_else(|| RepoError {
-                message: "field with key 'data' not resolve to an json array".to_string(),
+                message: "field with key 'docs' does not resolve to an json array".to_string(),
             })?;
 
         let mut entries = Vec::with_capacity(files.len());
         for (idx, filej) in files.iter().enumerate() {
             let endpoint = Endpoint {
                 parent_url: dir.api_url(),
-                key: Some(format!("response.docs.0.files_s.{idx}")),
+                key: Some(format!("files_s.{idx}")),
             };
-            let JsonValue::String(download_url) = filej else {
-                todo!()
-            };
+            let download_url: String = json_extract(filej, "files_s.0").or_raise(|| RepoError {
+                message: "failed to extract 'files_s.0' as String from json".to_string(),
+            })?;
             let filename = download_url
                 .split('/')
                 .next_back()
@@ -115,13 +114,13 @@ impl DatasetBackend for HalScience {
                     message: format!("didn't get filename from '{download_url}'"),
                 })?;
             let guess = mime_guess::from_path(filename);
-            let download_url = Url::from_str(download_url).or_raise(|| RepoError {
+            let download_url = Url::from_str(download_url.as_str()).or_raise(|| RepoError {
                 message: format!("invalid download url '{download_url}'"),
             })?;
             let file = FileMeta::new(
+                Some(filename.to_string()),
                 None,
-                None,
-                dir.join(&format!("{filename}.pdf")),
+                dir.join(&format!("{}", filename.to_string())),
                 endpoint,
                 download_url,
                 None,
