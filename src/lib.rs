@@ -10,6 +10,9 @@ pub use crate::repo::Entry;
 pub use crate::repo::FileMeta;
 pub use crate::repo::Hasher;
 
+mod filter;
+pub use crate::filter::FileFilter;
+
 mod helper;
 
 mod resolver;

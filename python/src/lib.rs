@@ -244,9 +244,10 @@ impl PyDataset {
             self_
                 .0
                 .clone()
-                .download_with_validation(&client, dst_dir, mp, limit)
+                .download_with_validation(&client, dst_dir, mp, limit, &datahugger::FileFilter::accept_all())
                 .await
         })
+        .map(|_| ())
         .map_err(|err| PyRuntimeError::new_err(format!("{err}")))
     }
 
