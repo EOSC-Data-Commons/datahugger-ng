@@ -334,7 +334,7 @@ pub async fn resolve_doi_to_url(
 ///
 /// ```no_run
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let ds = resolve("https://zenodo.org/record/12345").await?;
+/// let ds = datahugger::resolve("https://zenodo.org/record/12345").await?;
 /// # Ok(())
 /// # }
 /// ```
