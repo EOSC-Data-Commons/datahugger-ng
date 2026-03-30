@@ -17,7 +17,7 @@ pub fn main() {
     probe_ssl_certs();
 }
 
-use datahugger::datasets::DataverseJsonSrcDataset;
+use datahugger::datasets::{DataverseJsonSrcDataset, HalJsonSrcDataset};
 use datahugger::datasets::ZenodoJsonSrcDataset;
 use datahugger::{
     crawl,
@@ -171,6 +171,40 @@ impl PyZenodoJsonSrcDataset {
     fn new(id: String, content: String) -> PyResult<Self> {
         let ds = Dataset {
             backend: Arc::new(ZenodoJsonSrcDataset::new(
+                id, content,
+            )),
+        };
+        Ok(Self {
+            inner: PyDataset(ds),
+        })
+    }
+
+    fn crawl_file(&self) -> PyResult<PyFileMetaStream> {
+        let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
+        let client = ClientBuilder::new()
+            .user_agent(user_agent)
+            .build()
+            .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let mp = NoProgress;
+
+        let stream = self.inner.0.clone().crawl_file(&client, mp);
+        let stream = PyFileMetaStream::new(stream);
+        Ok(stream)
+    }
+}
+
+#[pyclass]
+#[pyo3(name = "HalJsonSrcDataset")]
+struct PyHalJsonSrcDataset {
+    inner: PyDataset,
+}
+
+#[pymethods]
+impl PyHalJsonSrcDataset {
+    #[new]
+    fn new(id: String, content: String) -> PyResult<Self> {
+        let ds = Dataset {
+            backend: Arc::new(HalJsonSrcDataset::new(
                 id, content,
             )),
         };
@@ -626,6 +660,7 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyEntryBase>()?;
     m.add_class::<PyDataverseJsonSrcDataset>()?;
     m.add_class::<PyZenodoJsonSrcDataset>()?;
+    m.add_class::<PyHalJsonSrcDataset>()?;
 
     // Dir
     let dir = py.get_type::<PyDirEntry>();

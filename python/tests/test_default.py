@@ -8,6 +8,7 @@ from datahugger import (
     DOIResolver,
     DataverseJsonSrcDataset,
     ZenodoJsonSrcDataset,
+    HalJsonSrcDataset,
 )
 import requests
 
@@ -143,6 +144,28 @@ def test_zenodo_from_json():
     ds = ZenodoJsonSrcDataset(
         "19109278",
         zenodo,
+    )
+
+    for i in ds.crawl_file():
+        print(i)
+
+
+def test_hal_from_json():
+    try:
+        response = requests.get(
+            "https://api.archives-ouvertes.fr/search/?q=halId_s:hal-02661316&wt=json&fl=halId_s,fileMain_s,files_s,fileType_s,modifiedDate_tdate,producedDate_tdate,version_i",
+            timeout=60,
+        )
+        response.raise_for_status()
+        hal = response.text
+
+    except Exception as e:
+        print("fetching JSON failed")
+        raise e
+
+    ds = HalJsonSrcDataset(
+        "hal-02661316",
+        hal,
     )
 
     for i in ds.crawl_file():

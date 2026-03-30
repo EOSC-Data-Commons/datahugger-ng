@@ -11,7 +11,6 @@ pub use crate::repo::FileMeta;
 pub use crate::repo::Hasher;
 
 mod helper;
-pub use crate::helper::json_extract;
 
 mod resolver;
 pub use crate::resolver::resolve;

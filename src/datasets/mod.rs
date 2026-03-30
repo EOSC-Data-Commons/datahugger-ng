@@ -13,7 +13,7 @@ pub use dataone::Dataone;
 pub use dataverse::{DataverseDataset, DataverseFile, DataverseJsonSrcDataset};
 pub use dryad::DataDryad;
 pub use github::GitHub;
-pub use hal::HalScience;
+pub use hal::{HalJsonSrcDataset, HalScience};
 pub use huggingface::HuggingFace;
 pub use osf::OSF;
 pub use zenodo::{Zenodo, ZenodoJsonSrcDataset};

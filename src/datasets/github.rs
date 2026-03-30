@@ -8,8 +8,8 @@ use url::Url;
 use reqwest::{Client, StatusCode};
 use std::{any::Any, str::FromStr};
 
+use crate::helper::json_extract;
 use crate::{
-    json_extract,
     repo::{Endpoint, FileMeta, RepoError},
     DatasetBackend, DirMeta, Entry,
 };

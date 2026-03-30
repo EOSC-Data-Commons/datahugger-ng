@@ -57,10 +57,27 @@ class ZenodoJsonSrcDataset(Dataset):
 
     def __init__(self, id: str, content: str) -> None:
         """
-        Create a new DataverseJsonSrcDataset.
+        Create a new ZenodoJsonSrcDataset.
 
         Args:
             id: The Zenodo dataset ID, e.g., 931707
+            content: The JSON content as a string
+
+        Raises:
+            RuntimeError
+        """
+
+class HalJsonSrcDataset(Dataset):
+    """
+    A HAL dataset backend that uses pre-fetched JSON content.
+    """
+
+    def __init__(self, id: str, content: str) -> None:
+        """
+        Create a new HalJsonSrcDataset.
+
+        Args:
+            id: The HAL dataset ID, e.g., hal-02661316
             content: The JSON content as a string
 
         Raises:

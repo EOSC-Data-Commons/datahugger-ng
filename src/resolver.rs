@@ -13,10 +13,10 @@ use crate::{
         Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, HalScience,
         HuggingFace, Zenodo, OSF,
     },
-    json_extract,
     repo::Dataset,
 };
 
+use crate::helper::json_extract;
 use std::collections::HashSet;
 use std::sync::LazyLock;
 
@@ -68,6 +68,9 @@ static DATAONE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
         "sead-published.ncsa.illinois.edu",
     ])
 });
+
+static HAL_DOMAINS: LazyLock<HashSet<&'static str>> =
+    LazyLock::new(|| HashSet::from(["hal.science", "inrae.fr"]));
 
 static DATAVERSE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     HashSet::from([
@@ -394,13 +397,23 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
             let dataset = Dataset::new(Arxiv::new(id));
             Ok(dataset)
         }
-        "hal.science" => {
+        d if HAL_DOMAINS
+            .iter()
+            .any(|&hal_domain| d.ends_with(hal_domain)) =>
+        {
             let mut segments = url.path_segments().ok_or_else(|| DispatchError {
                 message: format!("cannot get path segments of url '{}'", url.as_str()),
             })?;
             let id = segments.next().ok_or(DispatchError {
                 message: format!("connot get record id from '{url}'"),
             })?;
+
+            // Remove version suffix (e.g., "hal-04707203v2" -> "hal-04707203")
+            let id = if let Some(pos) = id.rfind('v') {
+                &id[..pos] // Everything before the 'v'
+            } else {
+                id // No 'v' found, use as-is
+            };
 
             let dataset = Dataset::new(HalScience::new(id));
             Ok(dataset)

@@ -1,10 +1,11 @@
-use exn::{Result, ResultExt};
+use exn::{Exn, Result, ResultExt};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
 use crate::error::ErrorStatus;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct JsonExtractError {
     pub message: String,
     pub status: ErrorStatus,
@@ -37,9 +38,10 @@ impl std::error::Error for JsonExtractError {}
 ///
 /// # Examples
 ///
+/// ```ignore
 /// ```rust
 /// use serde_json::json;
-/// use datahugger::json_extract;
+///
 ///
 /// let value = json!({
 ///     "user": {
@@ -55,18 +57,31 @@ impl std::error::Error for JsonExtractError {}
 /// # Type Parameters
 ///
 /// * `T` - The type to deserialize the final JSON value into.
-pub fn json_extract<T>(value: &Value, path: &str) -> Result<T, JsonExtractError>
+pub(crate) fn json_extract<T>(value: &Value, path: &str) -> Result<T, JsonExtractError>
+where
+    T: DeserializeOwned,
+{
+    json_extract_opt(value, path)?.ok_or_else(|| {
+        Exn::new(JsonExtractError {
+            message: format!("path '{path}' not found"),
+            status: ErrorStatus::Permanent,
+        })
+    })
+}
+
+pub(crate) fn json_extract_opt<T>(value: &Value, path: &str) -> Result<Option<T>, JsonExtractError>
 where
     T: DeserializeOwned,
 {
     let mut current = value;
 
+    // Navigate the path - return None if path doesn't exist
     for key in path.split('.').filter(|s| !s.is_empty()) {
         current = match current {
-            Value::Object(map) => map.get(key).ok_or(JsonExtractError {
-                message: format!("'{key}' not found in object at path '{path}'"),
-                status: ErrorStatus::Permanent,
-            })?,
+            Value::Object(map) => match map.get(key) {
+                Some(v) => v,
+                None => return Ok(None), // Path doesn't exist
+            },
             Value::Array(arr) => {
                 let idx = key.parse::<usize>().or_raise(|| JsonExtractError {
                     message: format!("key '{key}' cannot parse to an index at path '{path}'"),
@@ -77,20 +92,17 @@ where
                     status: ErrorStatus::Permanent,
                 })?
             }
-            _ => Err(JsonExtractError {
-                message: format!(
-                    "key '{key}' cannot descend into non-container value at path '{path}'"
-                ),
-                status: ErrorStatus::Permanent,
-            })?,
+            _ => return Ok(None), // Can't descend into non-container
         };
     }
+
+    // Path exists, try to deserialize - error if wrong type
     let value: T = serde_json::from_value::<T>(current.clone()).or_raise(|| JsonExtractError {
         message: format!("failed to deserialize value at path '{path}'"),
         status: ErrorStatus::Permanent,
     })?;
 
-    Ok(value)
+    Ok(Some(value))
 }
 
 #[cfg(test)]
@@ -123,7 +135,30 @@ mod tests {
 
         let xp = "data.0.name";
         let err = json_extract::<String>(&value, xp).unwrap_err();
-        assert!(err.to_string().contains("out of bounds"));
+        assert!(
+            err.message
+                .to_string()
+                .contains("array index 0 out of bounds"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn test_json_extract_missing_path_optional() {
+        let value = serde_json::json!({
+            "data": []
+        });
+
+        let xp = "data.0.name";
+        let err = json_extract_opt::<String>(&value, xp).unwrap_err();
+        assert!(
+            err.message
+                .to_string()
+                .contains("array index 0 out of bounds"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -133,8 +168,27 @@ mod tests {
         });
 
         let xp = "data.0";
-        let err = json_extract::<String>(&value, xp).unwrap_err();
-        assert!(err.to_string().contains("cannot descend"));
+
+        let res = json_extract::<String>(&value, xp).unwrap_err();
+        assert!(res.message.to_string().contains("path 'data.0' not found"));
+    }
+
+    #[test]
+    fn test_json_extract_array_with_non_numeric_id() {
+        let value = json!({
+            "data": [
+                1
+            ]
+        });
+
+        let err = json_extract::<i64>(&value, "data.a").unwrap_err();
+        assert!(
+            err.message
+                .to_string()
+                .contains("key 'a' cannot parse to an index at path 'data.a'"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -146,5 +200,29 @@ mod tests {
         let xp = "data.id";
         let err = json_extract::<i64>(&value, xp).unwrap_err();
         assert!(err.to_string().contains("deserialize"));
+    }
+
+    #[test]
+    fn test_json_extract_optional_value() {
+        let value = json!({
+            "persons": [
+                {
+                    "name": "John Doe",
+                    "age": 43,
+                },
+                {
+                    "name": "Jane Doe"
+                }
+            ]
+        });
+
+        let xp1 = "persons.0.age";
+        let xp2 = "persons.1.age";
+
+        let age1: Option<i64> = json_extract_opt(&value, xp1).unwrap();
+        let age2: Option<i64> = json_extract_opt(&value, xp2).unwrap();
+
+        assert_eq!(age1, Some(43));
+        assert_eq!(age2, None);
     }
 }
