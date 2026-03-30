@@ -305,8 +305,39 @@ pub async fn resolve_doi_to_url(
     resolve_doi_to_url_with_base(client, doi, None, follow_redirects).await
 }
 
+/// Resolves a dataset URL into a [`Dataset`] by dispatching based on the
+/// URL's domain and structure.
+///
+/// This function parses the given URL and maps it to a supported data source
+/// (e.g., DataONE, Dataverse, arXiv, Hugging Face, Zenodo, GitHub, etc.).
+/// The resolution strategy depends on the domain and expected URL format.
+///
 /// # Errors
-/// ???
+///
+/// Returns an [`Exn<DispatchError>`] if:
+///
+/// - The input string is not a valid URL.
+/// - Required URL components (e.g., domain, host, or path segments) are missing.
+/// - The URL structure does not match the expected format for a supported provider
+///   (e.g., missing identifiers like `doi`, `persistentId`, repository info, etc.).
+/// - The domain is recognized but contains invalid or unsupported subtypes
+///   (e.g., unsupported Hugging Face repo kind).
+/// - The domain is unsupported.
+/// - Additional resolution steps fail (e.g., fetching the default GitHub branch).
+///
+/// # Panics
+///
+/// This function may panic for domains that are explicitly marked as
+/// unimplemented.
+///
+/// # Examples
+///
+/// ```no_run
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let ds = resolve("https://zenodo.org/record/12345").await?;
+/// # Ok(())
+/// # }
+/// ```
 #[allow(clippy::too_many_lines)]
 pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
     let url = Url::from_str(url).or_raise(|| DispatchError {
