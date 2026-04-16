@@ -3,10 +3,11 @@
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1768922183,
+        "lastModified": 1776354588,
+        "narHash": "sha256-NOsJcVAG63emvdlQSpSGQjvHHxcGDfBHd/cgtpduerw=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "374c5e4ffbd1c61a681530d5bfde3ce2b75c982d",
+        "rev": "d7aba90c41ee261d215cbe09cf92393cc0ff2606",
         "type": "github"
       },
       "original": {
@@ -20,21 +21,7 @@
       "flake": false,
       "locked": {
         "lastModified": 1767039857,
-        "owner": "NixOS",
-        "repo": "flake-compat",
-        "rev": "5edf11c44bc78a0d334f6334cdaf7d60d732daab",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "flake-compat",
-        "type": "github"
-      }
-    },
-    "flake-compat_2": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1767039857,
+        "narHash": "sha256-vNpUSpF5Nuw8xvDLj2KCwwksIbjua2LZCqhV1LNRDns=",
         "owner": "edolstra",
         "repo": "flake-compat",
         "rev": "5edf11c44bc78a0d334f6334cdaf7d60d732daab",
@@ -43,56 +30,16 @@
       "original": {
         "owner": "edolstra",
         "repo": "flake-compat",
-        "type": "github"
-      }
-    },
-    "git-hooks": {
-      "inputs": {
-        "flake-compat": "flake-compat",
-        "gitignore": "gitignore",
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1768908798,
-        "owner": "cachix",
-        "repo": "git-hooks.nix",
-        "rev": "be7d943c905ac39110153679404546625757ec5a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "cachix",
-        "repo": "git-hooks.nix",
-        "type": "github"
-      }
-    },
-    "gitignore": {
-      "inputs": {
-        "nixpkgs": [
-          "git-hooks",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1762808025,
-        "owner": "hercules-ci",
-        "repo": "gitignore.nix",
-        "rev": "cb5e3fdca1de58ccbc3ef53de65bd372b48f567c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "hercules-ci",
-        "repo": "gitignore.nix",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1768921670,
+        "lastModified": 1776354229,
+        "narHash": "sha256-M0rboXp08fnK5KE7vJpMWHk9En2DjmuVeiuQAhE8KoM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "b6f827e7de9f10228090ec5b7a05e382261577f9",
+        "rev": "7730a67fc162c8fa9c298b9a53d39a4353484b32",
         "type": "github"
       },
       "original": {
@@ -103,16 +50,17 @@
     },
     "nixpkgs-python": {
       "inputs": {
-        "flake-compat": "flake-compat_2",
+        "flake-compat": "flake-compat",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1765052656,
+        "lastModified": 1774026014,
+        "narHash": "sha256-UBBQYhyAKayDCi6iCIKShQXWRvwyj5omLPOuSeVjtOY=",
         "owner": "cachix",
         "repo": "nixpkgs-python",
-        "rev": "04b27dbad2e004cb237db202f21154eea3c4f89f",
+        "rev": "8b6d4103312761d4144b7bf9aebcc2f394b7e325",
         "type": "github"
       },
       "original": {
@@ -124,12 +72,8 @@
     "root": {
       "inputs": {
         "devenv": "devenv",
-        "git-hooks": "git-hooks",
         "nixpkgs": "nixpkgs",
         "nixpkgs-python": "nixpkgs-python",
-        "pre-commit-hooks": [
-          "git-hooks"
-        ],
         "rust-overlay": "rust-overlay"
       }
     },
@@ -140,10 +84,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1768877311,
+        "lastModified": 1776350315,
+        "narHash": "sha256-ijD4bgb5Iyap9F3MX73vLAZF/SYu+q7Gd7Ux4cbfCWw=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "59e4ab96304585fde3890025fd59bd2717985cc1",
+        "rev": "62e3b8aedabc240e5b0cc9fae003bc9edfebbc9b",
         "type": "github"
       },
       "original": {
