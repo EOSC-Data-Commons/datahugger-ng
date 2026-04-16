@@ -166,7 +166,7 @@ You need to have a dryad account and in your profile you can find your API secre
 https://datadryad.org/dataset/doi:10.5061/dryad.mj8m0
 
 ```bash
-export DRYAD_API_KEY="your_api_key"
+export DRYAD_API_TOKEN="your_api_token"
 datahugger download https://datadryad.org/dataset/doi:10.5061/dryad.mj8m0 --to /tmp/dryad_download/
 ```
 
