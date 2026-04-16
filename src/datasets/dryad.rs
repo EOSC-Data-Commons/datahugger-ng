@@ -142,9 +142,10 @@ impl DatasetBackend for DataDryad {
             let mime_type: String = json_extract(filej, "mimeType").or_raise(|| RepoError {
                 message: "fail to extracting 'mimeType' as String from json".to_string(),
             })?;
-            let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
-                message: format!("fail to parse the '{}' to proper mime type", mime_type),
-            })?;
+            let mime_type = mime::Mime::from_str(&mime_type).ok().or_else(|| {
+                let guess = mime_guess::from_path(&name);
+                guess.first()
+            });
             let download_url_path: String =
                 json_extract(filej, "_links.stash:download.href").or_raise(|| RepoError {
                    message: format!("fail to extracting '_links.stash:download' as String from json, at parsing {files_api_url}")
@@ -162,17 +163,32 @@ impl DatasetBackend for DataDryad {
             let hash_type: String = json_extract(filej, "digestType").or_raise(|| RepoError {
                 message: "fail to extracting 'digestType' as String from json".to_string(),
             })?;
-            let checksum = if hash_type.to_lowercase() == "md5" {
-                let hash: String = json_extract(filej, "digest").or_raise(|| RepoError {
-                    message:
-                        "fail to extracting 'attributes.extra.hashes.sha256' as String from json"
-                            .to_string(),
-                })?;
-                Checksum::Md5(hash)
-            } else {
-                exn::bail!(RepoError {
-                    message: format!("unsupported hash type, '{hash_type}'")
-                })
+            let checksum = match hash_type.to_lowercase().as_str() {
+                "md5" => {
+                    let hash: String = json_extract(filej, "digest").or_raise(|| {
+                        RepoError {
+                            message:
+                                "fail to extracting 'attributes.extra.hashes.sha256' as String from json"
+                                    .to_string(),
+                        }
+                    })?;
+                    Checksum::Md5(hash)
+                }
+                "sha-256" => {
+                    let hash: String = json_extract(filej, "digest").or_raise(|| {
+                        RepoError {
+                            message:
+                                "fail to extracting 'attributes.extra.hashes.sha256' as String from json"
+                                    .to_string(),
+                        }
+                    })?;
+                    Checksum::Sha256(hash)
+                }
+                _ => {
+                    exn::bail!(RepoError {
+                        message: format!("unsupported hash type, '{hash_type}'")
+                    })
+                }
             };
             let file = FileMeta::new(
                 None,
@@ -182,7 +198,7 @@ impl DatasetBackend for DataDryad {
                 download_url,
                 Some(size),
                 vec![checksum],
-                Some(mime_type),
+                mime_type,
                 None,
                 None,
                 None,
