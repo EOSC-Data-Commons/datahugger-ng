@@ -9,6 +9,7 @@ from datahugger import (
     DataverseJsonSrcDataset,
     ZenodoJsonSrcDataset,
     HalJsonSrcDataset,
+    DabarXmlSrcDataset,
 )
 import requests
 
@@ -170,6 +171,27 @@ def test_hal_from_json():
 
     for i in ds.crawl_file():
         print(i)
+
+
+def test_dabar_from_xml():
+    try:
+        response = requests.get(
+            "https://dabar.srce.hr/oai/?verb=GetRecord&metadataPrefix=mods&identifier=oai:dabar.srce.hr:biotechri_715",
+            timeout=60,
+        )
+        response.raise_for_status()
+        dabar = response.text
+
+    except Exception as e:
+        print("fetching JSON failed")
+        raise e
+
+    ds = DabarXmlSrcDataset("", dabar)
+
+    for i in ds.crawl_file():
+        print(i)
+
+    # print(dabar)
 
 
 @pytest.mark.asyncio

@@ -84,6 +84,23 @@ class HalJsonSrcDataset(Dataset):
             RuntimeError
         """
 
+class DabarXmlSrcDataset(Dataset):
+    """
+    A HAL dataset backend that uses pre-fetched JSON content.
+    """
+
+    def __init__(self, id: str, content: str) -> None:
+        """
+        Create a new DabarXmlSrcDataset.
+
+        Args:
+            id: The DABAR dataset ID, e.g., agr:2814
+            content: The JSON content as a string
+
+        Raises:
+            RuntimeError
+        """
+
 class Dataset(object):
     def download_with_validation(self, dst_dir: pathlib.Path, limit: int = 0) -> None:
         """blocking call, using rust's async runtime"""

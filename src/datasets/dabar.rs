@@ -115,9 +115,6 @@ fn analyze_xml(
 
     let record_identifier = record_identifier.unwrap();
 
-    //println!("{:?}", record_identifier.and_then(|n| n.text()));
-    //println!("{}", urn_url_text);
-
     // /oai:record/oai:metadata//mods:mods[mods:physicalDescription/mods:internetMediaType]
     let file_metas: Vec<_> = root
         .descendants()
@@ -158,10 +155,10 @@ impl DabarXmlSrcDataset {
 #[async_trait]
 impl DatasetBackend for DabarXmlSrcDataset {
     fn root_url(&self) -> Url {
-        todo!()
+        Url::parse("https://example.com").unwrap() // TODO: fix this
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
         let doc = roxmltree::Document::parse(self.content).or_raise(|| RepoError {
             message: "Failed to parse XML".to_string(),
         })?;
@@ -190,7 +187,7 @@ impl DatasetBackend for DabarXmlSrcDataset {
                 message: "URN:NBN url node has no text".to_string(),
             })?;
 
-        println!("{}", urn_url_text);
+        //println!("{}", urn_url_text);
 
         let no_redirect_client = Client::builder()
             .redirect(reqwest::redirect::Policy::none())
