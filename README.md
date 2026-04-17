@@ -75,14 +75,16 @@ o/f/m/a/Lynx rufus.pdf             [------------------------]      0 B/326.02 kB
 o/f/m/a/Ursus arctos.pdf           [------------------------]      0 B/319.05 kB (       0 B/s,  0s)
 ```
 
-To download only specific files, use `--include` with a glob pattern (can be repeated):
+To download only specific files, use `--include` with a glob pattern (can be repeated).
+To skip unwanted files, use `--exclude` (excludes are applied after includes):
 
 ```console
 datahugger download https://zenodo.org/records/14640564 --include "*.csv" --to /tmp/only-csvs
 datahugger download https://zenodo.org/records/14640564 --include "README" --include "*.tsv.gz" --to /tmp/selected
+datahugger download https://zenodo.org/records/14640564 --exclude "*.log" --to /tmp/no-logs
 ```
 
-Use `inspect` with `--include` to preview which files match before downloading:
+Use `inspect` with `--include` / `--exclude` to preview which files match before downloading:
 
 ```console
 datahugger inspect https://zenodo.org/records/14640564 --include "*.csv"

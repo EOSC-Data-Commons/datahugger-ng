@@ -42,7 +42,7 @@ impl Dataset {
         crawl(client.clone(), Arc::clone(&self.backend), root_dir, mp)
             .try_filter(move |entry| {
                 let pass = match entry {
-                    Entry::Dir(_) => filter.is_accept_all(),
+                    Entry::Dir(_) => true,
                     Entry::File(file_meta) => filter.matches(file_meta.relative().as_str()),
                 };
                 futures_util::future::ready(pass)
@@ -346,7 +346,7 @@ impl DownloadExt for Dataset {
         )
         .try_filter(move |entry| {
             let pass = match entry {
-                Entry::Dir(_) => filter.is_accept_all(),
+                Entry::Dir(_) => true,
                 Entry::File(file_meta) => filter.matches(file_meta.relative().as_str()),
             };
             futures_util::future::ready(pass)

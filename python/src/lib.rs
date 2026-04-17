@@ -244,7 +244,7 @@ impl PyDataset {
             self_
                 .0
                 .clone()
-                .download_with_validation(&client, dst_dir, mp, limit, &datahugger::FileFilter::accept_all())
+                .download_with_validation(&client, dst_dir, mp, limit, &datahugger::FileFilter::default())
                 .await
         })
         .map(|_| ())

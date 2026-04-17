@@ -43,6 +43,11 @@ struct InspectArgs {
     /// Can be specified multiple times. If omitted, all files are shown.
     #[arg(long)]
     include: Vec<String>,
+
+    /// Exclude files matching this glob pattern.
+    /// Can be specified multiple times. Excludes are applied after includes.
+    #[arg(long)]
+    exclude: Vec<String>,
 }
 
 #[derive(Args)]
@@ -68,6 +73,11 @@ struct DownloadArgs {
     /// Can be specified multiple times. If omitted, all files are downloaded.
     #[arg(long)]
     include: Vec<String>,
+
+    /// Exclude files matching this glob pattern.
+    /// Can be specified multiple times. Excludes are applied after includes.
+    #[arg(long)]
+    exclude: Vec<String>,
 }
 
 #[tokio::main]
@@ -89,8 +99,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         Commands::Download(args) => {
             let url = &args.url;
-            let filter = FileFilter::from_patterns(&args.include).unwrap_or_else(|err| {
-                eprintln!("invalid --include pattern: {err}");
+            let filter = FileFilter::new(&args.include, &args.exclude).unwrap_or_else(|err| {
+                eprintln!("invalid --include/--exclude pattern: {err}");
                 std::process::exit(1);
             });
             let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
@@ -133,13 +143,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .unwrap_or(0);
             if !filter.is_accept_all() && count == 0 {
-                eprintln!("warning: no files matched the --include pattern(s)");
+                eprintln!("warning: no files matched the --include/--exclude pattern(s)");
             }
         }
         Commands::Inspect(args) => {
             let url = &args.url;
-            let filter = FileFilter::from_patterns(&args.include).unwrap_or_else(|err| {
-                eprintln!("invalid --include pattern: {err}");
+            let filter = FileFilter::new(&args.include, &args.exclude).unwrap_or_else(|err| {
+                eprintln!("invalid --include/--exclude pattern: {err}");
                 std::process::exit(1);
             });
             let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
@@ -180,7 +190,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .unwrap_or(0);
             if !filter.is_accept_all() && count == 0 {
-                eprintln!("warning: no files matched the --include pattern(s)");
+                eprintln!("warning: no files matched the --include/--exclude pattern(s)");
             }
         }
     }
