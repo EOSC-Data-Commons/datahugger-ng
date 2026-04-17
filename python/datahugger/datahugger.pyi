@@ -95,7 +95,7 @@ class DabarXmlSrcDataset(Dataset):
 
         Args:
             id: The DABAR dataset ID, e.g., agr:2814
-            content: The JSON content as a string
+            content: The XML content as a string
 
         Raises:
             RuntimeError
