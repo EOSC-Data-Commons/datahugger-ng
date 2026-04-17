@@ -127,7 +127,7 @@ fn analyze_xml(
 #[derive(Debug)]
 pub struct DabarXmlSrcDataset {
     pub id: String,
-    pub content: &'static str,
+    pub content: String,
 }
 
 impl DabarXmlSrcDataset {
@@ -135,7 +135,7 @@ impl DabarXmlSrcDataset {
     pub fn new(id: impl Into<String>, content: String) -> Self {
         DabarXmlSrcDataset {
             id: id.into(),
-            content: Box::leak(content.into_boxed_str()),
+            content: content,
         }
     }
 }
@@ -147,7 +147,7 @@ impl DatasetBackend for DabarXmlSrcDataset {
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
-        let doc = roxmltree::Document::parse(self.content).or_raise(|| RepoError {
+        let doc = roxmltree::Document::parse(self.content.as_str()).or_raise(|| RepoError {
             message: "Failed to parse XML".to_string(),
         })?;
 
