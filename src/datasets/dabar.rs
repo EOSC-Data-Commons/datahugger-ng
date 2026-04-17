@@ -4,20 +4,15 @@ use async_trait::async_trait;
 use exn::{Exn, ResultExt};
 use url::Url;
 
-use crate::helper::{json_extract, json_extract_opt};
 use crate::{
     repo::{Endpoint, FileMeta, RepoError},
     DatasetBackend, DirMeta, Entry,
 };
 use mime::Mime;
-use reqwest::{Client, StatusCode};
-use std::{any::Any, str::FromStr};
-
-use quick_xml::events::Event;
-use quick_xml::Reader;
+use reqwest::Client;
+use std::any::Any;
 
 // Namespace constants mirroring Python's NS dict
-const NS_OAI: &str = "http://www.openarchives.org/OAI/2.0/";
 const NS_MODS: &str = "http://www.loc.gov/mods/v3";
 
 fn make_file_entry(
@@ -26,14 +21,11 @@ fn make_file_entry(
     location: &str,
     dir: &DirMeta,
 ) -> Result<Entry, Exn<RepoError>> {
-    let file_identifier = file_meta
-        .attribute("ID")
-        .ok_or_else(|| RepoError {
+    let file_identifier = file_meta.attribute("ID").ok_or_else(|| {
+        Exn::new(RepoError {
             message: "file_meta element missing ID attribute".to_string(),
         })
-        .or_raise(|| RepoError {
-            message: "file_meta element missing ID attribute".to_string(),
-        })?;
+    })?;
 
     // mods:physicalDescription/mods:internetMediaType
     let mime_text = file_meta
@@ -42,25 +34,21 @@ fn make_file_entry(
             n.tag_name().name() == "internetMediaType" && n.tag_name().namespace() == Some(NS_MODS)
         })
         .and_then(|n| n.text())
-        .ok_or_else(|| RepoError {
-            message: format!("No mimetype found for file_meta ID={file_identifier}"),
-        })
-        .or_raise(|| RepoError {
-            message: format!("No mimetype found for file_meta ID={file_identifier}"),
+        .ok_or_else(|| {
+            Exn::new(RepoError {
+                message: format!("No mimetype found for file_meta ID={file_identifier}"),
+            })
         })?;
 
     let mime: Mime = mime_text.parse::<Mime>().or_raise(|| RepoError {
         message: format!("Invalid mimetype: {mime_text}"),
     })?;
 
-    let record_id_text = record_identifier
-        .text()
-        .ok_or_else(|| RepoError {
+    let record_id_text = record_identifier.text().ok_or_else(|| {
+        Exn::new(RepoError {
             message: "record identifier has no text content".to_string(),
         })
-        .or_raise(|| RepoError {
-            message: "record identifier has no text content".to_string(),
-        })?;
+    })?;
 
     let download_url: Url = format!("{location}/{file_identifier}/download")
         .parse::<Url>()
@@ -171,23 +159,17 @@ impl DatasetBackend for DabarXmlSrcDataset {
                     && n.tag_name().namespace() == Some(NS_MODS)
                     && n.attribute("displayLabel") == Some("URN:NBN")
             })
-            .ok_or_else(|| RepoError {
-                message: "No location url (URN:NBN) found in record".to_string(),
-            })
-            .or_raise(|| RepoError {
-                message: "No location url (URN:NBN) found in record".to_string(),
+            .ok_or_else(|| {
+                Exn::new(RepoError {
+                    message: "No location url (URN:NBN) found in record".to_string(),
+                })
             })?;
 
-        let urn_url_text = urn_url_node
-            .text()
-            .ok_or_else(|| RepoError {
+        let urn_url_text = urn_url_node.text().ok_or_else(|| {
+            Exn::new(RepoError {
                 message: "URN:NBN url node has no text".to_string(),
             })
-            .or_raise(|| RepoError {
-                message: "URN:NBN url node has no text".to_string(),
-            })?;
-
-        //println!("{}", urn_url_text);
+        })?;
 
         let no_redirect_client = Client::builder()
             .redirect(reqwest::redirect::Policy::none())
@@ -207,11 +189,10 @@ impl DatasetBackend for DabarXmlSrcDataset {
         let location = response
             .headers()
             .get("Location")
-            .ok_or_else(|| RepoError {
-                message: "No location header in response".to_string(),
-            })
-            .or_raise(|| RepoError {
-                message: "No location header in response".to_string(),
+            .ok_or_else(|| {
+                Exn::new(RepoError {
+                    message: "No location header in response".to_string(),
+                })
             })?
             .to_str()
             .or_raise(|| RepoError {
