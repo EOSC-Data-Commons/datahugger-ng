@@ -7,6 +7,7 @@ mod hal;
 mod huggingface;
 mod osf;
 mod zenodo;
+mod dabar;
 
 pub use arxiv::Arxiv;
 pub use dataone::Dataone;

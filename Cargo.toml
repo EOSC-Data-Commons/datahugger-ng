@@ -44,6 +44,8 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 url = "2.5.8"
 xmltree = "0.12.0"
+roxmltree = "0.21.1"
+quick-xml = "0.39.2"
 
 [dev-dependencies]
 wiremock = "0.6.5"
