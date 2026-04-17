@@ -1,4 +1,5 @@
 mod arxiv;
+mod dabar;
 mod dataone;
 mod dataverse;
 mod dryad;
@@ -7,7 +8,6 @@ mod hal;
 mod huggingface;
 mod osf;
 mod zenodo;
-mod dabar;
 
 pub use arxiv::Arxiv;
 pub use dataone::Dataone;

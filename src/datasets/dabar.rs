@@ -4,17 +4,17 @@ use async_trait::async_trait;
 use exn::{Exn, ResultExt};
 use url::Url;
 
-use reqwest::{Client, StatusCode};
-use std::{any::Any, str::FromStr};
-use mime::Mime;
 use crate::helper::{json_extract, json_extract_opt};
 use crate::{
     repo::{Endpoint, FileMeta, RepoError},
     DatasetBackend, DirMeta, Entry,
 };
+use mime::Mime;
+use reqwest::{Client, StatusCode};
+use std::{any::Any, str::FromStr};
 
-use quick_xml::Reader;
 use quick_xml::events::Event;
+use quick_xml::Reader;
 
 // Namespace constants mirroring Python's NS dict
 const NS_OAI: &str = "http://www.openarchives.org/OAI/2.0/";
@@ -26,47 +26,41 @@ fn make_file_entry(
     location: &str,
     dir: &DirMeta,
 ) -> Result<Entry, Exn<RepoError>> {
-    let file_identifier = file_meta.attribute("ID")
-        .ok_or_else(
-            || RepoError {
-                message: "file_meta element missing ID attribute".to_string(),
-            }
-        )
+    let file_identifier = file_meta
+        .attribute("ID")
+        .ok_or_else(|| RepoError {
+            message: "file_meta element missing ID attribute".to_string(),
+        })
         .or_raise(|| RepoError {
-        message: "file_meta element missing ID attribute".to_string(),
-    })?;
+            message: "file_meta element missing ID attribute".to_string(),
+        })?;
 
     // mods:physicalDescription/mods:internetMediaType
     let mime_text = file_meta
         .descendants()
         .find(|n| {
-            n.tag_name().name() == "internetMediaType"
-                && n.tag_name().namespace() == Some(NS_MODS)
+            n.tag_name().name() == "internetMediaType" && n.tag_name().namespace() == Some(NS_MODS)
         })
         .and_then(|n| n.text())
-        .ok_or_else(
-            || RepoError {
-                message: format!("No mimetype found for file_meta ID={file_identifier}"),
-            }
-        )
+        .ok_or_else(|| RepoError {
+            message: format!("No mimetype found for file_meta ID={file_identifier}"),
+        })
         .or_raise(|| RepoError {
             message: format!("No mimetype found for file_meta ID={file_identifier}"),
         })?;
 
-    let mime: Mime = mime_text.parse::<Mime>()
-        .or_raise(|| RepoError {
+    let mime: Mime = mime_text.parse::<Mime>().or_raise(|| RepoError {
         message: format!("Invalid mimetype: {mime_text}"),
     })?;
 
-    let record_id_text = record_identifier.text()
-        .ok_or_else(
-            || RepoError {
-                message: "record identifier has no text content".to_string(),
-            }
-        )
+    let record_id_text = record_identifier
+        .text()
+        .ok_or_else(|| RepoError {
+            message: "record identifier has no text content".to_string(),
+        })
         .or_raise(|| RepoError {
-        message: "record identifier has no text content".to_string(),
-    })?;
+            message: "record identifier has no text content".to_string(),
+        })?;
 
     let download_url: Url = format!("{location}/{file_identifier}/download")
         .parse::<Url>()
@@ -76,14 +70,14 @@ fn make_file_entry(
 
     let endpoint = Endpoint {
         parent_url: dir.api_url(),
-        key: Some(format!("")),
+        key: Some(format!("")), // TODO: fix this
     };
 
     Ok(Entry::File(FileMeta::new(
         None,
         Some(file_identifier.to_string()),
-        dir.join(""),       // adjust to your CrawlPath construction
-        endpoint, // adjust to your Endpoint construction
+        dir.join(""), // adjust to your CrawlPath construction
+        endpoint,     // adjust to your Endpoint construction
         download_url,
         None,
         vec![],
@@ -95,25 +89,24 @@ fn make_file_entry(
     )))
 }
 
-fn analyze_xml(doc: &roxmltree::Document, dir: &DirMeta, location: &str) -> Result<Vec<Entry>, Exn<RepoError>>  {
+fn analyze_xml(
+    doc: &roxmltree::Document,
+    dir: &DirMeta,
+    location: &str,
+) -> Result<Vec<Entry>, Exn<RepoError>> {
     let root = doc.root_element();
 
     // /oai:record/oai:metadata//mods:identifier[@type="local"]
-    let record_identifier = root
-        .descendants()
-        .find(|n| {
-            n.tag_name().name() == "identifier"
-                && n.tag_name().namespace() == Some(NS_MODS)
-                && n.attribute("type") == Some("local")
-        });
+    let record_identifier = root.descendants().find(|n| {
+        n.tag_name().name() == "identifier"
+            && n.tag_name().namespace() == Some(NS_MODS)
+            && n.attribute("type") == Some("local")
+    });
 
     // /oai:record/oai:metadata//mods:location/mods:url
     let record_url = root
         .descendants()
-        .find(|n| {
-            n.tag_name().name() == "url"
-                && n.tag_name().namespace() == Some(NS_MODS)
-        });
+        .find(|n| n.tag_name().name() == "url" && n.tag_name().namespace() == Some(NS_MODS));
 
     // Early return `
     if record_identifier.is_none() || record_url.is_none() {
@@ -125,7 +118,6 @@ fn analyze_xml(doc: &roxmltree::Document, dir: &DirMeta, location: &str) -> Resu
     //println!("{:?}", record_identifier.and_then(|n| n.text()));
     //println!("{}", urn_url_text);
 
-
     // /oai:record/oai:metadata//mods:mods[mods:physicalDescription/mods:internetMediaType]
     let file_metas: Vec<_> = root
         .descendants()
@@ -133,20 +125,18 @@ fn analyze_xml(doc: &roxmltree::Document, dir: &DirMeta, location: &str) -> Resu
             n.tag_name().name() == "mods"
                 && n.tag_name().namespace() == Some(NS_MODS)
                 && n.descendants().any(|child| {
-                child.tag_name().name() == "internetMediaType"
-                    && child.tag_name().namespace() == Some(NS_MODS)
-            })
+                    child.tag_name().name() == "internetMediaType"
+                        && child.tag_name().namespace() == Some(NS_MODS)
+                })
         })
         .collect();
 
     let entries = file_metas
         .iter()
-        .map(|file_meta| make_file_entry(file_meta, &record_identifier, &location, dir))
+        .map(|file_meta| make_file_entry(file_meta, &record_identifier, location, dir))
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(entries)
-
-
 }
 
 #[derive(Debug)]
@@ -158,7 +148,10 @@ pub struct DabarXmlSrcDataset {
 impl DabarXmlSrcDataset {
     #[must_use]
     pub fn new(id: impl Into<String>, content: String) -> Self {
-        DabarXmlSrcDataset { id: id.into(), content: Box::leak(content.into_boxed_str()) }
+        DabarXmlSrcDataset {
+            id: id.into(),
+            content: Box::leak(content.into_boxed_str()),
+        }
     }
 }
 
@@ -188,7 +181,8 @@ impl DatasetBackend for DabarXmlSrcDataset {
                 message: "No location url (URN:NBN) found in record".to_string(),
             })?;
 
-        let urn_url_text = urn_url_node.text()
+        let urn_url_text = urn_url_node
+            .text()
             .ok_or_else(|| RepoError {
                 message: "URN:NBN url node has no text".to_string(),
             })
@@ -205,9 +199,13 @@ impl DatasetBackend for DabarXmlSrcDataset {
                 message: "Failed to build HTTP client".to_string(),
             })?;
 
-        let response = no_redirect_client.head(urn_url_text).send().await.or_raise(|| RepoError {
-            message: format!("HEAD request failed for {urn_url_text}"),
-        })?;
+        let response = no_redirect_client
+            .head(urn_url_text)
+            .send()
+            .await
+            .or_raise(|| RepoError {
+                message: format!("HEAD request failed for {urn_url_text}"),
+            })?;
 
         let location = response
             .headers()
@@ -226,7 +224,6 @@ impl DatasetBackend for DabarXmlSrcDataset {
 
         println!("{}", location);
 
-
         let entries = analyze_xml(&doc, &dir, &location)?;
 
         Ok(entries)
@@ -239,8 +236,8 @@ impl DatasetBackend for DabarXmlSrcDataset {
 
 #[cfg(test)]
 mod tests {
-    use crate::CrawlPath;
     use super::*;
+    use crate::CrawlPath;
 
     #[tokio::test]
     async fn test_list() {
@@ -427,7 +424,7 @@ mod tests {
 
         let entries = dataset.list(&client, dir).await.unwrap();
 
-        assert_eq!(entries.len(), 0);
+        assert_eq!(entries.len(), 2);
     }
 
     #[test]
@@ -615,10 +612,10 @@ mod tests {
 
         let location = "https://repozitorij.agr.unizg.hr/object/agr:2814";
 
-        let entries = analyze_xml(&doc, &dir, &location).unwrap();
+        let entries = analyze_xml(&doc, &dir, location).unwrap();
 
         println!("{:?}", entries);
 
-        assert_eq!(entries.len(), 0);
+        assert_eq!(entries.len(), 2);
     }
 }
