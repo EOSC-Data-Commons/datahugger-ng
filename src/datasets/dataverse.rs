@@ -212,7 +212,7 @@ pub struct DataverseJsonSrcDataset {
     pub id: String,
     pub base_url: Url,
     pub version: String,
-    pub content: &'static str,
+    pub content: String,
 }
 
 impl DataverseJsonSrcDataset {
@@ -227,7 +227,7 @@ impl DataverseJsonSrcDataset {
             id: id.into(),
             base_url: base_url.clone(),
             version: version.into(),
-            content: Box::leak(content.into_boxed_str()),
+            content,
         }
     }
 }
@@ -235,7 +235,7 @@ impl DataverseJsonSrcDataset {
 #[async_trait]
 impl DatasetBackend for DataverseJsonSrcDataset {
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
-        let json_value: JsonValue = serde_json::from_str(self.content).or_raise(|| RepoError {
+        let json_value: JsonValue = serde_json::from_str(&self.content).or_raise(|| RepoError {
             message: "Failed to parse JSON".to_string(),
         })?;
 

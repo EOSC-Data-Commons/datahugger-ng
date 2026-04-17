@@ -169,7 +169,7 @@ impl DatasetBackend for HalScience {
 #[derive(Debug)]
 pub struct HalJsonSrcDataset {
     pub id: String,
-    pub content: &'static str,
+    pub content: String,
 }
 
 impl HalJsonSrcDataset {
@@ -177,7 +177,7 @@ impl HalJsonSrcDataset {
     pub fn new(id: impl Into<String>, content: String) -> Self {
         HalJsonSrcDataset {
             id: id.into(),
-            content: Box::leak(content.into_boxed_str()),
+            content,
         }
     }
 }
@@ -219,7 +219,7 @@ impl DatasetBackend for HalJsonSrcDataset {
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
-        let json_value: JsonValue = serde_json::from_str(self.content).or_raise(|| RepoError {
+        let json_value: JsonValue = serde_json::from_str(&self.content).or_raise(|| RepoError {
             message: "Failed to parse JSON".to_string(),
         })?;
 

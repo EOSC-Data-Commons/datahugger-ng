@@ -135,7 +135,7 @@ impl DabarXmlSrcDataset {
     pub fn new(id: impl Into<String>, content: String) -> Self {
         DabarXmlSrcDataset {
             id: id.into(),
-            content: content,
+            content,
         }
     }
 }
@@ -147,7 +147,7 @@ impl DatasetBackend for DabarXmlSrcDataset {
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
-        let doc = roxmltree::Document::parse(self.content.as_str()).or_raise(|| RepoError {
+        let doc = roxmltree::Document::parse(&self.content).or_raise(|| RepoError {
             message: "Failed to parse XML".to_string(),
         })?;
 

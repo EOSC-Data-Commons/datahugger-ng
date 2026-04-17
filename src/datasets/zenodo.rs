@@ -176,7 +176,7 @@ impl DatasetBackend for Zenodo {
 #[derive(Debug)]
 pub struct ZenodoJsonSrcDataset {
     pub id: String,
-    pub content: &'static str,
+    pub content: String,
 }
 
 impl ZenodoJsonSrcDataset {
@@ -184,7 +184,7 @@ impl ZenodoJsonSrcDataset {
     pub fn new(id: impl Into<String>, content: String) -> Self {
         ZenodoJsonSrcDataset {
             id: id.into(),
-            content: Box::leak(content.into_boxed_str()),
+            content,
         }
     }
 }
@@ -203,7 +203,7 @@ impl DatasetBackend for ZenodoJsonSrcDataset {
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
-        let json_value: JsonValue = serde_json::from_str(self.content).or_raise(|| RepoError {
+        let json_value: JsonValue = serde_json::from_str(&self.content).or_raise(|| RepoError {
             message: "Failed to parse JSON".to_string(),
         })?;
 
