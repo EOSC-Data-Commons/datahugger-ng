@@ -11,7 +11,7 @@ use url::Url;
 use crate::{
     datasets::{
         Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, HalScience,
-        HuggingFace, Zenodo, OSF,
+        HuggingFace, MaterialsCloud, Zenodo, OSF,
     },
     repo::Dataset,
 };
@@ -496,6 +496,23 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
             };
 
             let dataset = Dataset::new(HuggingFace::new(owner, repo, revision));
+            Ok(dataset)
+        }
+        "archive.materialscloud.org" => {
+            let segments = url
+                .path_segments()
+                .ok_or_else(|| DispatchError {
+                    message: format!("cannot get path segments of url '{}'", url.as_str()),
+                })?
+                .collect::<Vec<&str>>();
+            let record_id = if segments.len() >= 2 {
+                segments[1]
+            } else {
+                exn::bail!(DispatchError {
+                    message: format!("unable to parse dryad dataset id from '{url}'",)
+                })
+            };
+            let dataset = Dataset::new(MaterialsCloud::new(record_id));
             Ok(dataset)
         }
         "zenodo.org" => {
