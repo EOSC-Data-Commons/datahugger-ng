@@ -5,6 +5,7 @@ mod dryad;
 mod github;
 mod hal;
 mod huggingface;
+mod materialsclound;
 mod osf;
 mod zenodo;
 
@@ -15,5 +16,6 @@ pub use dryad::DataDryad;
 pub use github::GitHub;
 pub use hal::{HalJsonSrcDataset, HalScience};
 pub use huggingface::HuggingFace;
+pub use materialsclound::MaterialsCloud;
 pub use osf::OSF;
 pub use zenodo::{Zenodo, ZenodoJsonSrcDataset};
