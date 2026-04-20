@@ -32,11 +32,11 @@ Support data repositories:
 prebuilt binaries via shell
 
 ```console
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.5.5/datahugger-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.5.6/datahugger-installer.sh | sh
 ```
 
 ```console
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.5.5/datahugger-installer.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.5.6/datahugger-installer.ps1 | iex"
 ```
 
 ```console
