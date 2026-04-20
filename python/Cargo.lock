@@ -373,7 +373,6 @@ dependencies = [
  "pyo3",
  "pyo3-async-runtimes",
  "reqwest",
- "roxmltree",
  "tokio",
 ]
 
