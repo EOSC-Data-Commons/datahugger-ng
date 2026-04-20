@@ -415,6 +415,24 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
     }
 
     match domain {
+        "mendeley.com" => {
+            // FIXME:
+            let segments = url
+                .path_segments()
+                .ok_or_else(|| DispatchError {
+                    message: format!("cannot get path segments of url '{}'", url.as_str()),
+                })?
+                .collect::<Vec<&str>>();
+            let record_id = if segments.len() >= 2 {
+                segments[1]
+            } else {
+                exn::bail!(DispatchError {
+                    message: format!("unable to parse dryad dataset id from '{url}'",)
+                })
+            };
+            let dataset = Dataset::new(Zenodo::new(record_id));
+            Ok(dataset)
+        }
         "arxiv.org" => {
             let mut segments = url.path_segments().ok_or_else(|| DispatchError {
                 message: format!("cannot get path segments of url '{}'", url.as_str()),
