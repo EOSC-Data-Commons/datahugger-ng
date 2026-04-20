@@ -101,6 +101,7 @@ static DATAVERSE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
         "dataverse.csuc.cat",
         "dataverse.harvard.edu",
         "dataverse.iit.it",
+        "dataverse.uliege.be",
         "dataverse.ird.fr",
         "dataverse.lib.umanitoba.ca",
         "dataverse.lib.unb.ca",
