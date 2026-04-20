@@ -425,7 +425,7 @@ impl std::error::Error for RepoError {}
 #[async_trait]
 pub trait DatasetBackend: Send + Sync + Any {
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>>;
-    fn root_url(&self) -> Url;
+    fn root_dir(&self) -> DirMeta;
     fn as_any(&self) -> &dyn Any;
 }
 
@@ -443,6 +443,6 @@ impl Dataset {
     }
     #[must_use]
     pub fn root_dir(&self) -> DirMeta {
-        DirMeta::new_root(&self.backend.root_url())
+        self.backend.root_dir()
     }
 }

@@ -124,7 +124,7 @@ impl MaterialsCloud {
 #[allow(clippy::too_many_lines)]
 #[async_trait]
 impl DatasetBackend for MaterialsCloud {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // https://archive.materialscloud.org/api/record/<id> to start for every dateset entry
 
         // Safe to unwrap:
@@ -132,7 +132,7 @@ impl DatasetBackend for MaterialsCloud {
         // - `path_segments_mut` cannot fail for this URL scheme
         let mut url = Url::from_str("https://archive.materialscloud.org/api/records").unwrap();
         url.path_segments_mut().unwrap().extend([&self.id, "files"]);
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {

@@ -28,7 +28,7 @@ impl Arxiv {
 
 #[async_trait]
 impl DatasetBackend for Arxiv {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // https://arxiv.org/pdf/<id> to get the record pdf
 
         // Safe to unwrap:
@@ -36,7 +36,7 @@ impl DatasetBackend for Arxiv {
         // - `path_segments_mut` cannot fail for this URL scheme
         let mut url = Url::from_str("https://arxiv.org").unwrap();
         url.path_segments_mut().unwrap().extend(["pdf", &self.id]);
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {

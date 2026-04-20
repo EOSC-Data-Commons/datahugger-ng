@@ -166,8 +166,9 @@ impl DataverseDataset {
 
 #[async_trait]
 impl DatasetBackend for DataverseDataset {
-    fn root_url(&self) -> Url {
-        parse_url(self.base_url.clone(), &self.version, &self.id)
+    fn root_dir(&self) -> DirMeta {
+        let url = parse_url(self.base_url.clone(), &self.version, &self.id);
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
@@ -244,8 +245,9 @@ impl DatasetBackend for DataverseJsonSrcDataset {
         Ok(entries)
     }
 
-    fn root_url(&self) -> Url {
-        parse_url(self.base_url.clone(), &self.version, &self.id)
+    fn root_dir(&self) -> DirMeta {
+        let url = parse_url(self.base_url.clone(), &self.version, &self.id);
+        DirMeta::new_root(&url)
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -274,7 +276,7 @@ impl DataverseFile {
 
 #[async_trait]
 impl DatasetBackend for DataverseFile {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // "https://datavers.example/api/files/:persistentId/versions/:latest-poblished/?persistentId=doi:10.7910/DVN/KBHLOD/DHJ45U"
         // Safe to unwrap:
         // - the base URL is a hard-coded, valid absolute URL
@@ -291,7 +293,7 @@ impl DatasetBackend for DataverseFile {
         }
 
         url.query_pairs_mut().append_pair("persistentId", &self.id);
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
