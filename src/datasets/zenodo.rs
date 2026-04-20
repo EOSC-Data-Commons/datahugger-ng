@@ -124,7 +124,7 @@ impl Zenodo {
 #[allow(clippy::too_many_lines)]
 #[async_trait]
 impl DatasetBackend for Zenodo {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // https://zenodo.org/api/<id> to start for every dateset entry
 
         // Safe to unwrap:
@@ -132,7 +132,7 @@ impl DatasetBackend for Zenodo {
         // - `path_segments_mut` cannot fail for this URL scheme
         let mut url = Url::from_str("https://zenodo.org/api/records").unwrap();
         url.path_segments_mut().unwrap().extend([&self.id, "files"]);
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
@@ -191,7 +191,7 @@ impl ZenodoJsonSrcDataset {
 
 #[async_trait]
 impl DatasetBackend for ZenodoJsonSrcDataset {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // https://zenodo.org/api/<id> to start for every dateset entry
 
         // Safe to unwrap:
@@ -199,7 +199,7 @@ impl DatasetBackend for ZenodoJsonSrcDataset {
         // - `path_segments_mut` cannot fail for this URL scheme
         let mut url = Url::from_str("https://zenodo.org/api/records").unwrap();
         url.path_segments_mut().unwrap().extend([&self.id, "files"]);
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {

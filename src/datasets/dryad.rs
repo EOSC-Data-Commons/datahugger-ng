@@ -35,7 +35,7 @@ impl DataDryad {
 #[allow(clippy::too_many_lines)]
 #[async_trait]
 impl DatasetBackend for DataDryad {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // https://datadryad.org/api/v2/datasets/<id> to start for every dateset entry
 
         // Safe to unwrap:
@@ -43,7 +43,7 @@ impl DatasetBackend for DataDryad {
         // - `path_segments_mut` cannot fail for this URL scheme
         let mut url = Url::from_str("https://datadryad.org/api/v2/datasets").unwrap();
         url.path_segments_mut().unwrap().extend([&self.id]);
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
