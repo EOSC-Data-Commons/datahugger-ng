@@ -21,6 +21,7 @@ Support data repositories:
 | arXiv              | [arxiv.org](https://arxiv.org/) | — | [example](#repository-without-limitations) |
 | Hal                | [hal.science](https://hal.science/) | — | [example](#repository-without-limitations) |
 | Zenodo             | [zenodo.org](https://zenodo.org/) | — | [example](#repository-without-limitations) |
+| MaterialsCloud Archive| [archive.materialscloud.org](https://archive.materialscloud.org/) | — | [example](#repository-without-limitations) |
 | Dryad              | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key) | [example](#datadryad-api-key-config-and-download) |
 | DataONE            | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#repository-without-limitations) |
 
@@ -158,6 +159,11 @@ https://github.com/EOSC-Data-Commons/datahugger-ng
 export GITHUB_TOKEN="your_personal_access_token" 
 datahugger download https://github.com/EOSC-Data-Commons/datahugger-ng --to /tmp/github_download/
 ```
+
+You can also pass the url in a folder to only download that folder.
+
+Note: if the branch or commit number is not provided, the default branch will be used.
+
 ### Datadryad API key config and download
 
 Datadryad requires a bearer token to access data. First, follow [API instructions](https://datadryad.org/api) to get your key.
@@ -210,6 +216,14 @@ https://zenodo.org/records/17867222
 datahugger download https://zenodo.org/record/17867222 --to /tmp/zenodo_download/
 ```
 
+- MaterialsCloud - simple download
+
+https://archive.materialscloud.org/record/2026.79
+
+```bash
+datahugger download https://archive.materialscloud.org/record/2026.79 --to /tmp/mc_download/
+```
+
 - Hal.science
 
 ```bash
@@ -253,6 +267,7 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
     - [ ] MendelyDataset
     - [x] HuggingFaceDataset
     - [x] HAL
+    - [x] MaterialsCloud
     - [ ] CERNBox
     - [x] OSFDataset
     - [x] Many Dataverse dataset  
