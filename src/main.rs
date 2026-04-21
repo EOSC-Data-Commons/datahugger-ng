@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use clap::{Args, Parser, Subcommand};
-use datahugger::{resolve, DownloadExt};
+use datahugger::{resolve, DownloadExt, FileFilter};
 use indicatif::MultiProgress;
 use reqwest::{
     header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT},
@@ -38,6 +38,16 @@ struct InspectArgs {
     /// For a single dataset record, leaving this unlimited is usually fine.
     #[arg(short, long, default_value_t = 0)]
     limit: usize,
+
+    /// Only show files matching this glob pattern.
+    /// Can be specified multiple times. If omitted, all files are shown.
+    #[arg(long)]
+    include: Vec<String>,
+
+    /// Exclude files matching this glob pattern.
+    /// Can be specified multiple times. Excludes are applied after includes.
+    #[arg(long)]
+    exclude: Vec<String>,
 }
 
 #[derive(Args)]
@@ -58,6 +68,16 @@ struct DownloadArgs {
     /// Defaults to the current directory (`"./"`).
     #[arg(short, long, value_name = "DIR")]
     to: Option<PathBuf>,
+
+    /// Only download files matching this glob pattern.
+    /// Can be specified multiple times. If omitted, all files are downloaded.
+    #[arg(long)]
+    include: Vec<String>,
+
+    /// Exclude files matching this glob pattern.
+    /// Can be specified multiple times. Excludes are applied after includes.
+    #[arg(long)]
+    exclude: Vec<String>,
 }
 
 #[tokio::main]
@@ -110,16 +130,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mp = MultiProgress::new();
             let dst = args.to.unwrap_or_else(|| PathBuf::from("."));
             fs::create_dir_all(&dst)?;
-            let _ = repo
-                .download_with_validation(&client, dst, mp, args.limit)
+
+            let filter = FileFilter::new(&args.include, &args.exclude).unwrap_or_else(|err| {
+                eprintln!("invalid --include/--exclude pattern: {err}");
+                std::process::exit(1);
+            });
+            let count = repo
+                .download_with_validation(&client, dst, mp, args.limit, Some(&filter))
                 .await
                 .map_err(|err| {
                     eprintln!("download failed: {err:?}");
                     std::process::exit(1);
-                });
+                })
+                .unwrap_or(0);
+            if !filter.is_accept_all() && count == 0 {
+                eprintln!("warning: no files matched the --include/--exclude pattern(s)");
+            }
         }
         Commands::Inspect(args) => {
             let url = &args.url;
+            let filter = FileFilter::new(&args.include, &args.exclude).unwrap_or_else(|err| {
+                eprintln!("invalid --include/--exclude pattern: {err}");
+                std::process::exit(1);
+            });
             let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
             let mut headers = HeaderMap::new();
             if let Ok(token) = std::env::var("GITHUB_TOKEN") {
@@ -149,13 +182,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let mp = MultiProgress::new();
-            let _ = repo
-                .print_meta(&client, mp, args.limit)
+            let count = repo
+                .print_meta(&client, mp, args.limit, Some(&filter))
                 .await
                 .map_err(|err| {
                     eprintln!("inspect failed: {err:?}");
                     std::process::exit(1);
-                });
+                })
+                .unwrap_or(0);
+            if !filter.is_accept_all() && count == 0 {
+                eprintln!("warning: no files matched the --include/--exclude pattern(s)");
+            }
         }
     }
 

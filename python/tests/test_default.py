@@ -61,7 +61,15 @@ def test_download(tmp_path: Path) -> None:
     ds = resolve(
         "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
     )
-    ds.download_with_validation(tmp_path)
+    nf = ds.download_with_validation(
+        tmp_path,
+        includes=None,
+        excludes=["tutorial4.py"],
+    )
+
+    assert "tutorial4.py" not in [i.name for i in tmp_path.iterdir()]
+    assert nf == 6
+
     assert sorted([i.name for i in tmp_path.iterdir()]) == [
         "ECM_matrix.py",
         "Markov_comp.py",
@@ -69,7 +77,6 @@ def test_download(tmp_path: Path) -> None:
         "tutorial1.py",
         "tutorial2.py",
         "tutorial3.py",
-        "tutorial4.py",
     ]
 
 

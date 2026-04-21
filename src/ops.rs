@@ -3,6 +3,7 @@ use exn::{Exn, OptionExt, ResultExt};
 use futures_core::stream::BoxStream;
 use futures_util::{StreamExt, TryStreamExt};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use reqwest::Client;
@@ -11,6 +12,7 @@ use crate::{
     crawl,
     crawler::{CrawlerError, ProgressManager},
     error::ErrorStatus,
+    filter::FileFilter,
     Dataset, Entry,
 };
 
@@ -31,26 +33,43 @@ impl Dataset {
         client: &Client,
         mp: MultiProgress,
         limit: usize,
-    ) -> Result<(), Exn<CrawlerError>> {
+        filter: Option<&FileFilter>,
+    ) -> Result<usize, Exn<CrawlerError>> {
         let root_dir = self.root_dir();
+        let file_count = Arc::new(AtomicUsize::new(0));
+        let counter = Arc::clone(&file_count);
         crawl(client.clone(), Arc::clone(&self.backend), root_dir, mp)
-            .try_for_each_concurrent(limit, |entry| async move {
-                match entry {
-                    Entry::Dir(dir_meta) => {
-                        println!("{dir_meta}");
+            .try_filter(move |entry| {
+                let pass = match entry {
+                    Entry::Dir(_) => true,
+                    Entry::File(file_meta) => match filter {
+                        Some(filter) => filter.matches(file_meta.relative().as_str()),
+                        None => true,
+                    },
+                };
+                futures_util::future::ready(pass)
+            })
+            .try_for_each_concurrent(limit, |entry| {
+                let counter = Arc::clone(&counter);
+                async move {
+                    match entry {
+                        Entry::Dir(dir_meta) => {
+                            println!("{dir_meta}");
+                        }
+                        Entry::File(file_meta) => {
+                            counter.fetch_add(1, Ordering::Relaxed);
+                            println!("{file_meta}");
+                        }
                     }
-                    Entry::File(file_meta) => {
-                        println!("{file_meta}");
-                    }
+                    Ok(())
                 }
-                Ok(())
             })
             .await
             .or_raise(|| CrawlerError {
                 message: "crawl, download and validation failed".to_string(),
                 status: ErrorStatus::Permanent,
             })?;
-        Ok(())
+        Ok(file_count.load(Ordering::Relaxed))
     }
 }
 
@@ -260,7 +279,8 @@ pub trait DownloadExt {
         dst_dir: P,
         mp: impl ProgressManager,
         limit: usize,
-    ) -> Result<(), Exn<CrawlerError>>
+        filter: Option<&FileFilter>,
+    ) -> Result<usize, Exn<CrawlerError>>
     where
         P: AsRef<Path> + Sync + Send;
 }
@@ -305,7 +325,8 @@ impl DownloadExt for Dataset {
         dst_dir: P,
         mp: impl ProgressManager,
         limit: usize,
-    ) -> Result<(), Exn<CrawlerError>>
+        filter: Option<&FileFilter>,
+    ) -> Result<usize, Exn<CrawlerError>>
     where
         P: AsRef<Path> + Sync + Send,
     {
@@ -317,18 +338,34 @@ impl DownloadExt for Dataset {
             message: format!("cannot create dir at '{}'", path.display()),
             status: ErrorStatus::Permanent,
         })?;
+        let file_count = Arc::new(AtomicUsize::new(0));
+        let counter = Arc::clone(&file_count);
         crawl(
             client.clone(),
             Arc::clone(&self.backend),
             root_dir,
             mp.clone(),
         )
+        .try_filter(move |entry| {
+            let pass = match entry {
+                Entry::Dir(_) => true,
+                Entry::File(file_meta) => match &filter {
+                    Some(filter) => filter.matches(file_meta.relative().as_str()),
+                    None => true,
+                },
+            };
+            futures_util::future::ready(pass)
+        })
         // NOTE: limit set to 0 as default for cli download,
         // should set to 20 for polite crawling for every dataset, it limit the stream consumer rate.
         .try_for_each_concurrent(limit, |entry| {
             let dst_dir = dst_dir.as_ref().to_path_buf();
             let mp = mp.clone();
+            let counter = Arc::clone(&counter);
             async move {
+                if matches!(&entry, Entry::File(_)) {
+                    counter.fetch_add(1, Ordering::Relaxed);
+                }
                 download_crawled_file_with_validation(client, entry, &dst_dir, mp).await?;
                 Ok(())
             }
@@ -338,7 +375,7 @@ impl DownloadExt for Dataset {
             message: "crawl, download and validation failed".to_string(),
             status: ErrorStatus::Permanent,
         })?;
-        Ok(())
+        Ok(file_count.load(Ordering::Relaxed))
     }
 }
 

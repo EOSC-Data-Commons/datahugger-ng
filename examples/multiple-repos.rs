@@ -36,10 +36,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // require:
             // use datahugger::DownloadExt;
             let mp = MultiProgress::new();
-            // repo.download_with_validation(&client, "./dummy_tests", mp, 0)
+            // let filter = FileFilter::default();
+            // repo.download_with_validation(&client, "./dummy_tests", mp, 0, &filter)
             //     .await
 
-            repo.print_meta(&client, mp, 0).await
+            repo.print_meta(&client, mp, 0, None).await
         }
     });
 
