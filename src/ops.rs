@@ -33,17 +33,19 @@ impl Dataset {
         client: &Client,
         mp: MultiProgress,
         limit: usize,
-        filter: &FileFilter,
+        filter: Option<&FileFilter>,
     ) -> Result<usize, Exn<CrawlerError>> {
         let root_dir = self.root_dir();
-        let filter = filter.clone();
         let file_count = Arc::new(AtomicUsize::new(0));
         let counter = Arc::clone(&file_count);
         crawl(client.clone(), Arc::clone(&self.backend), root_dir, mp)
             .try_filter(move |entry| {
                 let pass = match entry {
                     Entry::Dir(_) => true,
-                    Entry::File(file_meta) => filter.matches(file_meta.relative().as_str()),
+                    Entry::File(file_meta) => match filter {
+                        Some(filter) => filter.matches(file_meta.relative().as_str()),
+                        None => true,
+                    },
                 };
                 futures_util::future::ready(pass)
             })
@@ -276,7 +278,7 @@ pub trait DownloadExt {
         dst_dir: P,
         mp: impl ProgressManager,
         limit: usize,
-        filter: &FileFilter,
+        filter: Option<&FileFilter>,
     ) -> Result<usize, Exn<CrawlerError>>
     where
         P: AsRef<Path> + Sync + Send;
@@ -322,7 +324,7 @@ impl DownloadExt for Dataset {
         dst_dir: P,
         mp: impl ProgressManager,
         limit: usize,
-        filter: &FileFilter,
+        filter: Option<&FileFilter>,
     ) -> Result<usize, Exn<CrawlerError>>
     where
         P: AsRef<Path> + Sync + Send,
@@ -335,7 +337,6 @@ impl DownloadExt for Dataset {
             message: format!("cannot create dir at '{}'", path.display()),
             status: ErrorStatus::Permanent,
         })?;
-        let filter = filter.clone();
         let file_count = Arc::new(AtomicUsize::new(0));
         let counter = Arc::clone(&file_count);
         crawl(
@@ -347,7 +348,10 @@ impl DownloadExt for Dataset {
         .try_filter(move |entry| {
             let pass = match entry {
                 Entry::Dir(_) => true,
-                Entry::File(file_meta) => filter.matches(file_meta.relative().as_str()),
+                Entry::File(file_meta) => match &filter {
+                    Some(filter) => filter.matches(file_meta.relative().as_str()),
+                    None => true,
+                },
             };
             futures_util::future::ready(pass)
         })

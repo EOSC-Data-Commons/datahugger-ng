@@ -120,8 +120,8 @@ class Dataset:
     def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry]: ...
     def crawl_file(self) -> SyncAsyncIterator[FileEntry]: ...
     def download_with_validation(
-        self, dst_dir: pathlib.Path, limit: int = 0
-    ) -> None: ...
+        self, dst_dir: pathlib.Path, limit: int = 0, includes = None, excludes = None,
+    ) -> int: ...
     def id(self) -> str: ...
     def root_url(self) -> str: ...
 ```
@@ -156,8 +156,8 @@ Entries are yielded as either `DirEntry` or `FileEntry`.
 
 ```python
 def download_with_validation(
-    self, dst_dir: pathlib.Path, limit: int = 0
-) -> None
+    self, dst_dir: pathlib.Path, limit: int = 0, includes = None, excludes = None,
+) -> int
 ```
 
 Downloads files in the dataset into the given directory and validates them using the provided checksums.

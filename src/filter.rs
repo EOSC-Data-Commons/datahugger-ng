@@ -10,7 +10,10 @@ use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 ///
 /// Matching is always case-sensitive so that remote API paths behave
 /// consistently across platforms.
-fn build_globset<T: AsRef<str>>(patterns: &[T]) -> Result<GlobSet, globset::Error> {
+fn build_globset<T>(patterns: &[T]) -> Result<GlobSet, globset::Error>
+where
+    T: AsRef<str>,
+{
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         let pattern = pattern.as_ref().replace('\\', "/");
@@ -41,25 +44,14 @@ pub struct FileFilter {
     excludes: GlobSet,
 }
 
-impl Default for FileFilter {
-    /// Creates a filter that accepts all files (no include or exclude rules).
-    fn default() -> Self {
-        FileFilter {
-            includes: GlobSetBuilder::new().build().unwrap(),
-            excludes: GlobSetBuilder::new().build().unwrap(),
-        }
-    }
-}
-
 impl FileFilter {
     /// Creates a filter from include and exclude pattern lists.
     ///
     /// # Errors
     /// Returns an error if any pattern is invalid.
-    pub fn new<I, E>(includes: &[I], excludes: &[E]) -> Result<Self, globset::Error>
+    pub fn new<P>(includes: &[P], excludes: &[P]) -> Result<Self, globset::Error>
     where
-        I: AsRef<str>,
-        E: AsRef<str>,
+        P: AsRef<str>,
     {
         Ok(FileFilter {
             includes: build_globset(includes)?,
@@ -89,15 +81,7 @@ impl FileFilter {
 mod tests {
     use super::*;
 
-    // ── include-only ────────────────────────────────────────────
-
-    #[test]
-    fn default_matches_everything() {
-        let f = FileFilter::default();
-        assert!(f.matches("anything.csv"));
-        assert!(f.matches("dir/file.txt"));
-        assert!(f.is_accept_all());
-    }
+    // include
 
     #[test]
     fn single_extension_pattern() {
@@ -220,7 +204,7 @@ mod tests {
         assert!(f.matches("a/b/c/deep.txt"));
     }
 
-    // ── exclude-only ────────────────────────────────────────────
+    // exclude-only
 
     #[test]
     fn exclude_rejects_matching_files() {
@@ -237,7 +221,7 @@ mod tests {
         assert!(!f.matches("raw/data.csv"));
     }
 
-    // ── include + exclude combined ──────────────────────────────
+    // include + exclude combined
 
     #[test]
     fn include_and_exclude_combined() {

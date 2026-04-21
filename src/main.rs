@@ -99,10 +99,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         Commands::Download(args) => {
             let url = &args.url;
-            let filter = FileFilter::new(&args.include, &args.exclude).unwrap_or_else(|err| {
-                eprintln!("invalid --include/--exclude pattern: {err}");
-                std::process::exit(1);
-            });
             let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
             let mut headers = HeaderMap::new();
             if let Ok(token) = std::env::var("GITHUB_TOKEN") {
@@ -134,8 +130,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mp = MultiProgress::new();
             let dst = args.to.unwrap_or_else(|| PathBuf::from("."));
             fs::create_dir_all(&dst)?;
+
+            let filter = FileFilter::new(&args.include, &args.exclude).unwrap_or_else(|err| {
+                eprintln!("invalid --include/--exclude pattern: {err}");
+                std::process::exit(1);
+            });
             let count = repo
-                .download_with_validation(&client, dst, mp, args.limit, &filter)
+                .download_with_validation(&client, dst, mp, args.limit, Some(&filter))
                 .await
                 .map_err(|err| {
                     eprintln!("download failed: {err:?}");
@@ -182,7 +183,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let mp = MultiProgress::new();
             let count = repo
-                .print_meta(&client, mp, args.limit, &filter)
+                .print_meta(&client, mp, args.limit, Some(&filter))
                 .await
                 .map_err(|err| {
                     eprintln!("inspect failed: {err:?}");

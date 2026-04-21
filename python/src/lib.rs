@@ -19,6 +19,7 @@ pub fn main() {
 
 use datahugger::datasets::ZenodoJsonSrcDataset;
 use datahugger::datasets::{DataverseJsonSrcDataset, HalJsonSrcDataset};
+use datahugger::FileFilter;
 use datahugger::{
     crawl,
     crawler::{CrawlerError, ProgressManager},
@@ -225,12 +226,14 @@ impl PyHalJsonSrcDataset {
 
 #[pymethods]
 impl PyDataset {
-    #[pyo3(signature = (dst_dir, limit=0))]
+    #[pyo3(signature = (dst_dir, limit=0, includes=None, excludes=None))]
     fn download_with_validation(
         self_: PyRef<'_, Self>,
         dst_dir: PathBuf,
         limit: usize,
-    ) -> PyResult<()> {
+        includes: Option<Vec<String>>,
+        excludes: Option<Vec<String>>,
+    ) -> PyResult<usize> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
         let client = ClientBuilder::new()
             .user_agent(user_agent)
@@ -240,14 +243,26 @@ impl PyDataset {
 
         // blocking call to download, not ideal, but just to sync with original API.
         let rt = tokio::runtime::Runtime::new().expect("unable to create tokio runtime");
+        let filter: Option<FileFilter> = {
+            let includes = includes.unwrap_or_default();
+            let excludes = excludes.unwrap_or_default();
+
+            if includes.is_empty() && excludes.is_empty() {
+                None
+            } else {
+                Some(
+                    FileFilter::new(&includes, &excludes)
+                        .map_err(|err| PyRuntimeError::new_err(format!("{err}")))?,
+                )
+            }
+        };
         rt.block_on(async move {
             self_
                 .0
                 .clone()
-                .download_with_validation(&client, dst_dir, mp, limit, &datahugger::FileFilter::default())
+                .download_with_validation(&client, dst_dir, mp, limit, filter.as_ref())
                 .await
         })
-        .map(|_| ())
         .map_err(|err| PyRuntimeError::new_err(format!("{err}")))
     }
 

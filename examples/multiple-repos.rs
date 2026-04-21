@@ -1,4 +1,4 @@
-use datahugger::{resolve, FileFilter};
+use datahugger::resolve;
 use futures_util::future::join_all;
 use indicatif::MultiProgress;
 use reqwest::ClientBuilder;
@@ -40,8 +40,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // repo.download_with_validation(&client, "./dummy_tests", mp, 0, &filter)
             //     .await
 
-            repo.print_meta(&client, mp, 0, &FileFilter::default())
-                .await
+            repo.print_meta(&client, mp, 0, None).await
         }
     });
 

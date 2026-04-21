@@ -85,8 +85,14 @@ class HalJsonSrcDataset(Dataset):
         """
 
 class Dataset(object):
-    def download_with_validation(self, dst_dir: pathlib.Path, limit: int = 0) -> None:
-        """blocking call, using rust's async runtime"""
+    def download_with_validation(
+        self,
+        dst_dir: pathlib.Path,
+        limit: int = 0,
+        includes: list[str] | None = None,
+        excludes: list[str] | None = None,
+    ) -> int:
+        """blocking call, using rust's async runtime, return number of files it downloads"""
     def crawl_file(self) -> SyncAsyncIterator[FileEntry]:
         """returns a stream that can be either sync or async iterator over `FileEntry`"""
     def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry]:
