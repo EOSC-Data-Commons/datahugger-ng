@@ -154,6 +154,58 @@ static DATAVERSE_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     ])
 });
 
+struct ParsedLink {
+    owner: String,
+    repo: String,
+    reference: Option<String>,
+    path: Option<String>,
+}
+
+fn parse_github_link(link: &str) -> Result<(ParsedLink, Url), Box<dyn std::error::Error>> {
+    let url = Url::parse(link)?;
+    let host = url.host_str().ok_or("Invalid URL: missing host")?;
+    if host != "github.com" {
+        return Err("URL is not a github.com link".into());
+    }
+
+    let segments: Vec<_> = url
+        .path_segments()
+        .ok_or("Cannot parse URL path segments")?
+        .collect();
+
+    if segments.len() < 2 {
+        return Err("URL must be at least https://github.com/owner/repo".into());
+    }
+
+    let owner = segments[0].to_string();
+    let repo = segments[1].to_string();
+
+    let mut reference = None;
+    let mut path = None;
+
+    if segments.len() > 2 && segments[2] == "tree" {
+        if segments.len() < 4 {
+            return Err("Missing branch/commit after /tree".into());
+        }
+
+        reference = Some(segments[3].to_string());
+
+        if segments.len() > 4 {
+            path = Some(segments[4..].join("/"));
+        }
+    }
+
+    Ok((
+        ParsedLink {
+            owner,
+            repo,
+            reference,
+            path,
+        },
+        url,
+    ))
+}
+
 // get default branch's commit
 // NOTE: this might reach rate limit as well, therefore need a client as parameter.
 async fn github_get_default_branch_commit(
@@ -340,16 +392,16 @@ pub async fn resolve_doi_to_url(
 /// # }
 /// ```
 #[allow(clippy::too_many_lines)]
-pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
-    let url = Url::from_str(url).or_raise(|| DispatchError {
-        message: format!("'{url}' not a valid url"),
+pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
+    let link = Url::from_str(link).or_raise(|| DispatchError {
+        message: format!("'{link}' not a valid url"),
     })?;
-    let scheme = url.scheme();
-    let domain = url.domain().ok_or_else(|| DispatchError {
+    let scheme = link.scheme();
+    let domain = link.domain().ok_or_else(|| DispatchError {
         message: "domain unresolved".to_string(),
     })?;
-    let host_str = url.host_str().ok_or_else(|| DispatchError {
-        message: format!("host_str unresolved from '{url}'"),
+    let host_str = link.host_str().ok_or_else(|| DispatchError {
+        message: format!("host_str unresolved from '{link}'"),
     })?;
 
     // DataOne spec hosted
@@ -360,13 +412,13 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
         let base_url = Url::from_str(&base_url).or_raise(|| DispatchError {
             message: format!("'{base_url}' is not valid url"),
         })?;
-        let mut segments = url.path_segments().ok_or_else(|| DispatchError {
-            message: format!("'{url}' cannot be base"),
+        let mut segments = link.path_segments().ok_or_else(|| DispatchError {
+            message: format!("'{link}' cannot be base"),
         })?;
         let id = segments
             .find(|pat| pat.starts_with("doi"))
             .ok_or_raise(|| DispatchError {
-                message: format!("expect 'doi' in '{url}'"),
+                message: format!("expect 'doi' in '{link}'"),
             })?;
 
         let dataset = Dataset::new(Dataone::new(&base_url, id));
@@ -377,13 +429,13 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
     if DATAVERSE_DOMAINS.contains(domain) {
         // https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD
         // https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/JCJCJC
-        let mut segments = url.path_segments().ok_or_else(|| DispatchError {
-            message: format!("'{url}' cannot be base"),
+        let mut segments = link.path_segments().ok_or_else(|| DispatchError {
+            message: format!("'{link}' cannot be base"),
         })?;
         let typ = segments.next().ok_or_else(|| DispatchError {
-            message: format!("'{url}' no segments found"),
+            message: format!("'{link}' no segments found"),
         })?;
-        let queries = url.query_pairs();
+        let queries = link.query_pairs();
         let queries = queries.collect::<HashMap<_, _>>();
         let Some(id) = queries.get("persistentId") else {
             exn::bail!(DispatchError {
@@ -416,14 +468,14 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
 
     match domain {
         "arxiv.org" => {
-            let mut segments = url.path_segments().ok_or_else(|| DispatchError {
-                message: format!("cannot get path segments of url '{}'", url.as_str()),
+            let mut segments = link.path_segments().ok_or_else(|| DispatchError {
+                message: format!("cannot get path segments of url '{}'", link.as_str()),
             })?;
             let id = segments
                 .next()
                 .and_then(|_| segments.next())
                 .ok_or(DispatchError {
-                    message: format!("connot get record id from '{url}'"),
+                    message: format!("connot get record id from '{link}'"),
                 })?;
 
             let dataset = Dataset::new(Arxiv::new(id));
@@ -433,11 +485,11 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
             .iter()
             .any(|&hal_domain| d.ends_with(hal_domain)) =>
         {
-            let mut segments = url.path_segments().ok_or_else(|| DispatchError {
-                message: format!("cannot get path segments of url '{}'", url.as_str()),
+            let mut segments = link.path_segments().ok_or_else(|| DispatchError {
+                message: format!("cannot get path segments of url '{}'", link.as_str()),
             })?;
             let id = segments.next().ok_or(DispatchError {
-                message: format!("connot get record id from '{url}'"),
+                message: format!("connot get record id from '{link}'"),
             })?;
 
             // Remove version suffix (e.g., "hal-04707203v2" -> "hal-04707203")
@@ -458,12 +510,12 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
                  \n\
                  \x1b[2mFor example, datahugger would handle caching, retries, and consistency for you.\x1b[0m"
             );
-            let mut segments = url.path_segments().ok_or_else(|| DispatchError {
-                message: format!("cannot get path segments of url '{}'", url.as_str()),
+            let mut segments = link.path_segments().ok_or_else(|| DispatchError {
+                message: format!("cannot get path segments of url '{}'", link.as_str()),
             })?;
 
             let kind = segments.next().ok_or_else(|| DispatchError {
-                message: format!("missing repo kind in url '{}'", url.as_str()),
+                message: format!("missing repo kind in url '{}'", link.as_str()),
             })?;
 
             // Currently only datasets are supported
@@ -474,11 +526,11 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
             }
 
             let owner = segments.next().ok_or_else(|| DispatchError {
-                message: format!("missing owner in url '{}'", url.as_str()),
+                message: format!("missing owner in url '{}'", link.as_str()),
             })?;
 
             let repo = segments.next().ok_or_else(|| DispatchError {
-                message: format!("missing repo name in url '{}'", url.as_str()),
+                message: format!("missing repo name in url '{}'", link.as_str()),
             })?;
 
             // URL forms:
@@ -487,7 +539,7 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
             let (revision, _subpath) = match segments.next() {
                 Some("tree") => {
                     let rev = segments.next().ok_or_else(|| DispatchError {
-                        message: format!("missing revision in url '{}'", url.as_str()),
+                        message: format!("missing revision in url '{}'", link.as_str()),
                     })?;
                     let rest: Vec<&str> = segments.collect();
                     (rev, rest.join("/"))
@@ -499,69 +551,71 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
             Ok(dataset)
         }
         "archive.materialscloud.org" => {
-            let segments = url
+            let segments = link
                 .path_segments()
                 .ok_or_else(|| DispatchError {
-                    message: format!("cannot get path segments of url '{}'", url.as_str()),
+                    message: format!("cannot get path segments of url '{}'", link.as_str()),
                 })?
                 .collect::<Vec<&str>>();
             let record_id = if segments.len() >= 2 {
                 segments[1]
             } else {
                 exn::bail!(DispatchError {
-                    message: format!("unable to parse dryad dataset id from '{url}'",)
+                    message: format!("unable to parse dryad dataset id from '{link}'",)
                 })
             };
             let dataset = Dataset::new(MaterialsCloud::new(record_id));
             Ok(dataset)
         }
         "zenodo.org" => {
-            let segments = url
+            let segments = link
                 .path_segments()
                 .ok_or_else(|| DispatchError {
-                    message: format!("cannot get path segments of url '{}'", url.as_str()),
+                    message: format!("cannot get path segments of url '{}'", link.as_str()),
                 })?
                 .collect::<Vec<&str>>();
             let record_id = if segments.len() >= 2 {
                 segments[1]
             } else {
                 exn::bail!(DispatchError {
-                    message: format!("unable to parse dryad dataset id from '{url}'",)
+                    message: format!("unable to parse dryad dataset id from '{link}'",)
                 })
             };
             let dataset = Dataset::new(Zenodo::new(record_id));
             Ok(dataset)
         }
         "github.com" => {
-            let mut segments = url.path_segments().ok_or_else(|| DispatchError {
-                message: format!("cannot get path segments of url '{}'", url.as_str()),
+            let (parsed, _url) = parse_github_link(link.as_ref()).map_err(|e| DispatchError {
+                message: e.to_string(),
             })?;
 
-            let owner = segments.next().ok_or_else(|| DispatchError {
-                message: format!("missing owner in url '{}'", url.as_str()),
-            })?;
-
-            let repo_name = segments.next().ok_or_else(|| DispatchError {
-                message: format!("missing repo in url '{}'", url.as_str()),
-            })?;
-
-            let dataset = if let Some(branch_or_commit) =
-                segments.next().and_then(|_| segments.next())
-            {
-                Dataset::new(GitHub::new(owner, repo_name, branch_or_commit))
+            let dataset = if let Some(refspec) = parsed.reference {
+                Dataset::new(GitHub::new(
+                    &parsed.owner,
+                    &parsed.repo,
+                    &refspec,
+                    parsed.path,
+                ))
             } else {
-                let branch_or_commit = github_get_default_branch_commit(owner, repo_name).await?;
-                Dataset::new(GitHub::new(owner, repo_name, branch_or_commit))
+                let branch_or_commit =
+                    github_get_default_branch_commit(&parsed.owner, &parsed.repo).await?;
+
+                Dataset::new(GitHub::new(
+                    &parsed.owner,
+                    &parsed.repo,
+                    &branch_or_commit,
+                    parsed.path,
+                ))
             };
 
             Ok(dataset)
         }
         "datadryad.org" => {
             // example url: https://datadryad.org/dataset/doi:10.5061/dryad.mj8m0
-            let segments = url
+            let segments = link
                 .path_segments()
                 .ok_or_else(|| DispatchError {
-                    message: format!("cannot get path segments of url '{}'", url.as_str()),
+                    message: format!("cannot get path segments of url '{}'", link.as_str()),
                 })?
                 .collect::<Vec<&str>>();
             // id is 'doi:10.5061/dryad.mj8m0'
@@ -569,7 +623,7 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
                 format!("{}/{}", segments[1], segments[2])
             } else {
                 exn::bail!(DispatchError {
-                    message: format!("unable to parse dryad dataset id from '{url}'",)
+                    message: format!("unable to parse dryad dataset id from '{link}'",)
                 })
             };
             let base_url = Url::from_str("https://datadryad.org/").or_raise(|| DispatchError {
@@ -580,12 +634,12 @@ pub async fn resolve(url: &str) -> Result<Dataset, Exn<DispatchError>> {
             Ok(dataset)
         }
         "osf.io" => {
-            let mut segments = url.path_segments().ok_or_else(|| DispatchError {
-                message: format!("cannot get path segments of url '{}'", url.as_str()),
+            let mut segments = link.path_segments().ok_or_else(|| DispatchError {
+                message: format!("cannot get path segments of url '{}'", link.as_str()),
             })?;
 
             let id = segments.next().ok_or_else(|| DispatchError {
-                message: format!("no segments path in url '{}'", url.as_str()),
+                message: format!("no segments path in url '{}'", link.as_str()),
             })?;
 
             let dataset = Dataset::new(OSF::new(id));

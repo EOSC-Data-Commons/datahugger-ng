@@ -66,6 +66,7 @@ where
     P: AsRef<Path> + std::fmt::Debug,
 {
     debug!("downloading with validating");
+    // dbg!(&src);
     match src {
         Entry::Dir(dir_meta) => {
             let path = dst.as_ref().join(dir_meta.relative());
