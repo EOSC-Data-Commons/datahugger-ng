@@ -173,7 +173,7 @@ def test_hal_from_json():
         print(i)
 
 
-def test_dabar_from_xml():
+def test_dabar_from_xml1():
     try:
         response = requests.get(
             "https://dabar.srce.hr/oai/?verb=GetRecord&metadataPrefix=mods&identifier=oai:dabar.srce.hr:biotechri_715",
@@ -191,7 +191,24 @@ def test_dabar_from_xml():
     for i in ds.crawl_file():
         print(i)
 
-    # print(dabar)
+
+def test_dabar_from_xml2():
+    try:
+        response = requests.get(
+            "https://data.fulir.irb.hr/oai/?verb=GetRecord&metadataPrefix=mods&identifier=oai:data.fulir.irb.hr:irb_106",
+            timeout=60,
+        )
+        response.raise_for_status()
+        dabar = response.text
+
+    except Exception as e:
+        print("fetching JSON failed")
+        raise e
+
+    ds = DabarXmlSrcDataset("", dabar)
+
+    for i in ds.crawl_file():
+        print(i)
 
 
 @pytest.mark.asyncio

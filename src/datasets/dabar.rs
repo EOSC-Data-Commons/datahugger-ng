@@ -44,6 +44,12 @@ fn make_file_entry(
         message: format!("Invalid mimetype: {mime_text}"),
     })?;
 
+    let size: Option<u64> = file_meta
+        .descendants()
+        .find(|n| n.tag_name().name() == "extent" && n.tag_name().namespace() == Some(NS_MODS))
+        .and_then(|n| n.text())
+        .and_then(|s| s.parse::<u64>().ok());
+
     let record_id_text = record_identifier.text().ok_or_else(|| {
         Exn::new(RepoError {
             message: "record identifier has no text content".to_string(),
@@ -67,7 +73,7 @@ fn make_file_entry(
         dir.join(""), // adjust to your CrawlPath construction
         endpoint,     // adjust to your Endpoint construction
         download_url,
-        None,
+        size,
         vec![],
         Some(mime),
         None,
@@ -109,6 +115,7 @@ fn analyze_xml(
         .filter(|n| {
             n.tag_name().name() == "mods"
                 && n.tag_name().namespace() == Some(NS_MODS)
+                && n.attribute("ID") != Some("master")
                 && n.descendants().any(|child| {
                     child.tag_name().name() == "internetMediaType"
                         && child.tag_name().namespace() == Some(NS_MODS)
@@ -199,8 +206,6 @@ impl DatasetBackend for DabarXmlSrcDataset {
                 message: "Location header is not valid UTF-8".to_string(),
             })?
             .to_string();
-
-        println!("{}", location);
 
         let entries = analyze_xml(&doc, &dir, &location)?;
 
