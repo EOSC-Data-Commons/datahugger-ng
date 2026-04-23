@@ -64,7 +64,7 @@ fn make_file_entry(
 
     let endpoint = Endpoint {
         parent_url: dir.api_url(),
-        key: Some(format!("")), // TODO: fix this
+        key: None, // TODO: figure out how to use this in local data analyzer use case
     };
 
     Ok(Entry::File(FileMeta::new(
@@ -150,7 +150,7 @@ impl DabarXmlSrcDataset {
 #[async_trait]
 impl DatasetBackend for DabarXmlSrcDataset {
     fn root_url(&self) -> Url {
-        Url::parse("https://example.com").unwrap() // TODO: fix this
+        Url::parse("https://dabar.srce.hr/oai/").unwrap() // static OAI-PMH repo URL
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
@@ -178,6 +178,8 @@ impl DatasetBackend for DabarXmlSrcDataset {
             })
         })?;
 
+        // Build a client to resolve the URL handle to figure out the domain to build the download links.
+        // TODO: Once DABAR MODS contains the domains, this logic can be removed.
         let no_redirect_client = Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .build()

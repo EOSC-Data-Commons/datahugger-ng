@@ -186,7 +186,7 @@ def test_dabar_from_xml1():
         print("fetching JSON failed")
         raise e
 
-    ds = DabarXmlSrcDataset("", dabar)
+    ds = DabarXmlSrcDataset("biotechri:715", dabar)
 
     for i in ds.crawl_file():
         print(i)
@@ -205,7 +205,7 @@ def test_dabar_from_xml2():
         print("fetching JSON failed")
         raise e
 
-    ds = DabarXmlSrcDataset("", dabar)
+    ds = DabarXmlSrcDataset("irb:106", dabar)
 
     for i in ds.crawl_file():
         print(i)
