@@ -86,7 +86,7 @@ class HalJsonSrcDataset(Dataset):
 
 class DabarXmlSrcDataset(Dataset):
     """
-    A HAL dataset backend that uses pre-fetched JSON content.
+    A DABAR MODS dataset backend that uses pre-fetched XML content.
     """
 
     def __init__(self, id: str, content: str) -> None:
