@@ -110,7 +110,7 @@ fn analyze_xml(
     let record_identifier = record_identifier.unwrap();
 
     // /oai:record/oai:metadata//mods:mods[mods:physicalDescription/mods:internetMediaType]
-    let file_metas: Vec<_> = root
+    let entries: Vec<_> = root
         .descendants()
         .filter(|n| {
             n.tag_name().name() == "mods"
@@ -121,11 +121,7 @@ fn analyze_xml(
                         && child.tag_name().namespace() == Some(NS_MODS)
                 })
         })
-        .collect();
-
-    let entries = file_metas
-        .iter()
-        .map(|file_meta| make_file_entry(file_meta, &record_identifier, location, dir))
+        .map(|file_meta| make_file_entry(&file_meta, &record_identifier, location, dir))
         .collect::<Result<Vec<_>, _>>()?;
 
     Ok(entries)
@@ -206,10 +202,9 @@ impl DatasetBackend for DabarXmlSrcDataset {
             .to_str()
             .or_raise(|| RepoError {
                 message: "Location header is not valid UTF-8".to_string(),
-            })?
-            .to_string();
+            })?;
 
-        let entries = analyze_xml(&doc, &dir, &location)?;
+        let entries = analyze_xml(&doc, &dir, location)?;
 
         Ok(entries)
     }
