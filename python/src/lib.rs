@@ -300,7 +300,27 @@ impl PyDataset {
 
     fn root_url(self_: PyRef<'_, Self>) -> String {
         let repo = self_.0.backend.clone();
-        repo.root_url().as_str().into()
+        let dir_meta = repo.root_dir();
+        dir_meta.root_url().as_str().into()
+    }
+
+    fn root_dir(self_: PyRef<'_, Self>) -> PyResult<Py<PyDirEntry>> {
+        let repo = self_.0.backend.clone();
+        let meta = repo.root_dir();
+
+        Python::attach(|py| {
+            Py::new(
+                py,
+                (
+                    PyDirEntry {
+                        path_crawl_rel: PathBuf::from(meta.path().as_str()),
+                        root_url: meta.root_url().as_str().to_string(),
+                        api_url: meta.api_url().as_str().to_string(),
+                    },
+                    PyEntryBase,
+                ),
+            )
+        })
     }
 
     fn crawl(self_: PyRef<'_, Self>) -> PyResult<PyEntryStream> {

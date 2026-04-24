@@ -95,7 +95,7 @@ impl HalScience {
 
 #[async_trait]
 impl DatasetBackend for HalScience {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // HAL Search API endpoint
         // can get files of a record by following search api call, e.g. for 'cel-01830944'
         // curl "https://api.archives-ouvertes.fr/search/?q=halId_s:cel-01830943&wt=json&fl=halId_s,fileMain_s,files_s,fileType_s"
@@ -125,8 +125,7 @@ impl DatasetBackend for HalScience {
             .append_pair("q", &format!("halId_s:{}", self.id))
             .append_pair("wt", "json")
             .append_pair("fl", "halId_s,fileMain_s,files_s,fileType_s,producedDate_tdate,modifiedDate_tdate,version_i"); // https://api.archives-ouvertes.fr/docs/search/?schema=fields#fields
-
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
@@ -184,7 +183,7 @@ impl HalJsonSrcDataset {
 
 #[async_trait]
 impl DatasetBackend for HalJsonSrcDataset {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // HAL Search API endpoint
         // can get files of a record by following search api call, e.g. for 'cel-01830944'
         // curl "https://api.archives-ouvertes.fr/search/?q=halId_s:cel-01830943&wt=json&fl=halId_s,fileMain_s,files_s,fileType_s"
@@ -214,8 +213,7 @@ impl DatasetBackend for HalJsonSrcDataset {
             .append_pair("q", &format!("halId_s:{}", self.id))
             .append_pair("wt", "json")
             .append_pair("fl", "halId_s,fileMain_s,files_s,fileType_s,producedDate_tdate,modifiedDate_tdate,version_i");
-
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {

@@ -145,8 +145,9 @@ impl DabarXmlSrcDataset {
 
 #[async_trait]
 impl DatasetBackend for DabarXmlSrcDataset {
-    fn root_url(&self) -> Url {
-        Url::parse("https://dabar.srce.hr/oai/").unwrap() // static OAI-PMH repo URL
+    fn root_dir(&self) -> DirMeta {
+        let url = Url::parse("https://dabar.srce.hr/oai/").unwrap(); // static OAI-PMH repo URL
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {

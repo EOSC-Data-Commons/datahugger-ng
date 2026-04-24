@@ -50,15 +50,14 @@ impl HuggingFace {
 
 #[async_trait]
 impl DatasetBackend for HuggingFace {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // https://huggingface.co/api/datasets/{owner}/{repo}/tree/{revision}/{path}
         let mut url = Url::parse("https://huggingface.co/api/datasets").unwrap();
         // safe to unwrap, we know the url.
         url.path_segments_mut()
             .unwrap()
             .extend([&self.owner, &self.repo, "tree", &self.revision]);
-
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {

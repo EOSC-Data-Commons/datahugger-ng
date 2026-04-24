@@ -39,7 +39,7 @@ impl GitHub {
 
 #[async_trait]
 impl DatasetBackend for GitHub {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // id for github repo is the commit hash or branch name
 
         // Safe to unwrap:
@@ -57,8 +57,7 @@ impl DatasetBackend for GitHub {
         }
 
         url.query_pairs_mut().append_pair("ref", &self.reference);
-
-        url
+        DirMeta::new_root(&url)
     }
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {

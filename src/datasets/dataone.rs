@@ -38,7 +38,7 @@ impl Dataone {
 
 #[async_trait]
 impl DatasetBackend for Dataone {
-    fn root_url(&self) -> Url {
+    fn root_dir(&self) -> DirMeta {
         // the dashboard can be at https://data.ess-dive.lbl.gov/view/doi%3A10.15485%2F1971251
         // the xml to describe datasets are all at https://cn.dataone.org/cn/v2/object/
 
@@ -46,7 +46,8 @@ impl DatasetBackend for Dataone {
         // - the base URL is a hard-coded, valid absolute URL
         // - `join` cannot fail for this URL scheme
         let url = Url::from_str("https://cn.dataone.org/cn/v2/object/").unwrap();
-        url.join(&self.id).expect("cannot parse new url")
+        url.join(&self.id).expect("cannot parse new url");
+        DirMeta::new_root(&url)
     }
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
