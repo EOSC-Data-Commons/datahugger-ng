@@ -1,10 +1,6 @@
 use std::{collections::HashMap, str::FromStr};
 
 use exn::{Exn, OptionExt, ResultExt};
-use reqwest::{
-    header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT},
-    ClientBuilder,
-};
 use serde_json::Value as JsonValue;
 use url::Url;
 
@@ -209,25 +205,11 @@ fn parse_github_link(link: &str) -> Result<(ParsedLink, Url), Box<dyn std::error
 // get default branch's commit
 // NOTE: this might reach rate limit as well, therefore need a client as parameter.
 async fn github_get_default_branch_commit(
+    client: &reqwest::Client,
     owner: &str,
     repo: &str,
 ) -> Result<String, Exn<DispatchError>> {
     // TODO: don't panic, and wrap client.get as client.get_json() to be used everywhere.
-    let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
-    let mut headers = HeaderMap::new();
-    if let Ok(token) = std::env::var("GITHUB_TOKEN") {
-        headers.insert(
-            AUTHORIZATION,
-            HeaderValue::from_str(&format!("token {token}")).unwrap(),
-        );
-    }
-    headers.insert(USER_AGENT, HeaderValue::from_str(&user_agent).unwrap());
-    let client = ClientBuilder::new()
-        .user_agent(&user_agent)
-        .default_headers(headers)
-        .use_native_tls()
-        .build()
-        .unwrap();
     let repo_url = format!("https://api.github.com/repos/{owner}/{repo}");
     let resp: JsonValue = client
         .get(&repo_url)
@@ -235,10 +217,14 @@ async fn github_get_default_branch_commit(
         .await
         .unwrap()
         .error_for_status()
-        .unwrap()
+        .map_err(|err| DispatchError {
+            message: format!("can't resolve `{}`, because {}", repo_url, err),
+        })?
         .json()
         .await
-        .unwrap();
+        .map_err(|err| DispatchError {
+            message: format!("can't convert to json `{}`, because {}", repo_url, err),
+        })?;
     let default_branch: String =
         json_extract(&resp, "default_branch").map_err(|_| DispatchError {
             message: "not able to get default branch".to_string(),
@@ -249,15 +235,18 @@ async fn github_get_default_branch_commit(
 
     let resp: JsonValue = client
         .get(&commits_url)
-        .header("User-Agent", user_agent.clone())
         .send()
         .await
-        .unwrap()
+        .map_err(|err| DispatchError {
+            message: format!("can't resolve `{}`, because {}", commits_url, err),
+        })?
         .error_for_status()
         .unwrap()
         .json()
         .await
-        .unwrap();
+        .map_err(|err| DispatchError {
+            message: format!("can't convert to json `{}`, because {}", commits_url, err),
+        })?;
     let commit_sha: String = json_extract(&resp, "sha").map_err(|_| DispatchError {
         message: "not able to get default branch".to_string(),
     })?;
@@ -387,12 +376,13 @@ pub async fn resolve_doi_to_url(
 ///
 /// ```no_run
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-/// let ds = datahugger::resolve("https://zenodo.org/record/12345").await?;
+/// let client = reqwest::Client::new();
+/// let ds = datahugger::resolve(&client, "https://zenodo.org/record/12345").await?;
 /// # Ok(())
 /// # }
 /// ```
 #[allow(clippy::too_many_lines)]
-pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
+pub async fn resolve(client: &reqwest::Client, link: &str) -> Result<Dataset, Exn<DispatchError>> {
     let link = Url::from_str(link).or_raise(|| DispatchError {
         message: format!("'{link}' not a valid url"),
     })?;
@@ -598,7 +588,7 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
                 ))
             } else {
                 let branch_or_commit =
-                    github_get_default_branch_commit(&parsed.owner, &parsed.repo).await?;
+                    github_get_default_branch_commit(client, &parsed.owner, &parsed.repo).await?;
 
                 Dataset::new(GitHub::new(
                     &parsed.owner,
@@ -668,13 +658,19 @@ mod tests {
     use super::*;
     use std::time::Duration;
 
+    use reqwest::{Client, ClientBuilder};
     use wiremock::matchers::{method, path, query_param};
     use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    fn client() -> Client {
+        ClientBuilder::new().use_native_tls().build().unwrap()
+    }
+
     #[tokio::test]
     async fn test_resolve_dataverse_default() {
         // dataset
         let url = "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD";
-        let qr = resolve(url).await.unwrap();
+        let qr = resolve(&client(), url).await.unwrap();
         let qr = qr
             .backend
             .as_any()
@@ -685,7 +681,7 @@ mod tests {
         // file
         let url =
             "https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/DHJ45U";
-        let qr = resolve(url).await.unwrap();
+        let qr = resolve(&client(), url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<DataverseFile>().unwrap();
         assert_eq!(qr.id.as_str(), "doi:10.7910/DVN/KBHLOD/DHJ45U");
     }
@@ -694,50 +690,46 @@ mod tests {
     async fn test_resolve_default() {
         // osf.io
         for url in ["https://osf.io/dezms/overview", "https://osf.io/dezms/"] {
-            let qr = resolve(url).await.unwrap();
+            let qr = resolve(&client(), url).await.unwrap();
             let qr = qr.backend.as_any().downcast_ref::<OSF>().unwrap();
             assert_eq!(qr.id.as_str(), "dezms");
         }
 
         // arxiv
         let url = "https://arxiv.org/abs/2101.00001v1";
-        let qr = resolve(url).await.unwrap();
+        let qr = resolve(&client(), url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<Arxiv>().unwrap();
         assert_eq!(qr.id.as_str(), "2101.00001v1");
 
         // Dataone
         let url = "https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2X";
-        let qr = resolve(url).await.unwrap();
+        let qr = resolve(&client(), url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<Dataone>().unwrap();
         assert_eq!(qr.id.as_str(), "doi%3A10.18739%2FA2542JB2X");
         assert_eq!(qr.base_url.as_str(), "https://arcticdata.io/");
 
         // dryad
         let url = "https://datadryad.org/dataset/doi:10.5061/dryad.mj8m0";
-        let qr = resolve(url).await.unwrap();
+        let qr = resolve(&client(), url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<DataDryad>().unwrap();
         assert_eq!(qr.id.as_str(), "doi:10.5061/dryad.mj8m0");
 
         // github
         // let url = "https://github.com/EOSC-Data-Commons/datahugger-ng";
-        // let qr = resolve(url).await.unwrap();
+        // let qr = resolve(&client(), url).await.unwrap();
         // let qr = qr.backend.as_any().downcast_ref::<GitHub>().unwrap();
         // assert_eq!(qr.owner.as_str(), "EOSE-Data-Commons");
         // assert_eq!(qr.repo.as_str(), "datahugger-ng");
-        // assert_eq!(
-        //     qr.branch_or_commit.as_str(),
-        //     "<commit number that can change because by default is the commit of default branch>"
-        // );
 
         // hal
         let url = "https://hal.science/cel-01830944";
-        let qr = resolve(url).await.unwrap();
+        let qr = resolve(&client(), url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<HalScience>().unwrap();
         assert_eq!(qr.id.as_str(), "cel-01830944");
 
         // huggingface
         let url = "https://huggingface.co/datasets/HuggingFaceFW/finepdfs";
-        let qr = resolve(url).await.unwrap();
+        let qr = resolve(&client(), url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<HuggingFace>().unwrap();
         assert_eq!(qr.owner.as_str(), "HuggingFaceFW");
         assert_eq!(qr.repo.as_str(), "finepdfs");
@@ -745,7 +737,7 @@ mod tests {
 
         // zenodo
         let url = "https://zenodo.org/records/17867222";
-        let qr = resolve(url).await.unwrap();
+        let qr = resolve(&client(), url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<Zenodo>().unwrap();
         assert_eq!(qr.id.as_str(), "17867222");
     }

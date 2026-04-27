@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let client = client.clone();
 
         async move {
-            let repo = match resolve(repo).await {
+            let repo = match resolve(&client, repo).await {
                 Ok(repo) => repo,
                 Err(err) => {
                     eprintln!("failed to resolve '{repo}': {err:?}");
