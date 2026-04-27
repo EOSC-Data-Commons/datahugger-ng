@@ -49,7 +49,6 @@ impl DatasetBackend for OnedataDataset {
 
     async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
         // NOTE: Require use redirect client
-        // XXX: pagenation?
         let resp = client
             .get(dir.api_url())
             .send()
@@ -114,9 +113,55 @@ impl DatasetBackend for OnedataDataset {
             message: format!("Failed to parse JSON from {}: {e}", dir.api_url()),
         })?;
 
-        let files: Vec<JsonValue> = json_extract(&json, "children").or_raise(|| RepoError {
+        // first check if it is the last page, if not add next page as a dir like entry
+        let mut is_last_page: bool = json_extract(&json, "isLast").or_raise(|| RepoError {
+            message: "Expected a bool from onedata DIR children API through 'isLast' key"
+                .to_string(),
+        })?;
+        let mut files: Vec<JsonValue> = json_extract(&json, "children").or_raise(|| RepoError {
             message: "Expected array from onedata DIR children API".to_string(),
         })?;
+
+        // peek the paging until it is the last page
+        while !is_last_page {
+            let mut children_list_url = dir.api_url();
+            children_list_url
+                .path_segments_mut()
+                .unwrap()
+                .extend(["children"]);
+            let next_page_token: String = json_extract(&json, "nextPageToken").or_raise(|| RepoError {
+                message: "Expected a string from onedata DIR children API through 'nextPageToken' key"
+                    .to_string(),
+            })?;
+            let params = [
+                ("attributes", "fileId"),
+                ("attributes", "name"),
+                ("attributes", "type"),
+                ("attributes", "size"),
+                ("token", &next_page_token),
+            ];
+            let resp = client
+                .get(children_list_url)
+                .query(&params)
+                .send()
+                .await
+                .or_raise(|| RepoError {
+                    message: format!("fail at client sent GET {}", dir.api_url()),
+                })?;
+
+            let json: JsonValue = resp.json().await.map_err(|e| RepoError {
+                message: format!("Failed to parse JSON from {}: {e}", dir.api_url()),
+            })?;
+            let page_files: Vec<JsonValue> =
+                json_extract(&json, "children").or_raise(|| RepoError {
+                    message: "Expected array from onedata DIR children API".to_string(),
+                })?;
+            files.extend(page_files);
+            is_last_page = json_extract(&json, "isLast").or_raise(|| RepoError {
+                message: "Expected a bool from onedata DIR children API through 'isLast' key"
+                    .to_string(),
+            })?;
+        }
 
         let mut entries = Vec::new();
         for (idx, filej) in files.iter().enumerate() {
