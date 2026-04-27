@@ -240,9 +240,13 @@ impl std::fmt::Display for Endpoint {
 }
 
 // TODO: `FileMetaByScan` will include the full accurate mimetype and size and checksum.
+struct FilenameSet;
+struct FilenameNotSet;
+struct FileIdentifierSet;
+struct FileIdentifierNotSet;
 
-#[derive(Debug, Default)]
-struct FileMetaBuilder {
+#[derive(Debug)]
+struct FileMetaBuilder<FilenameSetState, FileIdentifierSetState> {
     filename: Option<String>,
     file_identifier: Option<String>,
     path: Option<CrawlPath>,
@@ -255,9 +259,33 @@ struct FileMetaBuilder {
     creation_date: Option<String>,
     last_modification_date: Option<String>,
     downloadable: Option<bool>,
+
+    _filename: std::marker::PhantomData<FilenameSetState>,
+    _file_identifier: std::marker::PhantomData<FileIdentifierSetState>,
 }
 
-impl FileMetaBuilder {
+impl std::default::Default for FileMetaBuilder<FilenameNotSet, FileIdentifierNotSet> {
+    fn default() -> Self {
+        Self {
+            filename: Default::default(),
+            file_identifier: Default::default(),
+            path: Default::default(),
+            endpoint: Default::default(),
+            download_url: Default::default(),
+            size: Default::default(),
+            checksum: Default::default(),
+            mimetype: Default::default(),
+            version: Default::default(),
+            creation_date: Default::default(),
+            last_modification_date: Default::default(),
+            downloadable: Default::default(),
+            _filename: Default::default(),
+            _file_identifier: Default::default(),
+        }
+    }
+}
+
+impl FileMetaBuilder<FilenameSet, FileIdentifierSet> {
     fn build(self) -> FileMeta {
         FileMeta {
             filename: self.filename,
@@ -276,17 +304,94 @@ impl FileMetaBuilder {
     }
 }
 
-impl FileMetaBuilder {
-    pub fn set_filename(mut self, filename: impl Into<String>) -> Self {
-        self.filename = Some(filename.into());
-        self
+impl FileMetaBuilder<FilenameNotSet, FileIdentifierSet> {
+    fn build(self) -> FileMeta {
+        FileMeta {
+            filename: self.filename,
+            file_identifier: self.file_identifier,
+            path: self.path.expect("path is required"),
+            endpoint: self.endpoint.expect("endpoint is required"),
+            download_url: self.download_url.expect("download_url is required"),
+            size: self.size,
+            checksum: self.checksum,
+            mimetype: self.mimetype,
+            version: self.version,
+            creation_date: self.creation_date,
+            last_modification_date: self.last_modification_date,
+            downloadable: self.downloadable.unwrap_or(false),
+        }
     }
+}
 
-    pub fn set_file_identifier(mut self, file_identifier: impl Into<String>) -> Self {
+impl FileMetaBuilder<FilenameSet, FileIdentifierNotSet> {
+    fn build(self) -> FileMeta {
+        FileMeta {
+            filename: self.filename,
+            file_identifier: self.file_identifier,
+            path: self.path.expect("path is required"),
+            endpoint: self.endpoint.expect("endpoint is required"),
+            download_url: self.download_url.expect("download_url is required"),
+            size: self.size,
+            checksum: self.checksum,
+            mimetype: self.mimetype,
+            version: self.version,
+            creation_date: self.creation_date,
+            last_modification_date: self.last_modification_date,
+            downloadable: self.downloadable.unwrap_or(false),
+        }
+    }
+}
+
+impl<F> FileMetaBuilder<F, FileIdentifierNotSet> {
+    pub fn set_file_identifier(
+        mut self,
+        file_identifier: impl Into<String>,
+    ) -> FileMetaBuilder<F, FileIdentifierSet> {
         self.file_identifier = Some(file_identifier.into());
-        self
-    }
+        FileMetaBuilder {
+            filename: self.filename,
+            file_identifier: self.file_identifier,
+            path: self.path,
+            endpoint: self.endpoint,
+            download_url: self.download_url,
+            size: self.size,
+            checksum: self.checksum,
+            mimetype: self.mimetype,
+            version: self.version,
+            creation_date: self.creation_date,
+            last_modification_date: self.last_modification_date,
+            downloadable: self.downloadable,
 
+            _filename: std::marker::PhantomData,
+            _file_identifier: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<I> FileMetaBuilder<FilenameNotSet, I> {
+    pub fn set_filename(mut self, filename: impl Into<String>) -> FileMetaBuilder<FilenameSet, I> {
+        self.filename = Some(filename.into());
+        FileMetaBuilder {
+            filename: self.filename,
+            file_identifier: self.file_identifier,
+            path: self.path,
+            endpoint: self.endpoint,
+            download_url: self.download_url,
+            size: self.size,
+            checksum: self.checksum,
+            mimetype: self.mimetype,
+            version: self.version,
+            creation_date: self.creation_date,
+            last_modification_date: self.last_modification_date,
+            downloadable: self.downloadable,
+
+            _filename: std::marker::PhantomData,
+            _file_identifier: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<F, I> FileMetaBuilder<F, I> {
     pub fn set_path(mut self, path: CrawlPath) -> Self {
         self.path = Some(path);
         self
@@ -366,8 +471,8 @@ pub struct FileMeta {
 }
 
 impl FileMeta {
-    fn builder() -> FileMetaBuilder {
-        FileMetaBuilder::default()
+    fn builder() -> FileMetaBuilder<FilenameNotSet, FileIdentifierNotSet> {
+        FileMetaBuilder::<FilenameNotSet, FileIdentifierNotSet>::default()
     }
 }
 
