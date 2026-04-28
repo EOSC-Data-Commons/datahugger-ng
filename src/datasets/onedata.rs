@@ -13,12 +13,11 @@ use crate::{
     DatasetBackend, DirMeta, Entry,
 };
 
-/// A `DatasetBackend` that resolves a Onedata identifier (DOI or share URL)
+/// A `DatasetBackend` that resolves an onedata `root_file_id` identifier
 /// and lists all public files in the resulting share.
 #[derive(Debug)]
 pub struct OnedataDataset {
     pub domain: String,
-    /// The raw identifier - may be a DOI or a direct share URL.
     pub root_file_id: String,
 }
 
