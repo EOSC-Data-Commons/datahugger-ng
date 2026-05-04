@@ -140,7 +140,7 @@ impl DatasetBackend for OSF {
                 typ => {
                     exn::bail!(RepoError {
                         message: format!(
-                            "kind can be 'dataset' or 'kind' for an OSF entry, got {typ}"
+                            "kind can be 'dataset' or 'kind' for an OSF entry, got '{typ}'"
                         )
                     });
                 }

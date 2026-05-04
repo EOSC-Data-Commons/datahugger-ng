@@ -157,6 +157,14 @@ pub enum Entry {
     File(FileMeta),
 }
 
+/// - `path_crawl`
+///   Path of the directory relative to the dataset root.
+///
+/// - `root_url`
+///   Root URL of the dataset this directory belongs to.
+///
+/// - `api_url`
+///   API endpoint used to query the directory contents.
 #[derive(Debug, Clone)]
 pub struct DirMeta {
     path: CrawlPath,

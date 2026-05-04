@@ -22,8 +22,9 @@ Support data repositories:
 | Hal                | [hal.science](https://hal.science/) | — | [example](#datasets-without-limitations) |
 | Zenodo             | [zenodo.org](https://zenodo.org/) | — | [example](#datasets-without-limitations) |
 | MaterialsCloud Archive| [archive.materialscloud.org](https://archive.materialscloud.org/) | — | [example](#datasets-without-limitations) |
+| Onedata            | [https://demo.onedata.org/](https://demo.dataone.org/) | — | [example](#datasets-without-limitations) |
 | Dryad              | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key) | [example](#datadryad-api-key-config-and-download) |
-| DataONE            | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#datasets-without-limitations) |
+| DataONE (deprecated) | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#datasets-without-limitations) |
 
 
 [Open an issue](https://github.com/EOSC-Data-Commons/datahugger-ng/issues/new/choose) if a data repository you want to use not yet support.
@@ -229,6 +230,14 @@ https://zenodo.org/records/17867222
 
 ```bash
 datahugger download https://zenodo.org/record/17867222 --to /tmp/zenodo_download/
+```
+
+- Onedata - simple download
+
+https://demo.onedata.org/share/1b716e29e9da80675a48882de1ae0599ch053e
+
+```bash
+datahugger download https://demo.onedata.org/share/1b716e29e9da80675a48882de1ae0599ch053e --to /tmp/onedata_download/
 ```
 
 - MaterialsCloud - simple download
