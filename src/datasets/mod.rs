@@ -8,6 +8,7 @@ mod hal;
 mod huggingface;
 mod materialsclound;
 mod osf;
+mod swissubase;
 mod zenodo;
 
 pub use arxiv::Arxiv;
