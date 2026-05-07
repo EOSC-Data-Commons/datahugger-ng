@@ -3,10 +3,9 @@ use exn::{Exn, OptionExt, ResultExt};
 use futures_core::stream::BoxStream;
 use futures_util::{StreamExt, TryStreamExt};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use reqwest_middleware::ClientWithMiddleware;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
-
-use reqwest::Client;
 
 use crate::{
     crawl,
@@ -30,7 +29,7 @@ impl Dataset {
     /// when crawl fails
     pub async fn print_meta(
         &self,
-        client: &Client,
+        client: &ClientWithMiddleware,
         mp: MultiProgress,
         limit: usize,
         filter: Option<&FileFilter>,
@@ -80,7 +79,7 @@ impl Dataset {
 #[allow(clippy::too_many_lines)]
 #[instrument(skip(client, mp))]
 async fn download_crawled_file_with_validation<P>(
-    client: &Client,
+    client: &ClientWithMiddleware,
     src: Entry,
     dst: P,
     mp: impl ProgressManager,
@@ -288,7 +287,7 @@ fn compact_path(full_path: &str) -> String {
 pub trait DownloadExt {
     async fn download_with_validation<P>(
         self,
-        client: &Client,
+        client: &ClientWithMiddleware,
         dst_dir: P,
         mp: impl ProgressManager,
         limit: usize,
@@ -334,7 +333,7 @@ impl DownloadExt for Dataset {
     /// * `P` is A path-like type specifying the destination directory.
     async fn download_with_validation<P>(
         self,
-        client: &Client,
+        client: &ClientWithMiddleware,
         dst_dir: P,
         mp: impl ProgressManager,
         limit: usize,
@@ -396,7 +395,7 @@ impl DownloadExt for Dataset {
 pub trait CrawlExt {
     fn crawl(
         self,
-        client: &Client,
+        client: &ClientWithMiddleware,
         mp: impl ProgressManager,
     ) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>>;
 }
@@ -404,7 +403,7 @@ pub trait CrawlExt {
 impl CrawlExt for Dataset {
     fn crawl(
         self,
-        client: &Client,
+        client: &ClientWithMiddleware,
         mp: impl ProgressManager,
     ) -> BoxStream<'static, Result<Entry, Exn<CrawlerError>>> {
         let root_dir = self.root_dir();

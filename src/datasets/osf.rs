@@ -2,10 +2,11 @@
 
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
+use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use url::Url;
 
-use reqwest::{Client, StatusCode};
+use reqwest::StatusCode;
 use std::{any::Any, str::FromStr};
 
 use crate::helper::json_extract;
@@ -41,7 +42,11 @@ impl DatasetBackend for OSF {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
             .get(dir.api_url())
             .send()
@@ -109,7 +114,7 @@ impl DatasetBackend for OSF {
                         })?;
                     let checksum = Checksum::Sha256(hash);
                     let file = FileMeta::new(
-                        None,
+                        Some(name.clone()),
                         None,
                         dir.join(&name),
                         endpoint,

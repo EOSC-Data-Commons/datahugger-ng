@@ -2,7 +2,8 @@
 
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
-use reqwest::{Client, StatusCode};
+use reqwest::StatusCode;
+use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use std::{any::Any, str::FromStr};
 use url::Url;
@@ -46,7 +47,11 @@ impl DatasetBackend for OnedataDataset {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         // NOTE: Require use redirect client
         let resp = client
             .get(dir.api_url())

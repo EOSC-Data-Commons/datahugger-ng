@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use exn::Exn;
 use mime::Mime;
-use reqwest::Client;
+use reqwest_middleware::ClientWithMiddleware;
 use url::Url;
 
 use std::{any::Any, path::Path, sync::Arc};
@@ -624,7 +624,11 @@ impl std::error::Error for RepoError {}
 
 #[async_trait]
 pub trait DatasetBackend: Send + Sync + Any {
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>>;
+    async fn list(
+        &self,
+        client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>>;
     fn root_dir(&self) -> DirMeta;
     fn as_any(&self) -> &dyn Any;
 }

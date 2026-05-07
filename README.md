@@ -282,6 +282,7 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
 ## Roadmap 
 
 - [x] asynchronously stream file crawling results into the pipeline with exceptional performance
+- [ ] cover dataset metadata. (this was not originally planned because covered by another component of EOSC-Data-Commons. To make datahugger become more standalone tool, the dataset metadata resolving is supposed to be a requirement).
 - [x] resolver to resolve url to repository record handlers.
 - [x] expressive progress bar when binary running in CLI.
 - [x] clear interface to add support for data repositories that lack machine-readable API specifications (e.g., no FAIRiCAT or OAI-PMH support).
@@ -291,7 +292,9 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
 - [x] strong error handling mechanism and logging to avoid interruptions (using `exn` crate).
 - [x] Sharable client connection to reduce the cost of repeated reconnections.
 - [x] automatically resolve doi into dateset source url.
-- [ ] do detail benchs to show its power (might not need, the cli download already *~1000* times faster for example for dataset https://osf.io/3ua2c/).
+- [ ] ~~do detail benchs to show its power~~ (no need, the cli download already *~1000* times faster than original python implementation for example for large dataset like https://osf.io/3ua2c/).
+- [x] record and reply integratation test to assure the test reproduciblility.
+- [ ] customizable caching folder use the vcr middleware.
 - [x] single-pass streaming with computing checksum by plug a hasher in the pipeline.
 - [ ] all repos that already supported by py-datahugger
     - [x] Dataone (the repos itself are verry slow in responding http request).
@@ -303,10 +306,11 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
     - [x] HuggingFaceDataset
     - [x] HAL
     - [x] MaterialsCloud
-    - [ ] CERNBox
+    - [ ] ~~CERNBox~~ (not a data repository but a data storage)
+    - [x] onedata
     - [x] OSFDataset
     - [x] Many Dataverse dataset  
-    - [ ] Bgee Database
+    - [ ] ~~Bgee Database (through onedata)~~
 - [ ] compact but extremly expressive readme
     - [ ] crate.io + python docs.
     - [ ] a bit detail of data repo, shows if fairicat is support etc.
@@ -325,12 +329,13 @@ datahugger download https://arcticdata.io/catalog/view/doi%3A10.18739%2FA2542JB2
 - [x] python bindings
 - [x] cli that can do all py-datahugger do.
 - [ ] not only local FS, but s3 (using openDAL?)
-- [ ] seamephor, config that can intuitively estimate maximum resources been used (already partially taken care by for_each_concurrent limit).
-- [ ] supports for less popular data repositories, implement when use cases coming (need your help!)
+- [ ] ~~seamephor, config that can intuitively estimate maximum resources been used (already partially taken care by for_each_concurrent limit).~~
+- [ ] support for popular data repositories,
     - [ ] FigShareDataset (https://api.figshare.com/v2)
+    - [ ] PangaeaDataset
+- [ ] supports for less popular data repositories, implement when use cases coming (need your help!)
     - [ ] DSpaceDataset
     - [ ] SeaNoeDataset
-    - [ ] PangaeaDataset
     - [ ] B2ShareDataset
     - [ ] DjehutyDataset
 
@@ -344,6 +349,15 @@ devenv shell -v
 ```
 
 You can also use your own Rust setup, we don't enforce or test a specific Rust MSRV yet.
+
+### VCR test
+
+To ensure that the integration test suite is reproducible, we use a record-and-replay testing approach.
+When running `VCR_RECORD=1 cargo test`, the VCR middleware is attached to the HTTP client and records responses into fixture files.
+Subsequent test runs without `VCR_RECORD` will replay these recorded fixtures instead of making real HTTP requests.
+
+To keep the recorded data in sync with the API (since deterministic results cannot always be guaranteed, even if the data repository aims to provide them), we re-record the fixtures by running `VCR_RECORD=1` for every minor release.
+
 
 ### Make new Release
 

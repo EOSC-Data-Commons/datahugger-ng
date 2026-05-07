@@ -2,9 +2,9 @@
 
 use async_trait::async_trait;
 use exn::Exn;
+use reqwest_middleware::ClientWithMiddleware;
 use url::Url;
 
-use reqwest::Client;
 use std::{any::Any, str::FromStr};
 
 use crate::{
@@ -39,7 +39,11 @@ impl DatasetBackend for Arxiv {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        _client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let root_url = dir.root_url();
         // safe to unwrap, because I create the root_url
         let name: Vec<&str> = root_url.path_segments().unwrap().collect::<Vec<_>>();
@@ -50,7 +54,7 @@ impl DatasetBackend for Arxiv {
             key: Some(name.to_string()),
         };
         let file = FileMeta::new(
-            None,
+            Some(name.to_string()),
             None,
             dir.join(&format!("{name}.pdf")),
             endpoint,

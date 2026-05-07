@@ -2,6 +2,7 @@
 
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
+use reqwest_middleware::ClientWithMiddleware;
 use url::Url;
 
 use crate::{
@@ -150,7 +151,11 @@ impl DatasetBackend for DabarXmlSrcDataset {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        _client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let doc = roxmltree::Document::parse(&self.content).or_raise(|| RepoError {
             message: "Failed to parse XML".to_string(),
         })?;
@@ -217,6 +222,8 @@ impl DatasetBackend for DabarXmlSrcDataset {
 
 #[cfg(test)]
 mod tests {
+    use reqwest_middleware::ClientBuilder;
+
     use super::*;
     use crate::CrawlPath;
 
@@ -396,7 +403,7 @@ mod tests {
 </record>"#;
 
         let dataset = DabarXmlSrcDataset::new("test-id", xml.to_string());
-        let client = Client::new();
+        let client = ClientBuilder::new(Client::new()).build();
         let dir = DirMeta::new(
             CrawlPath::root(),
             Url::parse("https://example.com/api").unwrap(),
