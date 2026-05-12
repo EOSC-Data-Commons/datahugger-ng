@@ -56,17 +56,19 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
 
     let mut entries = Vec::with_capacity(files.len());
 
-    for (_idx, filej) in files
+    let files: Vec<&str> = files
         .iter()
         .filter_map(|filej| {
             let s = filej.as_str()?; // or however you extract the string from your JSON value
             let s = s.trim_end_matches('/');
             let path = Path::new(s);
             // Keep only paths that have a non-empty file extension
-            path.extension().map(|_| s)
+            path.extension()?;
+            path.file_name()?.to_str()
         })
-        .enumerate()
-    {
+        .collect();
+
+    for filej in &files {
         let endpoint = Endpoint {
             parent_url: dir.api_url(),
             key: None,
@@ -154,23 +156,5 @@ impl DatasetBackend for SwissUbase {
 
     fn as_any(&self) -> &dyn Any {
         self
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::CrawlPath;
-
-    #[tokio::test]
-    async fn test_list() {
-        let uuid = "68afda6c-a438-45df-aecb-bf13b5dfa65d";
-
-        let dataset = SwissUbase::new(uuid);
-        let client = Client::new();
-
-        let entries = dataset.list(&client, dataset.root_dir()).await.unwrap();
-
-        println!("{:#?}", entries);
     }
 }
