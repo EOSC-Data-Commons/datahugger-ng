@@ -155,6 +155,181 @@ impl Hasher {
 pub enum Entry {
     Dir(DirMeta),
     File(FileMeta),
+    Zip(FileInZipMeta),
+}
+
+#[derive(Debug, Clone)]
+pub struct ZipMeta {
+    download_url: Url,
+    size: Option<u64>,
+    checksum: Vec<Checksum>,
+    version: Option<String>,
+    creation_date: Option<String>,
+    last_modification_date: Option<String>,
+    downloadable: bool,
+}
+
+impl std::fmt::Display for ZipMeta {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let size_str = self
+            .size
+            .map_or("<unknown>".to_string(), |s| format!("{s} bytes"));
+
+        let checksum_str = if self.checksum.is_empty() {
+            "<none>".to_string()
+        } else {
+            self.checksum
+                .iter()
+                .map(|c| format!("{c}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+
+        writeln!(f, "🗜 ZipMeta:")?;
+        writeln!(f, "  Download   : {}", self.download_url)?;
+        writeln!(f, "  Size       : {size_str}")?;
+        writeln!(f, "  Checksums  : {checksum_str}")?;
+        writeln!(f, "  Mime Type  : <zip>")?;
+        writeln!(
+            f,
+            "  Version    : {}",
+            self.version.as_deref().unwrap_or("<unknown>")
+        )?;
+        writeln!(
+            f,
+            "  Created    : {}",
+            self.creation_date.as_deref().unwrap_or("<unknown>")
+        )?;
+        writeln!(
+            f,
+            "  Modified   : {}",
+            self.last_modification_date
+                .as_deref()
+                .unwrap_or("<unknown>")
+        )?;
+        writeln!(f, "  Downloadable: {}", self.downloadable)?;
+
+        Ok(())
+    }
+}
+
+impl ZipMeta {
+    #[must_use]
+    pub fn new(
+        download_url: Url,
+        size: Option<u64>,
+        checksum: Vec<Checksum>,
+        version: Option<String>,
+        creation_date: Option<String>,
+        last_modification_date: Option<String>,
+        downloadable: bool,
+    ) -> Self {
+        ZipMeta {
+            download_url,
+            size,
+            checksum,
+            version,
+            creation_date,
+            last_modification_date,
+            downloadable,
+        }
+    }
+
+    pub fn is_downloadable(&self) -> bool {
+        self.downloadable
+    }
+
+    pub fn download_url(&self) -> Url {
+        self.download_url.clone()
+    }
+
+    pub fn checksum(&self) -> &[Checksum] {
+        &self.checksum
+    }
+
+    pub fn size(&self) -> Option<u64> {
+        self.size
+    }
+
+    pub fn version(&self) -> Option<&str> {
+        self.version.as_deref()
+    }
+
+    pub fn creation_date(&self) -> Option<&str> {
+        self.creation_date.as_deref()
+    }
+
+    pub fn last_modification_date(&self) -> Option<&str> {
+        self.last_modification_date.as_deref()
+    }
+}
+#[derive(Debug, Clone)]
+pub struct FileInZipMeta {
+    filename: Option<String>,
+    file_identifier: Option<String>,
+    path: CrawlPath,
+    mimetype: Option<Mime>,
+    zip: ZipMeta,
+}
+
+impl FileInZipMeta {
+    #[must_use]
+    pub fn new(
+        filename: Option<String>,
+        file_identifier: Option<String>,
+        path: CrawlPath,
+        mimetype: Option<Mime>,
+        zip: ZipMeta,
+    ) -> Self {
+        FileInZipMeta {
+            filename,
+            file_identifier,
+            path,
+            mimetype,
+            zip,
+        }
+    }
+
+    pub fn filename(&self) -> Option<&str> {
+        self.filename.as_deref()
+    }
+
+    pub fn file_identifier(&self) -> Option<&str> {
+        self.file_identifier.as_deref()
+    }
+
+    pub fn path(&self) -> CrawlPath {
+        self.path.clone()
+    }
+
+    #[must_use]
+    pub fn relative(&self) -> CrawlPath {
+        self.path.relative()
+    }
+
+    pub fn mimetype(&self) -> Option<Mime> {
+        self.mimetype.clone()
+    }
+}
+
+impl std::fmt::Display for FileInZipMeta {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "📄 FileInZipMeta:")?;
+        writeln!(f, "  Path       : {}", self.path)?;
+        writeln!(
+            f,
+            "  Filename   : {}",
+            self.filename.as_deref().unwrap_or("<unknown>")
+        )?;
+        writeln!(
+            f,
+            "  Mime Type  : {}",
+            self.mimetype
+                .as_ref()
+                .map_or("<unknown>".to_string(), |m| m.to_string())
+        )?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone)]

@@ -46,6 +46,7 @@ impl Dataset {
                         Some(filter) => filter.matches(file_meta.relative().as_str()),
                         None => true,
                     },
+                    Entry::Zip(_) => false,
                 };
                 futures_util::future::ready(pass)
             })
@@ -59,6 +60,9 @@ impl Dataset {
                         Entry::File(file_meta) => {
                             counter.fetch_add(1, Ordering::Relaxed);
                             println!("{file_meta}");
+                        }
+                        Entry::Zip(zip_meta) => {
+                            println!("{zip_meta}");
                         }
                     }
                     Ok(())
@@ -239,6 +243,7 @@ where
             }
             Ok(())
         }
+        Entry::Zip(_) => unimplemented!(),
     }
 }
 
@@ -353,6 +358,7 @@ impl DownloadExt for Dataset {
                     Some(filter) => filter.matches(file_meta.relative().as_str()),
                     None => true,
                 },
+                Entry::Zip(_) => true,
             };
             futures_util::future::ready(pass)
         })

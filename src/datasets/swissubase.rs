@@ -1,6 +1,6 @@
 use crate::helper::json_extract;
-use crate::repo::Endpoint;
-use crate::{repo::RepoError, Checksum, DatasetBackend, DirMeta, Entry, FileMeta};
+use crate::repo::{Endpoint, FileInZipMeta, ZipMeta};
+use crate::{repo::RepoError, Checksum, DatasetBackend, DirMeta, Entry};
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
 use reqwest::{Client, StatusCode};
@@ -76,22 +76,23 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
 
         let guess = mime_guess::from_path(filej);
 
-        let file = FileMeta::new(
+        let file = FileInZipMeta::new(
             Some(filej.to_string()),
             None,
             dir.join(filej),
-            endpoint,
-            download_url.clone(),
-            None,
-            vec![checksum.clone()],
             guess.first(),
-            Some(version.clone()),
-            Some(publication_date.clone()),
-            None,
-            license != "restricted",
+            ZipMeta::new(
+                download_url.clone(),
+                None,
+                vec![checksum.clone()],
+                Some(version.clone()),
+                Some(publication_date.clone()),
+                None,
+                license != "restricted",
+            ),
         );
 
-        entries.push(Entry::File(file));
+        entries.push(Entry::Zip(file));
     }
 
     Ok(entries)

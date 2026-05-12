@@ -68,6 +68,7 @@ impl CrawlFileExt for Dataset {
             match res {
                 Ok(Entry::Dir(_)) => None,
                 Ok(Entry::File(f)) => Some(Ok(f)),
+                Ok(Entry::Zip(_)) => None,
                 Err(e) => Some(Err(e)),
             }
         })
@@ -573,6 +574,7 @@ impl<'py> IntoPyObject<'py> for PyEntry {
             )
             .map(pyo3::Py::into_any)
             .expect("cannot construct the PyDirEntry"),
+            Entry::Zip(_) => unimplemented!(),
         };
 
         Ok(obj.into_bound(py))

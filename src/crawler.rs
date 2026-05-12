@@ -87,6 +87,7 @@ where
                         yield item?;
                     }
                 }
+                Entry::Zip(_) => unimplemented!()
             }
         }
     })
