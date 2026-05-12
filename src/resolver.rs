@@ -11,7 +11,7 @@ use url::Url;
 use crate::{
     datasets::{
         Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, HalScience,
-        HuggingFace, MaterialsCloud, Zenodo, OSF,
+        HuggingFace, MaterialsCloud, SwissUbase, Zenodo, OSF,
     },
     repo::Dataset,
 };
@@ -643,6 +643,21 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
             })?;
 
             let dataset = Dataset::new(OSF::new(id));
+            Ok(dataset)
+        }
+        "www.swissubase.ch" => {
+            let segments = link
+                .path_segments()
+                .ok_or_else(|| DispatchError {
+                    message: format!("cannot get path segments of url '{}'", link.as_str()),
+                })?
+                .collect::<Vec<&str>>();
+
+            let dataset_id = segments.iter().rev().nth(1).ok_or_else(|| DispatchError {
+                message: format!("unable to parse swissubase dataset id from '{link}'"),
+            })?;
+
+            let dataset = Dataset::new(SwissUbase::new(dataset_id.to_string()));
             Ok(dataset)
         }
         "data.mendeley.com" => {

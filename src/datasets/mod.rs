@@ -21,4 +21,5 @@ pub use hal::{HalJsonSrcDataset, HalScience};
 pub use huggingface::HuggingFace;
 pub use materialsclound::MaterialsCloud;
 pub use osf::OSF;
+pub use swissubase::SwissUbase;
 pub use zenodo::{Zenodo, ZenodoJsonSrcDataset};
