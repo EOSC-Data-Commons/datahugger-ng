@@ -215,6 +215,7 @@ impl std::fmt::Display for ZipMeta {
 }
 
 impl ZipMeta {
+    #[allow(clippy::too_many_arguments)]
     #[must_use]
     pub fn new(
         endpoint: Endpoint,

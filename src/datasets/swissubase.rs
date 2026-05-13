@@ -76,10 +76,12 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         let guess = mime_guess::from_path(path);
 
         let file = FileInZipMeta::new(
-            path.file_name().and_then(|f| f.to_str()).map(ToString::to_string),
+            path.file_name()
+                .and_then(|f| f.to_str())
+                .map(ToString::to_string),
             None,
             dir.join(path.to_str().ok_or_else(|| RepoError {
-                message: "failed to extract path for file in zip".to_string()
+                message: "failed to extract path for file in zip".to_string(),
             })?),
             guess.first(),
             ZipMeta::new(
