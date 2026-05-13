@@ -653,6 +653,12 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
                 })?
                 .collect::<Vec<&str>>();
 
+            if segments.last().copied() != Some("overview") {
+                exn::bail!(DispatchError {
+                    message: format!("expected url to end with 'overview', got '{link}'"),
+                });
+            }
+
             let dataset_id = segments.iter().rev().nth(1).ok_or_else(|| DispatchError {
                 message: format!("unable to parse swissubase dataset id from '{link}'"),
             })?;
