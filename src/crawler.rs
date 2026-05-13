@@ -87,7 +87,10 @@ where
                         yield item?;
                     }
                 }
-                Entry::Zip(_) => unimplemented!()
+                Entry::Zip(z) => {
+                    pb.set_message(format!("Crawling {}...", z.relative()));
+                    yield Entry::Zip(z)
+                }
             }
         }
     })

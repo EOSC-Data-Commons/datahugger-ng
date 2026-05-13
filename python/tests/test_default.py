@@ -220,7 +220,7 @@ def test_dabar_from_xml2():
 
 def test_crawl_swissubase():
     ds = resolve(
-        "https://www.swissubase.ch/en/catalogue/studies/1223/latest/datasets/114/166/overview"
+        "https://www.swissubase.ch/en/catalogue/studies/1223/latest/datasets/114/4300/overview"
     )
 
     for i in ds.crawl():

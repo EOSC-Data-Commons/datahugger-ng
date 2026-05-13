@@ -56,32 +56,34 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
 
     let mut entries = Vec::with_capacity(files.len());
 
-    let files: Vec<&str> = files
+    let files: Vec<&Path> = files
         .iter()
         .filter_map(|filej| {
-            let s = filej.as_str()?; // or however you extract the string from your JSON value
+            let s = filej.as_str()?;
             let s = s.trim_end_matches('/');
             let path = Path::new(s);
-            // Keep only paths that have a non-empty file extension
             path.extension()?;
-            path.file_name()?.to_str()
+            Some(path)
         })
         .collect();
 
-    for filej in &files {
+    for path in &files {
         let endpoint = Endpoint {
             parent_url: dir.api_url(),
             key: None,
         };
 
-        let guess = mime_guess::from_path(filej);
+        let guess = mime_guess::from_path(path);
 
         let file = FileInZipMeta::new(
-            Some(filej.to_string()),
+            path.file_name().and_then(|f| f.to_str()).map(ToString::to_string),
             None,
-            dir.join(filej),
+            dir.join(path.to_str().ok_or_else(|| RepoError {
+                message: "failed to extract path for file in zip".to_string()
+            })?),
             guess.first(),
             ZipMeta::new(
+                endpoint,
                 download_url.clone(),
                 None,
                 vec![checksum.clone()],

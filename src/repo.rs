@@ -160,6 +160,7 @@ pub enum Entry {
 
 #[derive(Debug, Clone)]
 pub struct ZipMeta {
+    endpoint: Endpoint,
     download_url: Url,
     size: Option<u64>,
     checksum: Vec<Checksum>,
@@ -216,6 +217,7 @@ impl std::fmt::Display for ZipMeta {
 impl ZipMeta {
     #[must_use]
     pub fn new(
+        endpoint: Endpoint,
         download_url: Url,
         size: Option<u64>,
         checksum: Vec<Checksum>,
@@ -225,6 +227,7 @@ impl ZipMeta {
         downloadable: bool,
     ) -> Self {
         ZipMeta {
+            endpoint,
             download_url,
             size,
             checksum,
@@ -261,6 +264,11 @@ impl ZipMeta {
 
     pub fn last_modification_date(&self) -> Option<&str> {
         self.last_modification_date.as_deref()
+    }
+
+    #[must_use]
+    pub fn endpoint(&self) -> Endpoint {
+        self.endpoint.clone()
     }
 }
 #[derive(Debug, Clone)]
@@ -309,6 +317,10 @@ impl FileInZipMeta {
 
     pub fn mimetype(&self) -> Option<Mime> {
         self.mimetype.clone()
+    }
+
+    pub fn zip(&self) -> ZipMeta {
+        self.zip.clone()
     }
 }
 
