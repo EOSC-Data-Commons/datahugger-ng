@@ -54,6 +54,11 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
 
     let version: String = format!("{}.{}", major_version, minor_version);
 
+    let endpoint = Endpoint {
+        parent_url: dir.api_url(),
+        key: None,
+    };
+
     let mut entries = Vec::with_capacity(files.len());
 
     let files: Vec<&Path> = files
@@ -68,11 +73,6 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         .collect();
 
     for path in &files {
-        let endpoint = Endpoint {
-            parent_url: dir.api_url(),
-            key: None,
-        };
-
         let guess = mime_guess::from_path(path);
 
         let file = FileInZipMeta::new(
@@ -84,22 +84,24 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
                 message: "failed to extract path for file in zip".to_string(),
             })?),
             guess.first(),
-            ZipMeta::new(
-                endpoint,
-                download_url.clone(),
-                None,
-                vec![checksum.clone()],
-                Some(version.clone()),
-                Some(publication_date.clone()),
-                None,
-                license != "restricted",
-            ),
         );
 
-        entries.push(Entry::Zip(file));
+        entries.push(file);
     }
 
-    Ok(entries)
+    let meta = ZipMeta::new(
+        endpoint,
+        download_url.clone(),
+        None,
+        vec![checksum.clone()],
+        Some(version.clone()),
+        Some(publication_date.clone()),
+        None,
+        license != "restricted",
+        entries,
+    );
+
+    Ok(Vec::from([Entry::Zip(meta)]))
 }
 
 #[derive(Debug)]

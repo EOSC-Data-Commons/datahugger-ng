@@ -155,7 +155,7 @@ impl Hasher {
 pub enum Entry {
     Dir(DirMeta),
     File(FileMeta),
-    Zip(FileInZipMeta),
+    Zip(ZipMeta),
 }
 
 #[derive(Debug, Clone)]
@@ -168,6 +168,7 @@ pub struct ZipMeta {
     creation_date: Option<String>,
     last_modification_date: Option<String>,
     downloadable: bool,
+    files: Vec<FileInZipMeta>,
 }
 
 impl std::fmt::Display for ZipMeta {
@@ -226,6 +227,7 @@ impl ZipMeta {
         creation_date: Option<String>,
         last_modification_date: Option<String>,
         downloadable: bool,
+        files: Vec<FileInZipMeta>,
     ) -> Self {
         ZipMeta {
             endpoint,
@@ -236,6 +238,7 @@ impl ZipMeta {
             creation_date,
             last_modification_date,
             downloadable,
+            files,
         }
     }
 
@@ -271,6 +274,10 @@ impl ZipMeta {
     pub fn endpoint(&self) -> Endpoint {
         self.endpoint.clone()
     }
+
+    pub fn files(&self) -> Vec<FileInZipMeta> {
+        self.files.clone()
+    }
 }
 #[derive(Debug, Clone)]
 pub struct FileInZipMeta {
@@ -278,7 +285,6 @@ pub struct FileInZipMeta {
     file_identifier: Option<String>,
     path: CrawlPath,
     mimetype: Option<Mime>,
-    zip: ZipMeta,
 }
 
 impl FileInZipMeta {
@@ -288,14 +294,12 @@ impl FileInZipMeta {
         file_identifier: Option<String>,
         path: CrawlPath,
         mimetype: Option<Mime>,
-        zip: ZipMeta,
     ) -> Self {
         FileInZipMeta {
             filename,
             file_identifier,
             path,
             mimetype,
-            zip,
         }
     }
 
@@ -318,10 +322,6 @@ impl FileInZipMeta {
 
     pub fn mimetype(&self) -> Option<Mime> {
         self.mimetype.clone()
-    }
-
-    pub fn zip(&self) -> ZipMeta {
-        self.zip.clone()
     }
 }
 

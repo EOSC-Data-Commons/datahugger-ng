@@ -88,7 +88,7 @@ where
                     }
                 }
                 Entry::Zip(z) => {
-                    pb.set_message(format!("Crawling {}...", z.relative()));
+                    pb.set_message(format!("Crawling {}...", z.endpoint()));
                     yield Entry::Zip(z)
                 }
             }
