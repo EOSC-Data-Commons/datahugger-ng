@@ -11,7 +11,7 @@ use url::Url;
 use crate::{
     datasets::{
         Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, HalScience,
-        HuggingFace, MaterialsCloud, Zenodo, OSF,
+        HuggingFace, MaterialsCloud, OnedataDataset, Zenodo, OSF,
     },
     repo::Dataset,
 };
@@ -463,6 +463,45 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
             ty => exn::bail!(DispatchError {
                 message: format!("{ty} is not valid type, can only be 'dataset' or 'file'")
             }),
+        }
+    }
+
+    {
+        // Direct Onedata share URL: https://<onezone>/share/<share_id>
+        // e.g. https://demo.onedata.org/share/7d66329c72b852dad4ea96186999bac2ch0687
+        let segments: Vec<_> = link
+            .path_segments()
+            .map(|s| s.collect())
+            .unwrap_or_default();
+
+        if domain.ends_with("onedata.org")
+            && segments.first() == Some(&"share")
+            && segments.len() == 2
+        {
+            let client = ClientBuilder::new().build().unwrap();
+
+            // unwrap safe since there is already a if-gaurd in the branch
+            let domain = link.domain().unwrap();
+            let id = segments[1];
+
+            let url = format!("https://{domain}/api/v3/onezone/shares/{id}/public");
+            let resp = client
+                .get(url.clone())
+                .send()
+                .await
+                .or_raise(|| DispatchError {
+                    message: format!("fail at client sent GET '{}'", url),
+                })?;
+            let resp: JsonValue = resp.json().await.or_raise(|| DispatchError {
+                message: format!("fail GET {}, unable to convert to json", url),
+            })?;
+
+            let file_id: String = json_extract(&resp, "rootFileId").or_raise(|| DispatchError {
+                message: "share metadata missing 'rootFileId'".to_string(),
+            })?;
+
+            let dataset = Dataset::new(OnedataDataset::new(domain, file_id));
+            return Ok(dataset);
         }
     }
 
