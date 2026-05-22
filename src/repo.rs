@@ -210,6 +210,10 @@ impl std::fmt::Display for ZipMeta {
                 .unwrap_or("<unknown>")
         )?;
         writeln!(f, "  Downloadable: {}", self.downloadable)?;
+        for file in self.files.clone() {
+            write!(f, "\t");
+            writeln!(f, "  file: {:?}", file)?;
+        }
 
         Ok(())
     }

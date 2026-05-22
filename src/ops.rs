@@ -46,7 +46,7 @@ impl Dataset {
                         Some(filter) => filter.matches(file_meta.relative().as_str()),
                         None => true,
                     },
-                    Entry::Zip(_) => false,
+                    Entry::Zip(_) => true,
                 };
                 futures_util::future::ready(pass)
             })
