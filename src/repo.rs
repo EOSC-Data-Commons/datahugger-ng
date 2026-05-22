@@ -211,7 +211,7 @@ impl std::fmt::Display for ZipMeta {
         )?;
         writeln!(f, "  Downloadable: {}", self.downloadable)?;
         for file in self.files.clone() {
-            write!(f, "\t");
+            write!(f, "\t")?;
             writeln!(f, "  file: {:?}", file)?;
         }
 
