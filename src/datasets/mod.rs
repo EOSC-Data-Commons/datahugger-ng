@@ -9,6 +9,7 @@ mod huggingface;
 mod materialsclound;
 mod onedata;
 mod osf;
+mod swissubase;
 mod zenodo;
 
 pub use arxiv::Arxiv;
@@ -22,4 +23,5 @@ pub use huggingface::HuggingFace;
 pub use materialsclound::MaterialsCloud;
 pub use onedata::OnedataDataset;
 pub use osf::OSF;
+pub use swissubase::SwissUbase;
 pub use zenodo::{Zenodo, ZenodoJsonSrcDataset};

@@ -87,6 +87,10 @@ where
                         yield item?;
                     }
                 }
+                Entry::Zip(z) => {
+                    pb.set_message(format!("Crawling {}...", z.endpoint()));
+                    yield Entry::Zip(z)
+                }
             }
         }
     })

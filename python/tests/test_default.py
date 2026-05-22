@@ -218,6 +218,18 @@ def test_dabar_from_xml2():
         print(i)
 
 
+def test_crawl_swissubase():
+    ds = resolve(
+        "https://www.swissubase.ch/en/catalogue/studies/1223/latest/datasets/114/4300/overview"
+    )
+
+    for i in ds.crawl():
+        print(i)
+
+    for i in ds.crawl_file():
+        print(i)
+
+
 @pytest.mark.asyncio
 async def test_crawl_async():
     """not rigrous test but the async is happenning that clock ticks before crawling complete."""

@@ -68,6 +68,7 @@ impl CrawlFileExt for Dataset {
             match res {
                 Ok(Entry::Dir(_)) => None,
                 Ok(Entry::File(f)) => Some(Ok(f)),
+                Ok(Entry::Zip(_)) => None,
                 Err(e) => Some(Err(e)),
             }
         })
@@ -518,6 +519,85 @@ impl PyFileEntry {
     }
 }
 
+#[pyclass(name = "ZipEntry", extends=PyEntryBase)]
+struct PyZipEntry {
+    #[pyo3(get, set)]
+    download_url: String,
+    #[pyo3(get, set)]
+    size: Option<u64>,
+    #[pyo3(get, set)]
+    checksum: Vec<(String, String)>,
+    #[pyo3(get, set)]
+    version: Option<String>,
+    #[pyo3(get, set)]
+    creation_date: Option<String>,
+    #[pyo3(get, set)]
+    last_modification_date: Option<String>,
+    #[pyo3(get, set)]
+    files: Vec<Py<PyFileInZipEntry>>,
+}
+
+#[pymethods]
+impl PyZipEntry {
+    #[allow(clippy::too_many_arguments)]
+    #[new]
+    fn new(
+        download_url: String,
+        size: Option<u64>,
+        checksum: Vec<(String, String)>,
+        version: Option<String>,
+        creation_date: Option<String>,
+        last_modification_date: Option<String>,
+        files: Vec<Py<PyFileInZipEntry>>,
+    ) -> (Self, PyEntryBase) {
+        (
+            PyZipEntry {
+                download_url,
+                size,
+                checksum,
+                version,
+                creation_date,
+                last_modification_date,
+                files,
+            },
+            PyEntryBase::new(),
+            )
+    }
+}
+
+#[pyclass(name = "FileInZipEntry", extends=PyEntryBase)]
+struct PyFileInZipEntry {
+    #[pyo3(get, set)]
+    filename: Option<String>,
+    #[pyo3(get, set)]
+    file_identifier: Option<String>,
+    #[pyo3(get, set)]
+    path_crawl_rel: PathBuf,
+    #[pyo3(get, set)]
+    mimetype: Option<String>,
+}
+
+#[pymethods]
+impl PyFileInZipEntry {
+    #[new]
+    fn new(
+        filename: Option<String>,
+        file_identifier: Option<String>,
+        path_crawl_rel: PathBuf,
+        mimetype: Option<String>,
+    ) -> (Self, PyEntryBase) {
+        (
+            PyFileInZipEntry {
+                filename,
+                file_identifier,
+                path_crawl_rel,
+                mimetype,
+            },
+            PyEntryBase::new(),
+        )
+    }
+}
+
 #[derive(Debug)]
 struct PyEntry(Entry);
 
@@ -573,6 +653,41 @@ impl<'py> IntoPyObject<'py> for PyEntry {
             )
             .map(pyo3::Py::into_any)
             .expect("cannot construct the PyDirEntry"),
+            Entry::Zip(meta) => Py::new(
+                py,
+                (
+                    PyZipEntry {
+                        download_url: meta.download_url().as_str().to_string(),
+                        size: meta.size(),
+                        checksum: meta
+                            .checksum()
+                            .iter()
+                            .map(|cs| match cs {
+                                datahugger::Checksum::Md5(v) => ("md5".to_string(), v.clone()),
+                                datahugger::Checksum::Sha256(v) => ("sha256".to_string(), v.clone()),
+                                datahugger::Checksum::Sha1(v) => ("sha1".to_string(), v.clone()),
+                            })
+                            .collect::<Vec<_>>(),
+                        version: meta.version().map(|v| v.to_string()),
+                        creation_date: meta.creation_date().map(|v| v.to_string()),
+                        last_modification_date: meta.last_modification_date().map(|v| v.to_string()),
+                        files: meta.files().iter().map(|f| {
+                            Py::new(py, (
+                                PyFileInZipEntry {
+                                    filename: f.filename().map(|s| s.to_string()),
+                                    file_identifier: f.file_identifier().map(|s| s.to_string()),
+                                    path_crawl_rel: PathBuf::from(f.path().as_str()),
+                                    mimetype: f.mimetype().map(|m| m.to_string()),
+                                },
+                                PyEntryBase::new(),
+                            )).expect("cannot construct PyFileInZipEntry")
+                        }).collect(),
+                    },
+                    PyEntryBase,
+                ),
+            )
+                .map(pyo3::Py::into_any)
+                .expect("cannot construct the PyZipEntry"),
         };
 
         Ok(obj.into_bound(py))
@@ -761,8 +876,44 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     py.import("dataclasses")?
         .getattr("dataclass")?
         .call1((f,))?;
+    // FileInZipEntry
+    let fz = py.get_type::<PyFileInZipEntry>();
+    let ann = PyDict::new(py);
+    let filename_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("filename", filename_type)?;
+    let file_identifier_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("file_identifier", file_identifier_type)?;
+    ann.set_item("path_crawl_rel", py.get_type::<pyo3::types::PyString>())?;
+    let mimetype_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("mimetype", mimetype_type)?;
+    fz.setattr("__annotations__", ann)?;
+    py.import("dataclasses")?
+        .getattr("dataclass")?
+        .call1((fz,))?;
+    // ZipEntry
+    let ze = py.get_type::<PyZipEntry>();
+    let ann = PyDict::new(py);
+    ann.set_item("download_url", py.get_type::<pyo3::types::PyString>())?;
+    let size_type = py.eval(c_str!("int | None"), None, None)?;
+    ann.set_item("size", size_type)?;
+    let checksum_type = py.eval(c_str!("list[tuple[str, str]]"), None, None)?;
+    ann.set_item("checksum", checksum_type)?;
+    let version_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("version", version_type)?;
+    let creation_date_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("creation_date", creation_date_type)?;
+    let last_modification_date_type = py.eval(c_str!("str | None"), None, None)?;
+    ann.set_item("last_modification_date", last_modification_date_type)?;
+    let files_type = py.eval(c_str!("list"), None, None)?;
+    ann.set_item("files", files_type)?;
+    ze.setattr("__annotations__", ann)?;
+    py.import("dataclasses")?
+        .getattr("dataclass")?
+        .call1((ze,))?;
 
     m.add_class::<PyDirEntry>()?;
     m.add_class::<PyFileEntry>()?;
+    m.add_class::<PyFileInZipEntry>()?;
+    m.add_class::<PyZipEntry>()?;
     Ok(())
 }
