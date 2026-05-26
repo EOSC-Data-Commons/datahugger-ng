@@ -23,6 +23,7 @@ Support data repositories:
 | Zenodo             | [zenodo.org](https://zenodo.org/) | — | [example](#datasets-without-limitations) |
 | MaterialsCloud Archive| [archive.materialscloud.org](https://archive.materialscloud.org/) | — | [example](#datasets-without-limitations) |
 | Onedata            | [https://demo.onedata.org/](https://demo.dataone.org/) | — | [example](#datasets-without-limitations) |
+| SwissUBase          | [https://www.swissubase.ch/](https://www.swissubase.ch/) | SwissUBase pack everything in zip, inspect will list files in zip | [example](#datasets-without-limitations) |
 | Dryad              | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key) | [example](#datadryad-api-key-config-and-download) |
 | DataONE (deprecated) | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#datasets-without-limitations) |
 
@@ -238,6 +239,16 @@ https://demo.onedata.org/share/1b716e29e9da80675a48882de1ae0599ch053e
 
 ```bash
 datahugger download https://demo.onedata.org/share/1b716e29e9da80675a48882de1ae0599ch053e --to /tmp/onedata_download/
+```
+
+- SwissUBase - simple inspect
+
+SwissUBase will contain only the zip, it is a bit meaningless to download the zip as a whole, so what we provide is only to inspect the files in zip file.
+
+https://www.swissubase.ch/en/catalogue/studies/1223/latest/datasets/114/4300/overview
+
+```bash
+datahugger inspect https://www.swissubase.ch/en/catalogue/studies/1223/latest/datasets/114/4300/overview
 ```
 
 - MaterialsCloud - simple download
