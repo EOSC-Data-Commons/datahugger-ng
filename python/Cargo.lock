@@ -337,7 +337,7 @@ dependencies = [
 
 [[package]]
 name = "datahugger"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "async-recursion",
  "async-stream",
@@ -371,7 +371,7 @@ dependencies = [
 
 [[package]]
 name = "datahuggerpy"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "datahugger",
  "exn",
@@ -1335,9 +1335,9 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
-version = "0.39.2"
+version = "0.39.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "958f21e8e7ceb5a1aa7fa87fab28e7c75976e0bfe7e23ff069e0a260f894067d"
+checksum = "cdcc8dd4e2f670d309a5f0e83fe36dfdc05af317008fea29144da1a2ac858e5e"
 dependencies = [
  "memchr",
 ]
@@ -1461,9 +1461,9 @@ checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 
 [[package]]
 name = "reqwest"
-version = "0.13.2"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab3f43e3283ab1488b624b44b0e988d0acea0b3214e694730a055cb6b2efa801"
+checksum = "62e0021ea2c22aed41653bc7e1419abb2c97e038ff2c33d0e1309e49a97deec0"
 dependencies = [
  "base64",
  "bytes",
