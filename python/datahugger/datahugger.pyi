@@ -33,6 +33,15 @@ class FileEntry(Entry):
     creation_date: str | None
     last_modification_date: str | None
 
+@dataclass
+class ZipEntry(Entry):
+    download_url: str
+    size: int | None
+    checksum: list[tuple[str, str]]
+    version: str | None
+    creation_date: str | None
+    last_modification_date: str | None
+
 class DataverseJsonSrcDataset(Dataset):
     """
     A Dataverse dataset backend that uses pre-fetched JSON content.
@@ -112,7 +121,7 @@ class Dataset(object):
         """blocking call, using rust's async runtime, return number of files it downloads"""
     def crawl_file(self) -> SyncAsyncIterator[FileEntry]:
         """returns a stream that can be either sync or async iterator over `FileEntry`"""
-    def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry]:
+    def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry | ZipEntry]:
         """returns a stream that can be either sync or async iterator over `FileEntry | DirEntry`"""
     def root_url(self) -> str: ...
 
