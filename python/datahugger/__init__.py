@@ -3,6 +3,8 @@ from .datahugger import (
     DOIResolver,
     DirEntry,
     FileEntry,
+    FileInZipEntry,
+    ZipEntry,
     Dataset,
     DataverseJsonSrcDataset,
     ZenodoJsonSrcDataset,
@@ -19,5 +21,7 @@ __all__ = (
     "DabarXmlSrcDataset",
     "DirEntry",
     "FileEntry",
+    "FileInZipEntry",
+    "ZipEntry",
     "Dataset",
 )

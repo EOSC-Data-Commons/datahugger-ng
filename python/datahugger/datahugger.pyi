@@ -33,6 +33,14 @@ class FileEntry(Entry):
     creation_date: str | None
     last_modification_date: str | None
 
+
+@dataclass
+class FileInZipEntry:
+    filename: str | None
+    file_identifier: str | None
+    path_crawl_rel: pathlib.Path
+    mimetype: str | None
+
 @dataclass
 class ZipEntry(Entry):
     download_url: str
@@ -41,6 +49,7 @@ class ZipEntry(Entry):
     version: str | None
     creation_date: str | None
     last_modification_date: str | None
+    files: list[FileInZipEntry]
 
 class DataverseJsonSrcDataset(Dataset):
     """
