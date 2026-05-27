@@ -95,6 +95,51 @@ class FileEntry(Entry):
   List of checksum pairs `(algorithm, value)`
   (e.g. `("sha256", "...")`).
 
+### `ZipEntry`
+
+Represents a ZIP archive entry in the dataset. 
+A `ZipEntry` is a container object that describes a downloadable archive file and the files contained within it.
+
+```python
+@dataclass
+class ZipEntry(Entry):
+    download_url: str
+    size: int | None
+    checksum: list[tuple[str, str]]
+    version: str | None
+    creation_date: str | None
+    last_modification_date: str | None
+    files: list[FileInZipEntry]
+```
+
+---
+
+#### Fields
+
+- `download_url`
+  URL from which the ZIP archive can be downloaded.
+
+- `size`
+  Size of the ZIP archive in bytes, if known.
+
+- `checksum`
+  List of checksum pairs `(algorithm, value)`
+  (e.g. `("sha256", "...")`) used to verify archive integrity.
+
+- `version`
+  Optional version identifier of the archive.
+
+- `creation_date`
+  Optional creation timestamp of the archive.
+
+- `last_modification_date`
+  Optional last modification timestamp of the archive.
+
+- `files`
+  List of files contained inside the ZIP archive.
+  Each entry describes a file within the archive (path, size, checksum, and optional metadata such as mimetype).
+
+
 ## Iteration Model
 
 ### `SyncAsyncIterator[T]`
@@ -117,7 +162,7 @@ The central abstraction representing a remote dataset.
 
 ```python
 class Dataset:
-    def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry]: ...
+    def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry | ZipEntry]: ...
     def crawl_file(self) -> SyncAsyncIterator[FileEntry]: ...
     def download_with_validation(
         self, dst_dir: pathlib.Path, limit: int = 0, includes = None, excludes = None,
@@ -129,7 +174,7 @@ class Dataset:
 ### `Dataset.crawl()`
 
 ```python
-def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry]
+def crawl(self) -> SyncAsyncIterator[FileEntry | DirEntry | ZipEntry]
 ```
 
 Returns a stream of dataset entries (optional type that can be either `DirEntry` or `FileEntry`).
@@ -213,6 +258,8 @@ for entry in dataset.crawl():
         print("File:", entry.path_crawl_rel)
     elif isinstance(entry, DirEntry):
         print("Dir:", entry.path_crawl_rel)
+    elif isinstance(entry, ZipEntry):
+        print("Zip:", entry)
 ```
 
 ### Crawl a dataset asynchronously
