@@ -33,7 +33,6 @@ class FileEntry(Entry):
     creation_date: str | None
     last_modification_date: str | None
 
-
 @dataclass
 class FileInZipEntry:
     filename: str | None
