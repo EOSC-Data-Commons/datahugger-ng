@@ -34,7 +34,7 @@ class FileEntry(Entry):
     last_modification_date: str | None
 
 @dataclass
-class FileInZipEntry:
+class FileInZipEntry(Entry):
     filename: str | None
     file_identifier: str | None
     path_crawl_rel: pathlib.Path
