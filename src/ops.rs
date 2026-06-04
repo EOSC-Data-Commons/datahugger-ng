@@ -126,12 +126,20 @@ where
                 .send()
                 .await
                 .or_raise(|| CrawlerError {
-                    message: format!("fail to send http GET to {}", file_meta.download_url()),
+                    message: format!(
+                        "fail to send http GET to {}, to get file '{}'",
+                        file_meta.download_url(),
+                        file_meta.path()
+                    ),
                     status: ErrorStatus::Temporary,
                 })?
                 .error_for_status()
                 .or_raise(|| CrawlerError {
-                    message: format!("fail to send http GET to {}", file_meta.download_url()),
+                    message: format!(
+                        "fail to send http GET to {} to get file '{}'",
+                        file_meta.download_url(),
+                        file_meta.path()
+                    ),
                     // Temporary??
                     status: ErrorStatus::Temporary,
                 })?;
