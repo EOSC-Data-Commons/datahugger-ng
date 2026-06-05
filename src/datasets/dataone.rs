@@ -2,9 +2,10 @@
 
 use async_trait::async_trait;
 use exn::{Exn, OptionExt, ResultExt};
+use reqwest_middleware::ClientWithMiddleware;
 use url::Url;
 
-use reqwest::{Client, StatusCode};
+use reqwest::StatusCode;
 use std::{any::Any, io::Cursor, str::FromStr};
 
 use crate::{
@@ -49,7 +50,11 @@ impl DatasetBackend for Dataone {
         url.join(&self.id).expect("cannot parse new url");
         DirMeta::new_root(&url)
     }
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
             .get(dir.api_url().clone())
             .send()

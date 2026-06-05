@@ -1,0 +1,425 @@
+{
+  "http_interactions": [
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "{\"data\":[{\"id\":\"5dujq:osfstorage\",\"type\":\"files\",\"attributes\":{\"kind\":\"folder\",\"name\":\"osfstorage\",\"path\":\"/\",\"node\":\"5dujq\",\"provider\":\"osfstorage\"},\"relationships\":{\"files\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/files/osfstorage/\",\"meta\":{}}}},\"root_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/67b69ab2ca822c84f6ad8243/\",\"meta\":{}}},\"data\":{\"id\":\"67b69ab2ca822c84f6ad8243\",\"type\":\"files\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}}},\"links\":{\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/\",\"new_folder\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/?kind=folder\",\"storage_addons\":\"https://api.osf.io/v2/addons/?filter%5Bcategories%5D=storage\"}}],\"links\":{\"first\":null,\"last\":null,\"prev\":null,\"next\":null,\"meta\":{\"total\":1,\"per_page\":10}},\"meta\":{\"version\":\"2.0\"}}"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "server": [
+            "nginx"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "via": [
+            "1.1 google"
+          ],
+          "pragma": [
+            "no-cache"
+          ],
+          "date": [
+            "Fri, 08 May 2026 13:42:48 GMT"
+          ],
+          "referrer-policy": [
+            "same-origin"
+          ],
+          "x-frame-options": [
+            "DENY"
+          ],
+          "allow": [
+            "GET, HEAD, OPTIONS"
+          ],
+          "cross-origin-opener-policy": [
+            "same-origin"
+          ],
+          "vary": [
+            "Accept, Cookie, origin"
+          ],
+          "content-length": [
+            "957"
+          ],
+          "expires": [
+            "-1"
+          ],
+          "cache-control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "alt-svc": [
+            "h3=\":443\"; ma=2592000"
+          ],
+          "content-type": [
+            "application/vnd.api+json; charset=utf-8"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://api.osf.io/v2/nodes//5dujq/files",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Fri, 8 May 2026 13:42:49 +0000"
+    },
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "{\"data\":[{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\",\"attributes\":{\"guid\":null,\"checkout\":null,\"name\":\"Data and code\",\"kind\":\"folder\",\"path\":\"/6966d1761b4039bbf774591c/\",\"size\":null,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/\",\"last_touched\":null,\"date_modified\":null,\"date_created\":null,\"extra\":{\"hashes\":{\"md5\":null,\"sha256\":null}},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/67b69ab2ca822c84f6ad8243/\",\"meta\":{}}},\"data\":{\"id\":\"67b69ab2ca822c84f6ad8243\",\"type\":\"files\"}},\"files\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/files/osfstorage/6966d1761b4039bbf774591c/\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1761b4039bbf774591c/\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1761b4039bbf774591c/\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1761b4039bbf774591c/\",\"new_folder\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1761b4039bbf774591c/?kind=folder\",\"self\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\"}}],\"links\":{\"first\":null,\"last\":null,\"prev\":null,\"next\":null,\"meta\":{\"total\":1,\"per_page\":10}},\"meta\":{\"version\":\"2.0\"}}"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "content-length": [
+            "1845"
+          ],
+          "alt-svc": [
+            "h3=\":443\"; ma=2592000"
+          ],
+          "content-type": [
+            "application/vnd.api+json; charset=utf-8"
+          ],
+          "x-frame-options": [
+            "DENY"
+          ],
+          "cross-origin-opener-policy": [
+            "same-origin"
+          ],
+          "server": [
+            "nginx"
+          ],
+          "via": [
+            "1.1 google"
+          ],
+          "referrer-policy": [
+            "same-origin"
+          ],
+          "vary": [
+            "Accept, Cookie, origin"
+          ],
+          "date": [
+            "Fri, 08 May 2026 13:42:49 GMT"
+          ],
+          "pragma": [
+            "no-cache"
+          ],
+          "cache-control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "allow": [
+            "GET, HEAD, OPTIONS"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "expires": [
+            "-1"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://api.osf.io/v2/nodes/5dujq/files/osfstorage/",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Fri, 8 May 2026 13:42:49 +0000"
+    },
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "{\"data\":[{\"id\":\"6966d1852fa0266bc82c0161\",\"type\":\"files\",\"attributes\":{\"guid\":\"dvx3m\",\"checkout\":null,\"name\":\"morph_raw.csv\",\"kind\":\"file\",\"path\":\"/6966d1852fa0266bc82c0161\",\"size\":4473,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/morph_raw.csv\",\"last_touched\":null,\"date_modified\":\"2026-01-13T23:13:09.790889\",\"date_created\":\"2026-01-13T23:13:09.790889Z\",\"extra\":{\"hashes\":{\"md5\":\"b41b522b7216baebde69193fc16c59c4\",\"sha256\":\"7441f1d3d25fef7503233f8806a4bd72a476e86aa6ae6d7fde0a9a846252fca7\"},\"downloads\":25},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"meta\":{}}},\"data\":{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\"}},\"versions\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1852fa0266bc82c0161/versions/\",\"meta\":{}}}},\"comments\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/comments/?filter%5Btarget%5D=dvx3m\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1852fa0266bc82c0161/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966d1852fa0266bc82c0161/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1852fa0266bc82c0161\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1852fa0266bc82c0161\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1852fa0266bc82c0161\",\"download\":\"https://osf.io/download/dvx3m/\",\"render\":\"https://mfr.au-1.osf.io/render?url=https%3A%2F%2Fosf.io%2Fdownload%2Fdvx3m%2F%3Fdirect%26mode%3Drender\",\"html\":\"https://osf.io/5dujq/files/osfstorage/6966d1852fa0266bc82c0161\",\"self\":\"https://api.osf.io/v2/files/6966d1852fa0266bc82c0161/\",\"iri\":\"https://osf.io/dvx3m\"}},{\"id\":\"6966d1842631a0fe86482a56\",\"type\":\"files\",\"attributes\":{\"guid\":null,\"checkout\":null,\"name\":\"beh_raw.csv\",\"kind\":\"file\",\"path\":\"/6966d1842631a0fe86482a56\",\"size\":5605,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/beh_raw.csv\",\"last_touched\":null,\"date_modified\":\"2026-01-13T23:13:08.683042\",\"date_created\":\"2026-01-13T23:13:08.683042Z\",\"extra\":{\"hashes\":{\"md5\":\"317d767f6c5b9e4fc67afe7292a06b26\",\"sha256\":\"5263b63ad439bd3adeff725d890064fbe4baa245a29893283d1d434bc2736091\"},\"downloads\":18},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"meta\":{}}},\"data\":{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\"}},\"versions\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1842631a0fe86482a56/versions/\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1842631a0fe86482a56/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966d1842631a0fe86482a56/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1842631a0fe86482a56\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1842631a0fe86482a56\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1842631a0fe86482a56\",\"download\":\"https://osf.io/download/6966d1842631a0fe86482a56/\",\"render\":\"https://mfr.au-1.osf.io/render?url=https%3A%2F%2Fosf.io%2Fdownload%2F6966d1842631a0fe86482a56%2F%3Fdirect%26mode%3Drender\",\"html\":\"https://osf.io/5dujq/files/osfstorage/6966d1842631a0fe86482a56\",\"self\":\"https://api.osf.io/v2/files/6966d1842631a0fe86482a56/\"}},{\"id\":\"6966e5c7b7fd8d9b332bfac9\",\"type\":\"files\",\"attributes\":{\"guid\":\"kn6g5\",\"checkout\":null,\"name\":\"Weedfish-2025.Rmd\",\"kind\":\"file\",\"path\":\"/6966e5c7b7fd8d9b332bfac9\",\"size\":15199,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/Weedfish-2025.Rmd\",\"last_touched\":null,\"date_modified\":\"2026-01-14T00:39:35.716148\",\"date_created\":\"2026-01-14T00:39:35.716148Z\",\"extra\":{\"hashes\":{\"md5\":\"3dfb0bd2c717e8bf6fe45d0024f17c85\",\"sha256\":\"83a2f640e3cab4b878d5ccdea8b27223b921c1f9ecf67115a2a2c1848aea6132\"},\"downloads\":18},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"meta\":{}}},\"data\":{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\"}},\"versions\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac9/versions/\",\"meta\":{}}}},\"comments\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/comments/?filter%5Btarget%5D=kn6g5\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac9/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac9/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac9\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac9\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac9\",\"download\":\"https://osf.io/download/kn6g5/\",\"render\":\"https://mfr.au-1.osf.io/render?url=https%3A%2F%2Fosf.io%2Fdownload%2Fkn6g5%2F%3Fdirect%26mode%3Drender\",\"html\":\"https://osf.io/5dujq/files/osfstorage/6966e5c7b7fd8d9b332bfac9\",\"self\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac9/\",\"iri\":\"https://osf.io/kn6g5\"}},{\"id\":\"6966e5c7b7fd8d9b332bfac8\",\"type\":\"files\",\"attributes\":{\"guid\":\"6gtwv\",\"checkout\":null,\"name\":\"Weedfish-2025-README.Rmd\",\"kind\":\"file\",\"path\":\"/6966e5c7b7fd8d9b332bfac8\",\"size\":1953,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/Weedfish-2025-README.Rmd\",\"last_touched\":null,\"date_modified\":\"2026-01-14T00:39:35.626475\",\"date_created\":\"2026-01-14T00:39:35.626475Z\",\"extra\":{\"hashes\":{\"md5\":\"5cd6992119c8dc9e980c7f70802df2ba\",\"sha256\":\"c318b062046b207a0052e80394eb548283038128ac12afddd75d368291bb7118\"},\"downloads\":17},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"meta\":{}}},\"data\":{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\"}},\"versions\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac8/versions/\",\"meta\":{}}}},\"comments\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/comments/?filter%5Btarget%5D=6gtwv\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac8/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac8/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac8\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac8\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac8\",\"download\":\"https://osf.io/download/6gtwv/\",\"render\":\"https://mfr.au-1.osf.io/render?url=https%3A%2F%2Fosf.io%2Fdownload%2F6gtwv%2F%3Fdirect%26mode%3Drender\",\"html\":\"https://osf.io/5dujq/files/osfstorage/6966e5c7b7fd8d9b332bfac8\",\"self\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac8/\",\"iri\":\"https://osf.io/6gtwv\"}}],\"links\":{\"first\":null,\"last\":null,\"prev\":null,\"next\":null,\"meta\":{\"total\":4,\"per_page\":10}},\"meta\":{\"version\":\"2.0\"}}"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "vary": [
+            "Accept, Cookie, origin"
+          ],
+          "date": [
+            "Fri, 08 May 2026 13:42:49 GMT"
+          ],
+          "content-type": [
+            "application/vnd.api+json; charset=utf-8"
+          ],
+          "cross-origin-opener-policy": [
+            "same-origin"
+          ],
+          "x-frame-options": [
+            "DENY"
+          ],
+          "referrer-policy": [
+            "same-origin"
+          ],
+          "cache-control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "alt-svc": [
+            "h3=\":443\"; ma=2592000"
+          ],
+          "pragma": [
+            "no-cache"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "content-length": [
+            "8581"
+          ],
+          "server": [
+            "nginx"
+          ],
+          "allow": [
+            "GET, HEAD, OPTIONS"
+          ],
+          "expires": [
+            "-1"
+          ],
+          "via": [
+            "1.1 google"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://api.osf.io/v2/nodes/5dujq/files/osfstorage/6966d1761b4039bbf774591c/",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Fri, 8 May 2026 13:42:49 +0000"
+    },
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "{\"data\":[{\"id\":\"5dujq:osfstorage\",\"type\":\"files\",\"attributes\":{\"kind\":\"folder\",\"name\":\"osfstorage\",\"path\":\"/\",\"node\":\"5dujq\",\"provider\":\"osfstorage\"},\"relationships\":{\"files\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/files/osfstorage/\",\"meta\":{}}}},\"root_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/67b69ab2ca822c84f6ad8243/\",\"meta\":{}}},\"data\":{\"id\":\"67b69ab2ca822c84f6ad8243\",\"type\":\"files\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}}},\"links\":{\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/\",\"new_folder\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/?kind=folder\",\"storage_addons\":\"https://api.osf.io/v2/addons/?filter%5Bcategories%5D=storage\"}}],\"links\":{\"first\":null,\"last\":null,\"prev\":null,\"next\":null,\"meta\":{\"total\":1,\"per_page\":10}},\"meta\":{\"version\":\"2.0\"}}"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "pragma": [
+            "no-cache"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "allow": [
+            "GET, HEAD, OPTIONS"
+          ],
+          "server": [
+            "nginx"
+          ],
+          "content-type": [
+            "application/vnd.api+json; charset=utf-8"
+          ],
+          "content-length": [
+            "957"
+          ],
+          "via": [
+            "1.1 google"
+          ],
+          "x-frame-options": [
+            "DENY"
+          ],
+          "vary": [
+            "Accept, Cookie, origin"
+          ],
+          "cross-origin-opener-policy": [
+            "same-origin"
+          ],
+          "cache-control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "alt-svc": [
+            "h3=\":443\"; ma=2592000"
+          ],
+          "referrer-policy": [
+            "same-origin"
+          ],
+          "date": [
+            "Fri, 05 Jun 2026 08:57:09 GMT"
+          ],
+          "expires": [
+            "-1"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://api.osf.io/v2/nodes//5dujq/files",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Fri, 5 Jun 2026 08:57:09 +0000"
+    },
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "{\"data\":[{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\",\"attributes\":{\"guid\":null,\"checkout\":null,\"name\":\"Data and code\",\"kind\":\"folder\",\"path\":\"/6966d1761b4039bbf774591c/\",\"size\":null,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/\",\"last_touched\":null,\"date_modified\":null,\"date_created\":null,\"extra\":{\"hashes\":{\"md5\":null,\"sha256\":null}},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/67b69ab2ca822c84f6ad8243/\",\"meta\":{}}},\"data\":{\"id\":\"67b69ab2ca822c84f6ad8243\",\"type\":\"files\"}},\"files\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/files/osfstorage/6966d1761b4039bbf774591c/\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1761b4039bbf774591c/\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1761b4039bbf774591c/\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1761b4039bbf774591c/\",\"new_folder\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1761b4039bbf774591c/?kind=folder\",\"self\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\"}}],\"links\":{\"first\":null,\"last\":null,\"prev\":null,\"next\":null,\"meta\":{\"total\":1,\"per_page\":10}},\"meta\":{\"version\":\"2.0\"}}"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "x-frame-options": [
+            "DENY"
+          ],
+          "via": [
+            "1.1 google"
+          ],
+          "content-length": [
+            "1845"
+          ],
+          "vary": [
+            "Accept, Cookie, origin"
+          ],
+          "pragma": [
+            "no-cache"
+          ],
+          "content-type": [
+            "application/vnd.api+json; charset=utf-8"
+          ],
+          "cross-origin-opener-policy": [
+            "same-origin"
+          ],
+          "expires": [
+            "-1"
+          ],
+          "referrer-policy": [
+            "same-origin"
+          ],
+          "allow": [
+            "GET, HEAD, OPTIONS"
+          ],
+          "alt-svc": [
+            "h3=\":443\"; ma=2592000"
+          ],
+          "server": [
+            "nginx"
+          ],
+          "date": [
+            "Fri, 05 Jun 2026 08:57:09 GMT"
+          ],
+          "cache-control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://api.osf.io/v2/nodes/5dujq/files/osfstorage/",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Fri, 5 Jun 2026 08:57:09 +0000"
+    },
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "{\"data\":[{\"id\":\"6966d1852fa0266bc82c0161\",\"type\":\"files\",\"attributes\":{\"guid\":\"dvx3m\",\"checkout\":null,\"name\":\"morph_raw.csv\",\"kind\":\"file\",\"path\":\"/6966d1852fa0266bc82c0161\",\"size\":4473,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/morph_raw.csv\",\"last_touched\":null,\"date_modified\":\"2026-01-13T23:13:09.790889\",\"date_created\":\"2026-01-13T23:13:09.790889Z\",\"extra\":{\"hashes\":{\"md5\":\"b41b522b7216baebde69193fc16c59c4\",\"sha256\":\"7441f1d3d25fef7503233f8806a4bd72a476e86aa6ae6d7fde0a9a846252fca7\"},\"downloads\":25},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"meta\":{}}},\"data\":{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\"}},\"versions\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1852fa0266bc82c0161/versions/\",\"meta\":{}}}},\"comments\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/comments/?filter%5Btarget%5D=dvx3m\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1852fa0266bc82c0161/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966d1852fa0266bc82c0161/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1852fa0266bc82c0161\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1852fa0266bc82c0161\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1852fa0266bc82c0161\",\"download\":\"https://osf.io/download/dvx3m/\",\"render\":\"https://mfr.au-1.osf.io/render?url=https%3A%2F%2Fosf.io%2Fdownload%2Fdvx3m%2F%3Fdirect%26mode%3Drender\",\"html\":\"https://osf.io/5dujq/files/osfstorage/6966d1852fa0266bc82c0161\",\"self\":\"https://api.osf.io/v2/files/6966d1852fa0266bc82c0161/\",\"iri\":\"https://osf.io/dvx3m\"}},{\"id\":\"6966d1842631a0fe86482a56\",\"type\":\"files\",\"attributes\":{\"guid\":null,\"checkout\":null,\"name\":\"beh_raw.csv\",\"kind\":\"file\",\"path\":\"/6966d1842631a0fe86482a56\",\"size\":5605,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/beh_raw.csv\",\"last_touched\":null,\"date_modified\":\"2026-01-13T23:13:08.683042\",\"date_created\":\"2026-01-13T23:13:08.683042Z\",\"extra\":{\"hashes\":{\"md5\":\"317d767f6c5b9e4fc67afe7292a06b26\",\"sha256\":\"5263b63ad439bd3adeff725d890064fbe4baa245a29893283d1d434bc2736091\"},\"downloads\":18},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"meta\":{}}},\"data\":{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\"}},\"versions\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1842631a0fe86482a56/versions/\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1842631a0fe86482a56/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966d1842631a0fe86482a56/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1842631a0fe86482a56\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1842631a0fe86482a56\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966d1842631a0fe86482a56\",\"download\":\"https://osf.io/download/6966d1842631a0fe86482a56/\",\"render\":\"https://mfr.au-1.osf.io/render?url=https%3A%2F%2Fosf.io%2Fdownload%2F6966d1842631a0fe86482a56%2F%3Fdirect%26mode%3Drender\",\"html\":\"https://osf.io/5dujq/files/osfstorage/6966d1842631a0fe86482a56\",\"self\":\"https://api.osf.io/v2/files/6966d1842631a0fe86482a56/\"}},{\"id\":\"6966e5c7b7fd8d9b332bfac9\",\"type\":\"files\",\"attributes\":{\"guid\":\"kn6g5\",\"checkout\":null,\"name\":\"Weedfish-2025.Rmd\",\"kind\":\"file\",\"path\":\"/6966e5c7b7fd8d9b332bfac9\",\"size\":15199,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/Weedfish-2025.Rmd\",\"last_touched\":null,\"date_modified\":\"2026-01-14T00:39:35.716148\",\"date_created\":\"2026-01-14T00:39:35.716148Z\",\"extra\":{\"hashes\":{\"md5\":\"3dfb0bd2c717e8bf6fe45d0024f17c85\",\"sha256\":\"83a2f640e3cab4b878d5ccdea8b27223b921c1f9ecf67115a2a2c1848aea6132\"},\"downloads\":18},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"meta\":{}}},\"data\":{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\"}},\"versions\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac9/versions/\",\"meta\":{}}}},\"comments\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/comments/?filter%5Btarget%5D=kn6g5\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac9/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac9/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac9\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac9\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac9\",\"download\":\"https://osf.io/download/kn6g5/\",\"render\":\"https://mfr.au-1.osf.io/render?url=https%3A%2F%2Fosf.io%2Fdownload%2Fkn6g5%2F%3Fdirect%26mode%3Drender\",\"html\":\"https://osf.io/5dujq/files/osfstorage/6966e5c7b7fd8d9b332bfac9\",\"self\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac9/\",\"iri\":\"https://osf.io/kn6g5\"}},{\"id\":\"6966e5c7b7fd8d9b332bfac8\",\"type\":\"files\",\"attributes\":{\"guid\":\"6gtwv\",\"checkout\":null,\"name\":\"Weedfish-2025-README.Rmd\",\"kind\":\"file\",\"path\":\"/6966e5c7b7fd8d9b332bfac8\",\"size\":1953,\"provider\":\"osfstorage\",\"materialized_path\":\"/Data and code/Weedfish-2025-README.Rmd\",\"last_touched\":null,\"date_modified\":\"2026-01-14T00:39:35.626475\",\"date_created\":\"2026-01-14T00:39:35.626475Z\",\"extra\":{\"hashes\":{\"md5\":\"5cd6992119c8dc9e980c7f70802df2ba\",\"sha256\":\"c318b062046b207a0052e80394eb548283038128ac12afddd75d368291bb7118\"},\"downloads\":17},\"tags\":[],\"current_user_can_comment\":false,\"current_version\":1,\"show_as_unviewed\":false},\"relationships\":{\"parent_folder\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966d1761b4039bbf774591c/\",\"meta\":{}}},\"data\":{\"id\":\"6966d1761b4039bbf774591c\",\"type\":\"files\"}},\"versions\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac8/versions/\",\"meta\":{}}}},\"comments\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/comments/?filter%5Btarget%5D=6gtwv\",\"meta\":{}}}},\"node\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{}}},\"data\":{\"id\":\"5dujq\",\"type\":\"nodes\"}},\"target\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/nodes/5dujq/\",\"meta\":{\"type\":\"nodes\"}}},\"data\":{\"type\":\"nodes\",\"id\":\"5dujq\"}},\"cedar_metadata_records\":{\"links\":{\"related\":{\"href\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac8/cedar_metadata_records/\",\"meta\":{}}}}},\"links\":{\"info\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac8/\",\"move\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac8\",\"upload\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac8\",\"delete\":\"https://files.au-1.osf.io/v1/resources/5dujq/providers/osfstorage/6966e5c7b7fd8d9b332bfac8\",\"download\":\"https://osf.io/download/6gtwv/\",\"render\":\"https://mfr.au-1.osf.io/render?url=https%3A%2F%2Fosf.io%2Fdownload%2F6gtwv%2F%3Fdirect%26mode%3Drender\",\"html\":\"https://osf.io/5dujq/files/osfstorage/6966e5c7b7fd8d9b332bfac8\",\"self\":\"https://api.osf.io/v2/files/6966e5c7b7fd8d9b332bfac8/\",\"iri\":\"https://osf.io/6gtwv\"}}],\"links\":{\"first\":null,\"last\":null,\"prev\":null,\"next\":null,\"meta\":{\"total\":4,\"per_page\":10}},\"meta\":{\"version\":\"2.0\"}}"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "referrer-policy": [
+            "same-origin"
+          ],
+          "allow": [
+            "GET, HEAD, OPTIONS"
+          ],
+          "cross-origin-opener-policy": [
+            "same-origin"
+          ],
+          "expires": [
+            "-1"
+          ],
+          "x-frame-options": [
+            "DENY"
+          ],
+          "alt-svc": [
+            "h3=\":443\"; ma=2592000"
+          ],
+          "content-type": [
+            "application/vnd.api+json; charset=utf-8"
+          ],
+          "via": [
+            "1.1 google"
+          ],
+          "date": [
+            "Fri, 05 Jun 2026 08:57:09 GMT"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "vary": [
+            "Accept, Cookie, origin"
+          ],
+          "pragma": [
+            "no-cache"
+          ],
+          "server": [
+            "nginx"
+          ],
+          "cache-control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "content-length": [
+            "8581"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://api.osf.io/v2/nodes/5dujq/files/osfstorage/6966d1761b4039bbf774591c/",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Fri, 5 Jun 2026 08:57:10 +0000"
+    }
+  ],
+  "recorded_with": "rVCR 0.4.0"
+}

@@ -37,7 +37,8 @@ use pyo3::{
 use pyo3::{ffi::c_str, types::PyDict};
 use pyo3_async_runtimes::tokio::future_into_py;
 use reqwest::redirect::Policy;
-use reqwest::{Client, ClientBuilder, Url};
+use reqwest::{Client, ClientBuilder as InnerClientBuilder, Url};
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use std::collections::HashMap;
 use std::time::Duration;
 use std::{path::PathBuf, sync::Arc};
@@ -46,7 +47,7 @@ use tokio::sync::Mutex;
 pub trait CrawlFileExt {
     fn crawl_file(
         self,
-        client: &Client,
+        client: &ClientWithMiddleware,
         mp: impl ProgressManager,
     ) -> BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>>;
 }
@@ -54,7 +55,7 @@ pub trait CrawlFileExt {
 impl CrawlFileExt for Dataset {
     fn crawl_file(
         self,
-        client: &Client,
+        client: &ClientWithMiddleware,
         mp: impl ProgressManager,
     ) -> BoxStream<'static, Result<FileMeta, Exn<CrawlerError>>> {
         let root_dir = self.root_dir();
@@ -149,10 +150,11 @@ impl PyDataverseJsonSrcDataset {
     }
     fn crawl_file(&self) -> PyResult<PyFileMetaStream> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
-        let client = ClientBuilder::new()
+        let client = InnerClientBuilder::new()
             .user_agent(user_agent)
             .build()
             .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let client = ClientBuilder::new(client).build();
         let mp = NoProgress;
 
         let stream = self.inner.0.clone().crawl_file(&client, mp);
@@ -181,10 +183,11 @@ impl PyZenodoJsonSrcDataset {
 
     fn crawl_file(&self) -> PyResult<PyFileMetaStream> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
-        let client = ClientBuilder::new()
+        let client = InnerClientBuilder::new()
             .user_agent(user_agent)
             .build()
             .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let client = ClientBuilder::new(client).build();
         let mp = NoProgress;
 
         let stream = self.inner.0.clone().crawl_file(&client, mp);
@@ -213,10 +216,11 @@ impl PyHalJsonSrcDataset {
 
     fn crawl_file(&self) -> PyResult<PyFileMetaStream> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
-        let client = ClientBuilder::new()
+        let client = InnerClientBuilder::new()
             .user_agent(user_agent)
             .build()
             .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let client = ClientBuilder::new(client).build();
         let mp = NoProgress;
 
         let stream = self.inner.0.clone().crawl_file(&client, mp);
@@ -245,10 +249,11 @@ impl PyDabarXmlSrcDataset {
 
     fn crawl_file(&self) -> PyResult<PyFileMetaStream> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
-        let client = ClientBuilder::new()
+        let client = InnerClientBuilder::new()
             .user_agent(user_agent)
             .build()
             .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let client = ClientBuilder::new(client).build();
         let mp = NoProgress;
 
         let stream = self.inner.0.clone().crawl_file(&client, mp);
@@ -268,10 +273,11 @@ impl PyDataset {
         excludes: Option<Vec<String>>,
     ) -> PyResult<usize> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
-        let client = ClientBuilder::new()
+        let client = InnerClientBuilder::new()
             .user_agent(user_agent)
             .build()
             .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let client = ClientBuilder::new(client).build();
         let mp = NoProgress;
 
         // blocking call to download, not ideal, but just to sync with original API.
@@ -326,10 +332,11 @@ impl PyDataset {
 
     fn crawl(self_: PyRef<'_, Self>) -> PyResult<PyEntryStream> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
-        let client = ClientBuilder::new()
+        let client = InnerClientBuilder::new()
             .user_agent(user_agent)
             .build()
             .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let client = ClientBuilder::new(client).build();
         let mp = NoProgress;
 
         let stream = self_.0.clone().crawl(&client, mp);
@@ -339,10 +346,11 @@ impl PyDataset {
 
     fn crawl_file(self_: PyRef<'_, Self>) -> PyResult<PyFileMetaStream> {
         let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
-        let client = ClientBuilder::new()
+        let client = InnerClientBuilder::new()
             .user_agent(user_agent)
             .build()
             .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let client = ClientBuilder::new(client).build();
         let mp = NoProgress;
 
         let stream = self_.0.clone().crawl_file(&client, mp);
@@ -561,7 +569,7 @@ impl PyZipEntry {
                 files,
             },
             PyEntryBase::new(),
-            )
+        )
     }
 }
 
@@ -664,30 +672,44 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                             .iter()
                             .map(|cs| match cs {
                                 datahugger::Checksum::Md5(v) => ("md5".to_string(), v.clone()),
-                                datahugger::Checksum::Sha256(v) => ("sha256".to_string(), v.clone()),
+                                datahugger::Checksum::Sha256(v) => {
+                                    ("sha256".to_string(), v.clone())
+                                }
                                 datahugger::Checksum::Sha1(v) => ("sha1".to_string(), v.clone()),
                             })
                             .collect::<Vec<_>>(),
                         version: meta.version().map(|v| v.to_string()),
                         creation_date: meta.creation_date().map(|v| v.to_string()),
-                        last_modification_date: meta.last_modification_date().map(|v| v.to_string()),
-                        files: meta.files().iter().map(|f| {
-                            Py::new(py, (
-                                PyFileInZipEntry {
-                                    filename: f.filename().map(|s| s.to_string()),
-                                    file_identifier: f.file_identifier().map(|s| s.to_string()),
-                                    path_crawl_rel: PathBuf::from(f.path().as_str()),
-                                    mimetype: f.mimetype().map(|m| m.to_string()),
-                                },
-                                PyEntryBase::new(),
-                            )).expect("cannot construct PyFileInZipEntry")
-                        }).collect(),
+                        last_modification_date: meta
+                            .last_modification_date()
+                            .map(|v| v.to_string()),
+                        files: meta
+                            .files()
+                            .iter()
+                            .map(|f| {
+                                Py::new(
+                                    py,
+                                    (
+                                        PyFileInZipEntry {
+                                            filename: f.filename().map(|s| s.to_string()),
+                                            file_identifier: f
+                                                .file_identifier()
+                                                .map(|s| s.to_string()),
+                                            path_crawl_rel: PathBuf::from(f.path().as_str()),
+                                            mimetype: f.mimetype().map(|m| m.to_string()),
+                                        },
+                                        PyEntryBase::new(),
+                                    ),
+                                )
+                                .expect("cannot construct PyFileInZipEntry")
+                            })
+                            .collect(),
                     },
                     PyEntryBase,
                 ),
             )
-                .map(pyo3::Py::into_any)
-                .expect("cannot construct the PyZipEntry"),
+            .map(pyo3::Py::into_any)
+            .expect("cannot construct the PyZipEntry"),
         };
 
         Ok(obj.into_bound(py))

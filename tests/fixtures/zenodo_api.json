@@ -1,0 +1,169 @@
+{
+  "http_interactions": [
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "{\"enabled\": true, \"links\": {\"self\": \"https://zenodo.org/api/records/17867222/files\", \"archive\": \"https://zenodo.org/api/records/17867222/files-archive\"}, \"entries\": [{\"created\": \"2025-12-09T13:26:19.135257+00:00\", \"updated\": \"2025-12-09T13:26:19.194479+00:00\", \"mimetype\": \"application/zip\", \"version_id\": \"192a2ddd-d620-44e4-8361-9dc68b4f0154\", \"file_id\": \"734fc96c-e47a-4b9c-9ee8-5660f7b012fe\", \"bucket_id\": \"7347ca0b-23e3-438c-be68-0d5d1e2cece5\", \"metadata\": {}, \"access\": {\"hidden\": false}, \"links\": {\"self\": \"https://zenodo.org/api/records/17867222/files/Note15.zip\", \"content\": \"https://zenodo.org/api/records/17867222/files/Note15.zip/content\"}, \"key\": \"Note15.zip\", \"size\": 1489692, \"transfer\": {\"type\": \"L\"}, \"status\": \"completed\", \"checksum\": \"md5:692bb920f68974a7f93c65de96a42f13\", \"storage_class\": \"L\"}, {\"created\": \"2025-12-09T13:26:19.229997+00:00\", \"updated\": \"2025-12-09T13:26:19.262465+00:00\", \"mimetype\": \"application/pdf\", \"version_id\": \"2cd3b89a-01d3-45e9-b8ac-7d8a49c34e89\", \"file_id\": \"a54ead91-4535-4d37-87f6-01ca841a5f90\", \"bucket_id\": \"7347ca0b-23e3-438c-be68-0d5d1e2cece5\", \"metadata\": {\"width\": 595, \"height\": 842}, \"access\": {\"hidden\": false}, \"links\": {\"self\": \"https://zenodo.org/api/records/17867222/files/note15_revised.pdf\", \"content\": \"https://zenodo.org/api/records/17867222/files/note15_revised.pdf/content\", \"iiif_canvas\": \"https://zenodo.org/api/iiif/record:17867222/canvas/note15_revised.pdf\", \"iiif_base\": \"https://zenodo.org/api/iiif/record:17867222:note15_revised.pdf\", \"iiif_info\": \"https://zenodo.org/api/iiif/record:17867222:note15_revised.pdf/info.json\", \"iiif_api\": \"https://zenodo.org/api/iiif/record:17867222:note15_revised.pdf/full/full/0/default.png\"}, \"key\": \"note15_revised.pdf\", \"size\": 212511, \"transfer\": {\"type\": \"L\"}, \"status\": \"completed\", \"checksum\": \"md5:a83ddfed231c7cb66cbb94074eeddc7b\", \"storage_class\": \"L\"}], \"default_preview\": \"note15_revised.pdf\", \"order\": []}"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "retry-after": [
+            "60"
+          ],
+          "referrer-policy": [
+            "strict-origin-when-cross-origin"
+          ],
+          "vary": [
+            "Accept-Encoding"
+          ],
+          "x-source": [
+            "api"
+          ],
+          "access-control-allow-origin": [
+            "*"
+          ],
+          "content-security-policy": [
+            "default-src 'self' fonts.googleapis.com *.gstatic.com data: 'unsafe-inline' 'unsafe-eval' blob: zenodo-broker.web.cern.ch zenodo-broker-qa.web.cern.ch maxcdn.bootstrapcdn.com cdnjs.cloudflare.com ajax.googleapis.com webanalytics.web.cern.ch"
+          ],
+          "x-ratelimit-limit": [
+            "133"
+          ],
+          "strict-transport-security": [
+            "max-age=31556926; includeSubDomains"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "date": [
+            "Fri, 05 Jun 2026 09:45:24 GMT"
+          ],
+          "server": [
+            "nginx"
+          ],
+          "content-length": [
+            "1928"
+          ],
+          "x-xss-protection": [
+            "1; mode=block"
+          ],
+          "x-ratelimit-remaining": [
+            "132"
+          ],
+          "x-ratelimit-reset": [
+            "1780652785"
+          ],
+          "x-frame-options": [
+            "sameorigin"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "access-control-expose-headers": [
+            "Content-Type, ETag, Link, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset"
+          ],
+          "permissions-policy": [
+            "interest-cohort=()"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://zenodo.org/api/records/17867222/files",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Fri, 5 Jun 2026 09:45:24 +0000"
+    },
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "{\"enabled\": true, \"links\": {\"self\": \"https://zenodo.org/api/records/17867222/files\", \"archive\": \"https://zenodo.org/api/records/17867222/files-archive\"}, \"entries\": [{\"created\": \"2025-12-09T13:26:19.135257+00:00\", \"updated\": \"2025-12-09T13:26:19.194479+00:00\", \"mimetype\": \"application/zip\", \"version_id\": \"192a2ddd-d620-44e4-8361-9dc68b4f0154\", \"file_id\": \"734fc96c-e47a-4b9c-9ee8-5660f7b012fe\", \"bucket_id\": \"7347ca0b-23e3-438c-be68-0d5d1e2cece5\", \"metadata\": {}, \"access\": {\"hidden\": false}, \"links\": {\"self\": \"https://zenodo.org/api/records/17867222/files/Note15.zip\", \"content\": \"https://zenodo.org/api/records/17867222/files/Note15.zip/content\"}, \"key\": \"Note15.zip\", \"size\": 1489692, \"transfer\": {\"type\": \"L\"}, \"status\": \"completed\", \"checksum\": \"md5:692bb920f68974a7f93c65de96a42f13\", \"storage_class\": \"L\"}, {\"created\": \"2025-12-09T13:26:19.229997+00:00\", \"updated\": \"2025-12-09T13:26:19.262465+00:00\", \"mimetype\": \"application/pdf\", \"version_id\": \"2cd3b89a-01d3-45e9-b8ac-7d8a49c34e89\", \"file_id\": \"a54ead91-4535-4d37-87f6-01ca841a5f90\", \"bucket_id\": \"7347ca0b-23e3-438c-be68-0d5d1e2cece5\", \"metadata\": {\"width\": 595, \"height\": 842}, \"access\": {\"hidden\": false}, \"links\": {\"self\": \"https://zenodo.org/api/records/17867222/files/note15_revised.pdf\", \"content\": \"https://zenodo.org/api/records/17867222/files/note15_revised.pdf/content\", \"iiif_canvas\": \"https://zenodo.org/api/iiif/record:17867222/canvas/note15_revised.pdf\", \"iiif_base\": \"https://zenodo.org/api/iiif/record:17867222:note15_revised.pdf\", \"iiif_info\": \"https://zenodo.org/api/iiif/record:17867222:note15_revised.pdf/info.json\", \"iiif_api\": \"https://zenodo.org/api/iiif/record:17867222:note15_revised.pdf/full/full/0/default.png\"}, \"key\": \"note15_revised.pdf\", \"size\": 212511, \"transfer\": {\"type\": \"L\"}, \"status\": \"completed\", \"checksum\": \"md5:a83ddfed231c7cb66cbb94074eeddc7b\", \"storage_class\": \"L\"}], \"default_preview\": \"note15_revised.pdf\", \"order\": []}"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "x-source": [
+            "api"
+          ],
+          "date": [
+            "Fri, 05 Jun 2026 09:45:32 GMT"
+          ],
+          "access-control-expose-headers": [
+            "Content-Type, ETag, Link, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset"
+          ],
+          "access-control-allow-origin": [
+            "*"
+          ],
+          "content-length": [
+            "1928"
+          ],
+          "retry-after": [
+            "52"
+          ],
+          "strict-transport-security": [
+            "max-age=31556926; includeSubDomains"
+          ],
+          "referrer-policy": [
+            "strict-origin-when-cross-origin"
+          ],
+          "x-frame-options": [
+            "sameorigin"
+          ],
+          "content-security-policy": [
+            "default-src 'self' fonts.googleapis.com *.gstatic.com data: 'unsafe-inline' 'unsafe-eval' blob: zenodo-broker.web.cern.ch zenodo-broker-qa.web.cern.ch maxcdn.bootstrapcdn.com cdnjs.cloudflare.com ajax.googleapis.com webanalytics.web.cern.ch"
+          ],
+          "x-xss-protection": [
+            "1; mode=block"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "server": [
+            "nginx"
+          ],
+          "vary": [
+            "Accept-Encoding"
+          ],
+          "content-type": [
+            "application/json"
+          ],
+          "x-ratelimit-limit": [
+            "133"
+          ],
+          "x-ratelimit-reset": [
+            "1780652785"
+          ],
+          "permissions-policy": [
+            "interest-cohort=()"
+          ],
+          "x-ratelimit-remaining": [
+            "131"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://zenodo.org/api/records/17867222/files",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Fri, 5 Jun 2026 09:45:32 +0000"
+    }
+  ],
+  "recorded_with": "rVCR 0.4.0"
+}

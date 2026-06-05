@@ -3,7 +3,8 @@ use crate::repo::{Endpoint, FileInZipMeta, ZipMeta};
 use crate::{repo::RepoError, Checksum, DatasetBackend, DirMeta, Entry};
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
-use reqwest::{Client, StatusCode};
+use reqwest::StatusCode;
+use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use std::any::Any;
 use std::path::Path;
@@ -126,7 +127,11 @@ impl DatasetBackend for SwissUbase {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         println!("dir {}", dir);
 
         let resp = client

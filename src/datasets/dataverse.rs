@@ -2,10 +2,11 @@
 
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
+use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use url::Url;
 
-use reqwest::{Client, StatusCode};
+use reqwest::StatusCode;
 use std::{any::Any, str::FromStr};
 
 use crate::helper::json_extract;
@@ -171,7 +172,11 @@ impl DatasetBackend for DataverseDataset {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
             .get(dir.api_url().clone())
             .send()
@@ -235,7 +240,11 @@ impl DataverseJsonSrcDataset {
 
 #[async_trait]
 impl DatasetBackend for DataverseJsonSrcDataset {
-    async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        _client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let json_value: JsonValue = serde_json::from_str(&self.content).or_raise(|| RepoError {
             message: "Failed to parse JSON".to_string(),
         })?;
@@ -296,7 +305,11 @@ impl DatasetBackend for DataverseFile {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let resp = client
             .get(dir.api_url().clone())
             .send()

@@ -1,7 +1,6 @@
 use datahugger::resolve;
 use futures_util::future::join_all;
 use indicatif::MultiProgress;
-use reqwest::ClientBuilder;
 use tracing_subscriber::FmtSubscriber;
 
 #[tokio::main]
@@ -20,7 +19,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     let user_agent = format!("datahugger-ng-cli/{}", env!("CARGO_PKG_VERSION"));
-    let client = ClientBuilder::new().user_agent(user_agent).build()?;
+    let client = reqwest::ClientBuilder::new()
+        .user_agent(user_agent)
+        .build()?;
+    let client = reqwest_middleware::ClientBuilder::new(client).build();
     let futures = repos.into_iter().map(|repo| {
         let client = client.clone();
 

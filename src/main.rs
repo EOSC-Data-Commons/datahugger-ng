@@ -3,10 +3,7 @@ use std::{fs, path::PathBuf};
 use clap::{Args, Parser, Subcommand};
 use datahugger::{resolve, DownloadExt, FileFilter};
 use indicatif::MultiProgress;
-use reqwest::{
-    header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT},
-    ClientBuilder,
-};
+use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[derive(Parser)]
@@ -114,11 +111,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
             }
             headers.insert(USER_AGENT, HeaderValue::from_str(&user_agent)?);
-            let client = ClientBuilder::new()
+            let client = reqwest::ClientBuilder::new()
                 .user_agent(user_agent)
                 .default_headers(headers)
                 .use_native_tls()
                 .build()?;
+            let client = reqwest_middleware::ClientBuilder::new(client).build();
             let repo = match resolve(url).await {
                 Ok(repo) => repo,
                 Err(err) => {
@@ -168,11 +166,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
             }
             headers.insert(USER_AGENT, HeaderValue::from_str(&user_agent)?);
-            let client = ClientBuilder::new()
+            let client = reqwest::ClientBuilder::new()
                 .user_agent(user_agent)
                 .default_headers(headers)
                 .use_native_tls()
                 .build()?;
+            let client = reqwest_middleware::ClientBuilder::new(client).build();
             let repo = match resolve(url).await {
                 Ok(repo) => repo,
                 Err(err) => {

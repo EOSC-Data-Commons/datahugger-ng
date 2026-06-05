@@ -62,6 +62,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.102"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+
+[[package]]
 name = "async-recursion"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -357,6 +363,7 @@ dependencies = [
  "native-tls",
  "quick-xml",
  "reqwest",
+ "reqwest-middleware",
  "roxmltree",
  "serde",
  "serde_json",
@@ -384,6 +391,7 @@ dependencies = [
  "pyo3",
  "pyo3-async-runtimes",
  "reqwest",
+ "reqwest-middleware",
  "tokio",
 ]
 
@@ -1504,6 +1512,21 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
+]
+
+[[package]]
+name = "reqwest-middleware"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07bc3f1384cffa4f274dad2d4ddd73aed32fed8f786d96c6be8aa4e5fd3c3b58"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "http",
+ "reqwest",
+ "serde",
+ "thiserror 2.0.18",
+ "tower-service",
 ]
 
 [[package]]

@@ -1,9 +1,9 @@
 use exn::{Exn, ResultExt};
 use futures_core::stream::BoxStream;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use reqwest::Client;
 
 use async_stream::try_stream;
+use reqwest_middleware::ClientWithMiddleware;
 use std::sync::Arc;
 
 use crate::{error::ErrorStatus, DatasetBackend, DirMeta, Entry};
@@ -40,7 +40,7 @@ impl ProgressManager for MultiProgress {
 /// indicatif template error
 // TODO: return fused BoxStream??
 pub fn crawl<D>(
-    client: Client,
+    client: ClientWithMiddleware,
     dataset_backend: Arc<D>,
     dir: DirMeta,
     mp: impl ProgressManager,

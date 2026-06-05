@@ -2,10 +2,11 @@
 
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
+use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use url::Url;
 
-use reqwest::{Client, StatusCode};
+use reqwest::StatusCode;
 use std::{any::Any, str::FromStr};
 
 use crate::helper::json_extract;
@@ -135,7 +136,11 @@ impl DatasetBackend for Zenodo {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         // NOTE: for dev, the first entry point url for the `dir.api_url` is the `root_dir` (from `root_url`) of the Dataset
         let resp = client
             .get(dir.api_url())
@@ -202,7 +207,11 @@ impl DatasetBackend for ZenodoJsonSrcDataset {
         DirMeta::new_root(&url)
     }
 
-    async fn list(&self, _client: &Client, dir: DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    async fn list(
+        &self,
+        _client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let json_value: JsonValue = serde_json::from_str(&self.content).or_raise(|| RepoError {
             message: "Failed to parse JSON".to_string(),
         })?;
