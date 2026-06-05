@@ -46,7 +46,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 url = "2.5.8"
 xmltree = "0.12.0"
 roxmltree = "0.21.1"
-quick-xml = "0.39.3"
+quick-xml = "0.40.1"
 reqwest-middleware = { version = "0.5.1", features = ["query"] }
 
 [dev-dependencies]
