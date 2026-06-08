@@ -11,6 +11,7 @@ mod onedata;
 mod osf;
 mod swissubase;
 mod zenodo;
+mod mdeposit;
 
 pub use arxiv::Arxiv;
 pub use dabar::DabarXmlSrcDataset;
@@ -25,3 +26,4 @@ pub use onedata::OnedataDataset;
 pub use osf::OSF;
 pub use swissubase::SwissUbase;
 pub use zenodo::{Zenodo, ZenodoJsonSrcDataset};
+pub use mdeposit::Mdeposit;

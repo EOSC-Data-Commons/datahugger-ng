@@ -11,7 +11,7 @@ use url::Url;
 use crate::{
     datasets::{
         Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, HalScience,
-        HuggingFace, MaterialsCloud, OnedataDataset, SwissUbase, Zenodo, OSF,
+        HuggingFace, MaterialsCloud, Mdeposit, OnedataDataset, SwissUbase, Zenodo, OSF,
     },
     repo::Dataset,
 };
@@ -703,6 +703,30 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
             })?;
 
             let dataset = Dataset::new(SwissUbase::new(dataset_id.to_string()));
+            Ok(dataset)
+        }
+        "mdposit.mddbr.eu" => {
+            let fragment = link.fragment().ok_or_else(|| DispatchError {
+                message: format!("cannot get fragment of url '{}'", link.as_str()),
+            })?;
+
+            // fragment = "/id/MD-A00001/overview"
+            let segments: Vec<&str> = fragment
+                .split('/')
+                .filter(|s| !s.is_empty())
+                .collect();
+
+            if segments.last().copied() != Some("overview") {
+                exn::bail!(DispatchError {
+                    message: format!("expected url to end with 'overview', got '{link}'"),
+                });
+            }
+
+            let dataset_id = segments.iter().rev().nth(1).ok_or_else(|| DispatchError {
+                message: format!("unable to parse Mdepsoit dataset id from '{link}'"),
+            })?;
+
+            let dataset = Dataset::new(Mdeposit::new(dataset_id.to_string()));
             Ok(dataset)
         }
         "data.mendeley.com" => {
