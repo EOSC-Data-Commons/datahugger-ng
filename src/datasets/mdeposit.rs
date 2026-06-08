@@ -21,8 +21,7 @@ fn analyse_json(
 
     files
         .iter()
-        .enumerate()
-        .map(|(_idx, filej)| {
+        .map(|filej| {
             let name: String = json_extract(filej, "filename").or_raise(|| RepoError {
                 message: "fail to extracting 'filename' as String from json".to_string(),
             })?;
