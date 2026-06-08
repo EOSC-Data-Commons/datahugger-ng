@@ -1,6 +1,6 @@
-use crate::helper::json_extract;
+use crate::helper::{json_extract, json_extract_opt};
 use crate::repo::Endpoint;
-use crate::{repo::RepoError, DatasetBackend, DirMeta, Entry, FileMeta};
+use crate::{repo::RepoError, Checksum, DatasetBackend, DirMeta, Entry, FileMeta};
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
 use reqwest::StatusCode;
@@ -22,7 +22,7 @@ fn analyse_json(
     files
         .iter()
         .enumerate()
-        .map(|(idx, filej)| {
+        .map(|(_idx, filej)| {
             let name: String = json_extract(filej, "filename").or_raise(|| RepoError {
                 message: "fail to extracting 'filename' as String from json".to_string(),
             })?;
@@ -35,12 +35,45 @@ fn analyse_json(
             let download_url = dir
                 .api_url()
                 .join(&format!(
-                    "/api/rest/current/projects/{}.1/files/{}",
+                    "/api/rest/current/projects/{}.1/files/{}", // TODO: check whether this is a version segment
                     id, name
                 ))
                 .or_raise(|| RepoError {
                     message: "cannot parse download base url".to_string(),
                 })?;
+
+            let size: u64 = json_extract(filej, "length").or_raise(|| RepoError {
+                message: "fail to extracting 'size' as u64 from json".to_string(),
+            })?;
+
+            let hash: Option<String>     =
+                json_extract_opt(filej, "md5").or_raise(|| RepoError {
+                    message: "fail to extracting 'md5' as String from json"
+                        .to_string(),
+                })?;
+
+            let md5_sum = match hash  {
+                None => vec![],
+                Some(hash_str) => vec![Checksum::Md5(hash_str)]
+            };
+
+            let mime_type: String = json_extract(filej, "contentType").or_raise(|| RepoError {
+                message: "fail to extracting 'contentType' as String from json".to_string(),
+            })?;
+
+            let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
+                message: format!("fail to parse '{}' to proper mime type", mime_type),
+            })?;
+
+            let mime_type = if mime_type == mime::APPLICATION_OCTET_STREAM {
+                mime_guess::from_path(&name).first().unwrap_or(mime::APPLICATION_OCTET_STREAM)
+            } else {
+                mime_type
+            };
+
+            let upload_date = json_extract(filej, "uploadDate").or_raise(|| RepoError {
+                message: "fail to extracting 'uploadDate' as String from json".to_string(),
+            })?;
 
             let entry = FileMeta::new(
                 Some(name),
@@ -48,11 +81,11 @@ fn analyse_json(
                 dir.join(""),
                 endpoint,
                 download_url,
+                Some(size),
+                md5_sum,
+                Some(mime_type),
                 None,
-                vec![],
-                None,
-                None,
-                None,
+                Some(upload_date),
                 None,
                 true,
             );
