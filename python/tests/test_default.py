@@ -229,10 +229,9 @@ def test_crawl_swissubase():
     for i in ds.crawl_file():
         print(i)
 
+
 def test_crawl_mdposit():
-    ds = resolve(
-        "https://mdposit.mddbr.eu/#/id/MD-A0000A/overview"
-    )
+    ds = resolve("https://mdposit.mddbr.eu/#/id/MD-A0000A/overview")
 
     for i in ds.crawl():
         print(i)
