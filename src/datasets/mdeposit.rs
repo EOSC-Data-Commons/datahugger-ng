@@ -46,15 +46,13 @@ fn analyse_json(
                 message: "fail to extracting 'size' as u64 from json".to_string(),
             })?;
 
-            let hash: Option<String>     =
-                json_extract_opt(filej, "md5").or_raise(|| RepoError {
-                    message: "fail to extracting 'md5' as String from json"
-                        .to_string(),
-                })?;
+            let hash: Option<String> = json_extract_opt(filej, "md5").or_raise(|| RepoError {
+                message: "fail to extracting 'md5' as String from json".to_string(),
+            })?;
 
-            let md5_sum = match hash  {
+            let md5_sum = match hash {
                 None => vec![],
-                Some(hash_str) => vec![Checksum::Md5(hash_str)]
+                Some(hash_str) => vec![Checksum::Md5(hash_str)],
             };
 
             let mime_type: String = json_extract(filej, "contentType").or_raise(|| RepoError {
@@ -66,7 +64,9 @@ fn analyse_json(
             })?;
 
             let mime_type = if mime_type == mime::APPLICATION_OCTET_STREAM {
-                mime_guess::from_path(&name).first().unwrap_or(mime::APPLICATION_OCTET_STREAM)
+                mime_guess::from_path(&name)
+                    .first()
+                    .unwrap_or(mime::APPLICATION_OCTET_STREAM)
             } else {
                 mime_type
             };
