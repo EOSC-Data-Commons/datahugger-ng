@@ -1,41 +1,90 @@
-use std::any::Any;
+use crate::helper::json_extract;
+use crate::repo::Endpoint;
+use crate::{repo::RepoError, DatasetBackend, DirMeta, Entry, FileMeta};
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
-use crate::{repo::RepoError,DatasetBackend, DirMeta, Entry};
-use serde_json::Value as JsonValue;
-use url::Url;
-use std::str::FromStr;
 use reqwest::StatusCode;
 use reqwest_middleware::ClientWithMiddleware;
+use serde_json::Value as JsonValue;
+use std::any::Any;
+use std::str::FromStr;
+use url::Url;
 
+fn analyse_json(
+    json: &JsonValue,
+    dir: &DirMeta,
+    id: &String,
+) -> Result<Vec<Entry>, Exn<RepoError>> {
+    let files = json.as_array().ok_or_else(|| RepoError {
+        message: format!("expected array, got {:?}", json),
+    })?;
 
-fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+    files
+        .iter()
+        .enumerate()
+        .map(|(idx, filej)| {
+            let name: String = json_extract(filej, "filename").or_raise(|| RepoError {
+                message: "fail to extracting 'filename' as String from json".to_string(),
+            })?;
 
-    println!("analysing {}", json);
+            let endpoint = Endpoint {
+                parent_url: dir.api_url().clone(),
+                key: Some(name.clone()),
+            };
 
-    Ok(vec![])
+            let download_url = dir
+                .api_url()
+                .join(&format!(
+                    "/api/rest/current/projects/{}.1/files/{}",
+                    id, name
+                ))
+                .or_raise(|| RepoError {
+                    message: "cannot parse download base url".to_string(),
+                })?;
+
+            let entry = FileMeta::new(
+                Some(name),
+                None,
+                dir.join(""),
+                endpoint,
+                download_url,
+                None,
+                vec![],
+                None,
+                None,
+                None,
+                None,
+                true,
+            );
+
+            Ok(Entry::File(entry))
+        })
+        .collect()
 }
 
 #[derive(Debug)]
-pub struct Mdeposit {
+pub struct Mdposit {
     pub id: String,
 }
 
-impl Mdeposit {
+impl Mdposit {
     #[must_use]
     pub fn new(id: impl Into<String>) -> Self {
-        Mdeposit { id: id.into() }
+        Mdposit { id: id.into() }
     }
 }
 
 #[async_trait]
-impl DatasetBackend for Mdeposit {
-
+impl DatasetBackend for Mdposit {
     fn root_dir(&self) -> DirMeta {
         let url = Url::from_str(
-            format!("https://mdposit.mddbr.eu/api/rest/v1/projects/{}/filenotes", self.id).as_str(),
+            format!(
+                "https://mdposit.mddbr.eu/api/rest/v1/projects/{}/filenotes",
+                self.id
+            )
+            .as_str(),
         )
-            .unwrap();
+        .unwrap();
 
         DirMeta::new_root(&url)
     }
@@ -45,7 +94,6 @@ impl DatasetBackend for Mdeposit {
         client: &ClientWithMiddleware,
         dir: DirMeta,
     ) -> Result<Vec<Entry>, Exn<RepoError>> {
-
         let resp = client
             .get(dir.api_url().clone())
             .send()
@@ -74,7 +122,7 @@ impl DatasetBackend for Mdeposit {
             message: format!("fail GET {}, unable to convert to json", dir.api_url(),),
         })?;
 
-        let entries = analyse_json(&resp, &dir)?;
+        let entries = analyse_json(&resp, &dir, &self.id)?;
 
         Ok(entries)
     }
@@ -82,5 +130,4 @@ impl DatasetBackend for Mdeposit {
     fn as_any(&self) -> &dyn Any {
         self
     }
-
 }

@@ -132,7 +132,6 @@ impl DatasetBackend for SwissUbase {
         client: &ClientWithMiddleware,
         dir: DirMeta,
     ) -> Result<Vec<Entry>, Exn<RepoError>> {
-
         let resp = client
             .get(dir.api_url().clone())
             .send()

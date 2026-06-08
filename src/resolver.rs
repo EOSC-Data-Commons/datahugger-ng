@@ -11,7 +11,7 @@ use url::Url;
 use crate::{
     datasets::{
         Arxiv, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub, HalScience,
-        HuggingFace, MaterialsCloud, Mdeposit, OnedataDataset, SwissUbase, Zenodo, OSF,
+        HuggingFace, MaterialsCloud, Mdposit, OnedataDataset, SwissUbase, Zenodo, OSF,
     },
     repo::Dataset,
 };
@@ -711,10 +711,7 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
             })?;
 
             // fragment = "/id/MD-A00001/overview"
-            let segments: Vec<&str> = fragment
-                .split('/')
-                .filter(|s| !s.is_empty())
-                .collect();
+            let segments: Vec<&str> = fragment.split('/').filter(|s| !s.is_empty()).collect();
 
             if segments.last().copied() != Some("overview") {
                 exn::bail!(DispatchError {
@@ -726,7 +723,7 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
                 message: format!("unable to parse Mdepsoit dataset id from '{link}'"),
             })?;
 
-            let dataset = Dataset::new(Mdeposit::new(dataset_id.to_string()));
+            let dataset = Dataset::new(Mdposit::new(dataset_id.to_string()));
             Ok(dataset)
         }
         "data.mendeley.com" => {
