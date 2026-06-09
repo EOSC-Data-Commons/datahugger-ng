@@ -118,6 +118,23 @@ class DabarXmlSrcDataset(Dataset):
             RuntimeError
         """
 
+class MdpositJsonSrcDataset(Dataset):
+    """
+    A MDposit JSON dataset backend that uses pre-fetched JSON content.
+    """
+
+    def __init__(self, id: str, content: str) -> None:
+        """
+        Create a new MdpositJsonSrcDataset.
+
+        Args:
+            id: The MDposit dataset ID, e.g., MD-A00001.
+            content: The JSON content as a string
+
+        Raises:
+            RuntimeError
+        """
+
 class Dataset(object):
     def download_with_validation(
         self,

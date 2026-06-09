@@ -10,6 +10,7 @@ from datahugger import (
     ZenodoJsonSrcDataset,
     HalJsonSrcDataset,
     DabarXmlSrcDataset,
+    MdpositJsonSrcDataset,
 )
 import requests
 
@@ -208,11 +209,30 @@ def test_dabar_from_xml2():
         response.raise_for_status()
         dabar = response.text
 
-    except Exception as e:
+    except Exception:
         print("fetching JSON failed")
-        raise e
+        raise
 
     ds = DabarXmlSrcDataset("irb:106", dabar)
+
+    for i in ds.crawl_file():
+        print(i)
+
+
+def test_mdposit_from_json():
+    try:
+        response = requests.get(
+            "https://irb-dev.mddbr.eu/api/rest/v1/projects/A0001/filenotes",
+            timeout=60,
+        )
+        response.raise_for_status()
+        mdposit = response.text
+
+    except Exception:
+        print("fetching JSON failed")
+        raise
+
+    ds = MdpositJsonSrcDataset("MD-A0001", mdposit)
 
     for i in ds.crawl_file():
         print(i)

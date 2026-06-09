@@ -10,6 +10,7 @@ from .datahugger import (
     ZenodoJsonSrcDataset,
     HalJsonSrcDataset,
     DabarXmlSrcDataset,
+    MdpositJsonSrcDataset,
 )
 
 __all__ = (
@@ -19,6 +20,7 @@ __all__ = (
     "ZenodoJsonSrcDataset",
     "HalJsonSrcDataset",
     "DabarXmlSrcDataset",
+    "MdpositJsonSrcDataset",
     "DirEntry",
     "FileEntry",
     "FileInZipEntry",

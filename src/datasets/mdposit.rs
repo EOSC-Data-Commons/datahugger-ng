@@ -163,3 +163,45 @@ impl DatasetBackend for Mdposit {
         self
     }
 }
+
+#[derive(Debug)]
+pub struct MdpositJsonSrcDataset {
+    pub id: String,
+    pub content: String,
+}
+
+impl MdpositJsonSrcDataset {
+    #[must_use]
+    pub fn new(id: impl Into<String>, content: String) -> Self {
+        MdpositJsonSrcDataset {
+            id: id.into(),
+            content,
+        }
+    }
+}
+
+#[async_trait]
+impl DatasetBackend for MdpositJsonSrcDataset {
+    fn root_dir(&self) -> DirMeta {
+        let url = Url::from_str("https://mdposit.mddbr.eu").unwrap();
+        DirMeta::new_root(&url)
+    }
+
+    async fn list(
+        &self,
+        _client: &ClientWithMiddleware,
+        dir: DirMeta,
+    ) -> Result<Vec<Entry>, Exn<RepoError>> {
+        let json_value: JsonValue = serde_json::from_str(&self.content).or_raise(|| RepoError {
+            message: "Failed to parse JSON".to_string(),
+        })?;
+
+        let entries = analyse_json(&json_value, &dir, &self.id)?;
+
+        Ok(entries)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
