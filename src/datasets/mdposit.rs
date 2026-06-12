@@ -34,7 +34,7 @@ fn analyse_json(
             let download_url = dir
                 .api_url()
                 .join(&format!(
-                    "/api/rest/v1/projects/{}.1/files/{}", // https://mdposit.mddbr.eu/api/rest/docs/#/files/get_projects__projectAccessionOrID__files__filename_
+                    "/api/rest/v1/projects/{}/files/{}", // https://mdposit.mddbr.eu/api/rest/docs/#/files/get_projects__projectAccessionOrID__files__filename_
                     id, name
                 ))
                 .or_raise(|| RepoError {
