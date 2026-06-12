@@ -75,9 +75,9 @@ fn analyse_json(
             })?;
 
             let entry = FileMeta::new(
-                Some(name),
+                Some(name.clone()),
                 None,
-                dir.join(""),
+                dir.join(&name),
                 endpoint,
                 download_url,
                 Some(size),
