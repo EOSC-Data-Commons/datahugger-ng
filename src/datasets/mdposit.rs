@@ -34,7 +34,7 @@ fn analyse_json(
             let download_url = dir
                 .api_url()
                 .join(&format!(
-                    "/api/rest/current/projects/{}.1/files/{}", // TODO: check whether this is a version segment
+                    "/api/rest/v1/projects/{}.1/files/{}", // https://mdposit.mddbr.eu/api/rest/docs/#/files/get_projects__projectAccessionOrID__files__filename_
                     id, name
                 ))
                 .or_raise(|| RepoError {
