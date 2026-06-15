@@ -25,7 +25,7 @@ Support data repositories:
 | Onedata                | [https://demo.onedata.org/](https://demo.dataone.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
 | SwissUBase             | [https://www.swissubase.ch/](https://www.swissubase.ch/) | SwissUBase pack everything in zip, inspect will list files in zip                                                                                                       | [example](#datasets-without-limitations) |
 | Dryad                  | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key)                                                   | [example](#datadryad-api-key-config-and-download) |
-| MDposit                | [https://mdposit.mddbr.eu/](https://mdposit.mddbr.eu//) | — | [example](#ddatasets-without-limitations) |
+| MDposit                | [https://mdposit.mddbr.eu/](https://mdposit.mddbr.eu//) | — | [example](#datasets-without-limitations) |
 | DataONE (deprecated)   | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#datasets-without-limitations) |
 
 
