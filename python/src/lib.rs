@@ -18,7 +18,7 @@ pub fn main() {
 }
 
 use datahugger::datasets::{DabarXmlSrcDataset, ZenodoJsonSrcDataset};
-use datahugger::datasets::{DataverseJsonSrcDataset, HalJsonSrcDataset};
+use datahugger::datasets::{DataverseJsonSrcDataset, HalJsonSrcDataset, MdpositJsonSrcDataset};
 use datahugger::FileFilter;
 use datahugger::{
     crawl,
@@ -261,6 +261,41 @@ impl PyDabarXmlSrcDataset {
         Ok(stream)
     }
 }
+
+#[pyclass]
+#[pyo3(name = "MdpositJsonSrcDataset")]
+struct PyMdpositJsonSrcDataset {
+    inner: PyDataset,
+}
+
+#[pymethods]
+impl PyMdpositJsonSrcDataset {
+
+    #[new]
+    fn new(id: String, content: String) -> PyResult<Self> {
+        let ds = Dataset {
+            backend: Arc::new(MdpositJsonSrcDataset::new(id, content)),
+        };
+        Ok(Self {
+            inner: PyDataset(ds),
+        })
+    }
+
+    fn crawl_file(&self) -> PyResult<PyFileMetaStream> {
+        let user_agent = format!("datahugger-py/{}", env!("CARGO_PKG_VERSION"));
+        let client = InnerClientBuilder::new()
+            .user_agent(user_agent)
+            .build()
+            .map_err(|err| PyRuntimeError::new_err(format!("http client fail: {err}")))?;
+        let client = ClientBuilder::new(client).build();
+        let mp = NoProgress;
+
+        let stream = self.inner.0.clone().crawl_file(&client, mp);
+        let stream = PyFileMetaStream::new(stream);
+        Ok(stream)
+    }
+}
+
 
 #[pymethods]
 impl PyDataset {
@@ -862,6 +897,7 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyZenodoJsonSrcDataset>()?;
     m.add_class::<PyHalJsonSrcDataset>()?;
     m.add_class::<PyDabarXmlSrcDataset>()?;
+    m.add_class::<PyMdpositJsonSrcDataset>()?;
 
     // Dir
     let dir = py.get_type::<PyDirEntry>();

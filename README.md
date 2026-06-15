@@ -12,20 +12,21 @@ Tool for fetching data from DOI or URL.
 
 Support data repositories:
 
-| Source             | Website                         | Notes | Examples |
-|--------------------|---------------------------------|-------| ---------|
-| Dataverse          | [dataverse.org](https://dataverse.org/) | [Supported Dataverse repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataverse-repo-list.md) | [example](#datasets-without-limitations) |
-| OSF                | [osf.io](https://osf.io/)       | — | [example](#datasets-without-limitations) |
-| GitHub ✨(new)      | [github.com](https://github.com/) | Use a GitHub API token to get a higher rate limit | [example](#github---avoid-hitting-api-rate-limits-using-a-personal-access-token-pat) |
-| Hugging Face ✨(new)| [huggingface.co](https://huggingface.co/) | — | [example](#datasets-without-limitations) |
-| arXiv              | [arxiv.org](https://arxiv.org/) | — | [example](#datasets-without-limitations) |
-| Hal                | [hal.science](https://hal.science/) | — | [example](#datasets-without-limitations) |
-| Zenodo             | [zenodo.org](https://zenodo.org/) | — | [example](#datasets-without-limitations) |
-| MaterialsCloud Archive| [archive.materialscloud.org](https://archive.materialscloud.org/) | — | [example](#datasets-without-limitations) |
-| Onedata            | [https://demo.onedata.org/](https://demo.dataone.org/) | — | [example](#datasets-without-limitations) |
-| SwissUBase          | [https://www.swissubase.ch/](https://www.swissubase.ch/) | SwissUBase pack everything in zip, inspect will list files in zip | [example](#datasets-without-limitations) |
-| Dryad              | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key) | [example](#datadryad-api-key-config-and-download) |
-| DataONE (deprecated) | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#datasets-without-limitations) |
+| Source                 | Website                         | Notes                                                                                                                                                                   | Examples |
+|------------------------|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ---------|
+| Dataverse              | [dataverse.org](https://dataverse.org/) | [Supported Dataverse repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataverse-repo-list.md)                                               | [example](#datasets-without-limitations) |
+| OSF                    | [osf.io](https://osf.io/)       | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
+| GitHub ✨(new)          | [github.com](https://github.com/) | Use a GitHub API token to get a higher rate limit                                                                                                                       | [example](#github---avoid-hitting-api-rate-limits-using-a-personal-access-token-pat) |
+| Hugging Face ✨(new)    | [huggingface.co](https://huggingface.co/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
+| arXiv                  | [arxiv.org](https://arxiv.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
+| Hal                    | [hal.science](https://hal.science/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
+| Zenodo                 | [zenodo.org](https://zenodo.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
+| MaterialsCloud Archive | [archive.materialscloud.org](https://archive.materialscloud.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
+| Onedata                | [https://demo.onedata.org/](https://demo.dataone.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
+| SwissUBase             | [https://www.swissubase.ch/](https://www.swissubase.ch/) | SwissUBase pack everything in zip, inspect will list files in zip                                                                                                       | [example](#datasets-without-limitations) |
+| Dryad                  | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key)                                                   | [example](#datadryad-api-key-config-and-download) |
+| MDposit                | [https://mdposit.mddbr.eu/](https://mdposit.mddbr.eu//) | — | [example](#datasets-without-limitations) |
+| DataONE (deprecated)   | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#datasets-without-limitations) |
 
 
 [Open an issue](https://github.com/EOSC-Data-Commons/datahugger-ng/issues/new/choose) if a data repository you want to use not yet support.
@@ -263,6 +264,12 @@ datahugger download https://archive.materialscloud.org/record/2026.79 --to /tmp/
 
 ```bash
 datahugger download https://hal.science/cel-01830944 --to /tmp/hal_download/
+```
+
+- MDposit
+
+```bash
+datahugger download https://mdposit.mddbr.eu/#/id/MD-A000JP/overview --to /tmp/hal_download/
 ```
 
 - DataONE - may be slow for umbrella repositories
