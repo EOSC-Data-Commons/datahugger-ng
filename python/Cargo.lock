@@ -343,7 +343,7 @@ dependencies = [
 
 [[package]]
 name = "datahugger"
-version = "0.6.3"
+version = "0.6.4"
 dependencies = [
  "async-recursion",
  "async-stream",
@@ -378,7 +378,7 @@ dependencies = [
 
 [[package]]
 name = "datahuggerpy"
-version = "0.6.3"
+version = "0.6.4"
 dependencies = [
  "datahugger",
  "exn",
@@ -1343,9 +1343,9 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
-version = "0.39.4"
+version = "0.40.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdcc8dd4e2f670d309a5f0e83fe36dfdc05af317008fea29144da1a2ac858e5e"
+checksum = "2474bd2e5029e7ccb6abb2ba48cf2383a333851dedf495901544281590c7da7f"
 dependencies = [
  "memchr",
 ]
