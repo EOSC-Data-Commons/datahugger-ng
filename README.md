@@ -21,9 +21,9 @@ Support data repositories:
 | arXiv                  | [arxiv.org](https://arxiv.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
 | Hal                    | [hal.science](https://hal.science/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
 | Zenodo                 | [zenodo.org](https://zenodo.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
-| MaterialsCloud Archive | [archive.materialscloud.org](https://archive.materialscloud.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
-| Onedata                | [https://demo.onedata.org/](https://demo.dataone.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
-| SwissUBase             | [https://www.swissubase.ch/](https://www.swissubase.ch/) | SwissUBase pack everything in zip, inspect will list files in zip                                                                                                       | [example](#datasets-without-limitations) |
+| MaterialsCloud Archive | [archive.materialscloud.org](https://archive.materialscloud.org/) | —                                                                                                                                                           | [example](#datasets-without-limitations) |
+| Onedata                | [https://demo.onedata.org/](https://demo.dataone.org/) | we produce an extra file `__ARCHIVE__.tar` for onedata to include whole dataset, and you can use `--exclude __ARCHIVE__.tar` to not download it.                       | [example](#datasets-without-limitations) |
+| SwissUBase             | [https://www.swissubase.ch/](https://www.swissubase.ch/) | SwissUBase pack everything in zip, inspect will list files in zip                                                                                                    | [example](#datasets-without-limitations) |
 | Dryad                  | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key)                                                   | [example](#datadryad-api-key-config-and-download) |
 | MDposit                | [https://mdposit.mddbr.eu/](https://mdposit.mddbr.eu//) | — | [example](#datasets-without-limitations) |
 | DataONE (deprecated)   | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#datasets-without-limitations) |
@@ -241,6 +241,9 @@ https://demo.onedata.org/share/1b716e29e9da80675a48882de1ae0599ch053e
 ```bash
 datahugger download https://demo.onedata.org/share/1b716e29e9da80675a48882de1ae0599ch053e --to /tmp/onedata_download/
 ```
+
+In datahugger, we produce an extra file `__ARCHIVE__.tar` to include all files of dataset to download.
+User can use `--include __ARCHIVE__.tar` to only download this file or use `--exclude __ARCHIVE__.tar` to download other files other than this `tar`.
 
 - SwissUBase - simple inspect
 

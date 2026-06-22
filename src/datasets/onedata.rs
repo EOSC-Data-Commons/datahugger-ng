@@ -53,6 +53,42 @@ impl DatasetBackend for OnedataDataset {
         dir: DirMeta,
     ) -> Result<Vec<Entry>, Exn<RepoError>> {
         // NOTE: Require use redirect client
+        let mut entries = Vec::new();
+        if let Some(last) = dir
+            .api_url()
+            .path_segments()
+            .and_then(|mut segments| segments.next_back())
+        {
+            if last == self.root_file_id {
+                let name = "__ARCHIVE__.tar".to_string();
+                let endpoint = Endpoint {
+                    parent_url: dir.api_url(),
+                    key: None,
+                };
+                let download_url = Url::parse(&format!(
+                    "https://{}/api/v3/onezone/shares/data/{}/content",
+                    self.domain, self.root_file_id
+                ))
+                .expect("a valid url");
+                let guess = mime_guess::from_path(&name);
+                let file = FileMeta::new(
+                    Some(name.clone()),
+                    None,
+                    dir.join(&name),
+                    endpoint,
+                    download_url,
+                    None,
+                    vec![],
+                    guess.first(),
+                    None,
+                    None,
+                    None,
+                    true,
+                );
+                entries.push(Entry::File(file));
+            }
+        }
+
         let resp = client
             .get(dir.api_url())
             .send()
@@ -167,7 +203,6 @@ impl DatasetBackend for OnedataDataset {
             })?;
         }
 
-        let mut entries = Vec::new();
         for (idx, filej) in files.iter().enumerate() {
             let kind: String = json_extract(filej, "type").or_raise(|| RepoError {
                 message: "Missing 'type'".to_string(),
@@ -195,7 +230,7 @@ impl DatasetBackend for OnedataDataset {
             match kind.as_str() {
                 "REG" => {
                     let file = FileMeta::new(
-                        None,
+                        Some(name.clone()),
                         None,
                         dir.join(&name),
                         endpoint,

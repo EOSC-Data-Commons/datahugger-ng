@@ -543,6 +543,7 @@ impl std::fmt::Display for FileMeta {
         writeln!(f, "  Size       : {size_str}")?;
         writeln!(f, "  Mime Type  : {mimetype_str}")?;
         writeln!(f, "  Checksums  : {checksum_str}")?;
+        writeln!(f, "  restrict   : {}", !self.downloadable)?;
 
         Ok(())
     }
