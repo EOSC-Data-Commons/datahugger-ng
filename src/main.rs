@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use clap::{Args, Parser, Subcommand};
-use datahugger::{resolve, DownloadExt, FileFilter};
+use datahugger::{DownloadExt, FileFilter, resolve, resolve_doi_to_url};
 use indicatif::MultiProgress;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
@@ -95,7 +95,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     match cli.command {
         Commands::Download(args) => {
-            let url = &args.url;
+            let mut url = args.url;
             let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
             let mut headers = HeaderMap::new();
             if let Ok(token) = std::env::var("GITHUB_TOKEN") {
@@ -116,8 +116,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .default_headers(headers)
                 .use_native_tls()
                 .build()?;
+            if url.starts_with("https://doi.org/") {
+                let doi = url.trim_start_matches("https://doi.org/");
+                url = resolve_doi_to_url(&client, doi, true).await?;
+            }  
             let client = reqwest_middleware::ClientBuilder::new(client).build();
-            let repo = match resolve(url).await {
+            let repo = match resolve(&url).await {
                 Ok(repo) => repo,
                 Err(err) => {
                     eprintln!("failed to resolve '{url}': {err:?}");
@@ -146,7 +150,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Commands::Inspect(args) => {
-            let url = &args.url;
+            let mut url = args.url;
             let filter = FileFilter::new(&args.include, &args.exclude).unwrap_or_else(|err| {
                 eprintln!("invalid --include/--exclude pattern: {err}");
                 std::process::exit(1);
@@ -171,8 +175,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .default_headers(headers)
                 .use_native_tls()
                 .build()?;
+            if url.starts_with("https://doi.org/") {
+                let doi = url.trim_start_matches("https://doi.org/");
+                url = resolve_doi_to_url(&client, doi, true).await?;
+            }  
             let client = reqwest_middleware::ClientBuilder::new(client).build();
-            let repo = match resolve(url).await {
+            let repo = match resolve(&url).await {
                 Ok(repo) => repo,
                 Err(err) => {
                     eprintln!("failed to resolve '{url}': {err:?}");
