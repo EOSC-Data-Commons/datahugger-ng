@@ -94,7 +94,7 @@ def test_dataclass_constructor():
         None,
         None,
         None,
-        False
+        False,
     )
     assert str(entry.path_crawl_rel.as_posix()) == "/tmp/x"
     assert entry.download_url == "https://example.com/download_url"

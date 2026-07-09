@@ -270,7 +270,6 @@ struct PyMdpositJsonSrcDataset {
 
 #[pymethods]
 impl PyMdpositJsonSrcDataset {
-
     #[new]
     fn new(id: String, content: String) -> PyResult<Self> {
         let ds = Dataset {
@@ -295,7 +294,6 @@ impl PyMdpositJsonSrcDataset {
         Ok(stream)
     }
 }
-
 
 #[pymethods]
 impl PyDataset {
@@ -559,7 +557,7 @@ impl PyFileEntry {
                 version,
                 creation_date,
                 last_modification_date,
-                downloadable
+                downloadable,
             },
             PyEntryBase::new(),
         )
@@ -694,7 +692,7 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                         last_modification_date: meta
                             .last_modification_date()
                             .map(|v| v.to_string()),
-                        downloadable: meta.is_downloadable()
+                        downloadable: meta.is_downloadable(),
                     },
                     PyEntryBase,
                 ),
@@ -788,7 +786,7 @@ impl<'py> IntoPyObject<'py> for PyFileMeta {
                     version: meta.version().map(|v| v.to_string()),
                     creation_date: meta.creation_date().map(|v| v.to_string()),
                     last_modification_date: meta.last_modification_date().map(|v| v.to_string()),
-                    downloadable: meta.is_downloadable()
+                    downloadable: meta.is_downloadable(),
                 },
                 PyEntryBase,
             ),
