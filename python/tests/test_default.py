@@ -94,6 +94,7 @@ def test_dataclass_constructor():
         None,
         None,
         None,
+        False
     )
     assert str(entry.path_crawl_rel.as_posix()) == "/tmp/x"
     assert entry.download_url == "https://example.com/download_url"
@@ -262,7 +263,7 @@ def test_crawl_mdposit():
 
 @pytest.mark.asyncio
 async def test_crawl_async():
-    """not rigrous test but the async is happenning that clock ticks before crawling complete."""
+    """not a rigorous test but the async is happening that clock ticks before crawling complete."""
     ds = resolve(
         "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD"
     )

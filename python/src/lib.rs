@@ -526,6 +526,8 @@ struct PyFileEntry {
     creation_date: Option<String>,
     #[pyo3(get, set)]
     last_modification_date: Option<String>,
+    #[pyo3(get, set)]
+    downloadable: bool,
 }
 
 #[pymethods]
@@ -543,6 +545,7 @@ impl PyFileEntry {
         version: Option<String>,
         creation_date: Option<String>,
         last_modification_date: Option<String>,
+        downloadable: bool,
     ) -> (Self, PyEntryBase) {
         (
             PyFileEntry {
@@ -556,6 +559,7 @@ impl PyFileEntry {
                 version,
                 creation_date,
                 last_modification_date,
+                downloadable
             },
             PyEntryBase::new(),
         )
@@ -690,6 +694,7 @@ impl<'py> IntoPyObject<'py> for PyEntry {
                         last_modification_date: meta
                             .last_modification_date()
                             .map(|v| v.to_string()),
+                        downloadable: meta.is_downloadable()
                     },
                     PyEntryBase,
                 ),
@@ -783,6 +788,7 @@ impl<'py> IntoPyObject<'py> for PyFileMeta {
                     version: meta.version().map(|v| v.to_string()),
                     creation_date: meta.creation_date().map(|v| v.to_string()),
                     last_modification_date: meta.last_modification_date().map(|v| v.to_string()),
+                    downloadable: meta.is_downloadable()
                 },
                 PyEntryBase,
             ),
@@ -930,6 +936,8 @@ fn datahuggerpy(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     ann.set_item("creation_date", creation_date_type)?;
     let last_modification_date_type = py.eval(c_str!("str | None"), None, None)?;
     ann.set_item("last_modification_date", last_modification_date_type)?;
+    let downloadable_type = py.eval(c_str!("bool"), None, None)?;
+    ann.set_item("downloadable", downloadable_type)?;
     f.setattr("__annotations__", ann)?;
     py.import("dataclasses")?
         .getattr("dataclass")?
