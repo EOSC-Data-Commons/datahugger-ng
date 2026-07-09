@@ -32,6 +32,7 @@ class FileEntry(Entry):
     version: str | None
     creation_date: str | None
     last_modification_date: str | None
+    downloadable: bool
 
 @dataclass
 class FileInZipEntry(Entry):

@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use clap::{Args, Parser, Subcommand};
-use datahugger::{DownloadExt, FileFilter, resolve, resolve_doi_to_url};
+use datahugger::{resolve, resolve_doi_to_url, DownloadExt, FileFilter};
 use indicatif::MultiProgress;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
@@ -119,7 +119,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if url.starts_with("https://doi.org/") {
                 let doi = url.trim_start_matches("https://doi.org/");
                 url = resolve_doi_to_url(&client, doi, true).await?;
-            }  
+            }
             let client = reqwest_middleware::ClientBuilder::new(client).build();
             let repo = match resolve(&url).await {
                 Ok(repo) => repo,
@@ -178,7 +178,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if url.starts_with("https://doi.org/") {
                 let doi = url.trim_start_matches("https://doi.org/");
                 url = resolve_doi_to_url(&client, doi, true).await?;
-            }  
+            }
             let client = reqwest_middleware::ClientBuilder::new(client).build();
             let repo = match resolve(&url).await {
                 Ok(repo) => repo,
