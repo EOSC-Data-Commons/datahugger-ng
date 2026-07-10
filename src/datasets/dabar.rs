@@ -72,7 +72,7 @@ fn make_file_entry(
         None,
         Some(file_identifier.to_string()),
         dir.join(file_identifier),
-        endpoint,     // adjust to your Endpoint construction
+        endpoint, // adjust to your Endpoint construction
         download_url,
         size,
         vec![],
