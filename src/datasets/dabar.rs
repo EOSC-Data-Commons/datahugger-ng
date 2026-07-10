@@ -71,8 +71,8 @@ fn make_file_entry(
     Ok(Entry::File(FileMeta::new(
         None,
         Some(file_identifier.to_string()),
-        dir.join(""), // adjust to your CrawlPath construction
-        endpoint,     // adjust to your Endpoint construction
+        dir.join(file_identifier),
+        endpoint, // adjust to your Endpoint construction
         download_url,
         size,
         vec![],
