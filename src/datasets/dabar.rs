@@ -60,6 +60,7 @@ fn make_file_entry(
         .find(|n| {
             n.tag_name().name() == "url"
                 && n.tag_name().namespace() == Some(NS_MODS)
+                && n.has_attribute("access")
                 && n.parent().is_some_and(|p| {
                     p.tag_name().name() == "location" && p.tag_name().namespace() == Some(NS_MODS)
                 })
