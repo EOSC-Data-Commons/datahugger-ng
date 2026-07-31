@@ -57,7 +57,13 @@ fn make_file_entry(
 
     let download_url: Url = file_meta
         .descendants()
-        .find(|n| n.tag_name().name() == "url" && n.tag_name().namespace() == Some(NS_MODS))
+        .find(|n| {
+            n.tag_name().name() == "url"
+                && n.tag_name().namespace() == Some(NS_MODS)
+                && n.parent().is_some_and(|p| {
+                    p.tag_name().name() == "location" && p.tag_name().namespace() == Some(NS_MODS)
+                })
+        })
         .and_then(|n| n.text())
         .ok_or_raise(|| RepoError {
             message: format!("Could not build download URL for identifier={record_id_text}"),
@@ -365,8 +371,6 @@ mod tests {
         );
 
         let entries = analyze_xml(&doc, &dir).unwrap();
-
-        println!("{:?}", entries);
 
         assert_eq!(entries.len(), 2);
     }
