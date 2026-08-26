@@ -6,6 +6,7 @@ use reqwest::{
     redirect::Policy,
     ClientBuilder,
 };
+use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use url::Url;
 
@@ -359,6 +360,49 @@ pub async fn resolve_doi_to_url(
     resolve_doi_to_url_with_base(client, doi, None, follow_redirects).await
 }
 
+pub async fn dabar_dataset_resolve(
+    client: &ClientWithMiddleware,
+    link: &str,
+) -> Result<Dataset, Exn<DispatchError>> {
+    let resp = client.get(link).send().await.unwrap();
+    let new_link = if resp.status().is_redirection() {
+        if let Some(location) = resp.headers().get(reqwest::header::LOCATION) {
+            Url::from_str(location.to_str().expect("location is not a str"))
+                .expect("redirection location is not a valid url")
+        } else {
+            exn::bail!(DispatchError {
+                message: format!("{} cannot be redirect to resolve the dataset id", link)
+            });
+        }
+    } else {
+        exn::bail!(DispatchError {
+            message: format!("{} cannot be redirect to resolve the dataset id", link)
+        });
+    };
+
+    let segments: Vec<_> = new_link
+        .path_segments()
+        .map(|s| s.collect())
+        .unwrap_or_default();
+
+    let id = segments
+        .last()
+        .expect("the redirect link has no last segment");
+
+    let xml_url = format!("https://dabar.srce.hr/oai/?verb=GetRecord&metadataPrefix=mods&identifier=oai:dabar.srce.hr:{id}");
+    let xml_content = client
+        .get(xml_url)
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+
+    let dataset = Dataset::new(DabarXmlSrcDataset::new(*id, xml_content));
+    Ok(dataset)
+}
+
 /// Resolves a dataset URL into a [`Dataset`] by dispatching based on the
 /// URL's domain and structure.
 ///
@@ -523,43 +567,8 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
                 .or_raise(|| DispatchError {
                     message: "No direct policy client fail to build".to_string(),
                 })?;
-            let resp = client.get(link.clone()).send().await.unwrap();
-            let new_link = if resp.status().is_redirection() {
-                if let Some(location) = resp.headers().get(reqwest::header::LOCATION) {
-                    Url::from_str(location.to_str().expect("location is not a str"))
-                        .expect("redirection location is not a valid url")
-                } else {
-                    exn::bail!(DispatchError {
-                        message: format!("{} cannot be redirect to resolve the dataset id", link)
-                    });
-                }
-            } else {
-                exn::bail!(DispatchError {
-                    message: format!("{} cannot be redirect to resolve the dataset id", link)
-                });
-            };
-
-            let segments: Vec<_> = new_link
-                .path_segments()
-                .map(|s| s.collect())
-                .unwrap_or_default();
-
-            let id = segments
-                .last()
-                .expect("the redirect link has no last segment");
-
-            let xml_url = format!("https://dabar.srce.hr/oai/?verb=GetRecord&metadataPrefix=mods&identifier=oai:dabar.srce.hr:{id}");
-            let xml_content = client
-                .get(xml_url)
-                .send()
-                .await
-                .unwrap()
-                .text()
-                .await
-                .unwrap();
-
-            let dataset = Dataset::new(DabarXmlSrcDataset::new(*id, xml_content));
-            return Ok(dataset);
+            let client = reqwest_middleware::ClientBuilder::new(client).build();
+            return dabar_dataset_resolve(&client, link.as_str()).await;
         }
     }
 

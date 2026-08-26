@@ -16,6 +16,7 @@ pub use crate::filter::FileFilter;
 mod helper;
 
 mod resolver;
+pub use crate::resolver::dabar_dataset_resolve;
 pub use crate::resolver::resolve;
 pub use crate::resolver::resolve_doi_to_url;
 
