@@ -35,9 +35,12 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
     let download_path_segment = format!("{}/download", dataset_uuid);
 
     // Join with the base URL (automatically drops the SwissUBase id)
-    let download_url = dir.api_url().join(&download_path_segment).or_raise(|| RepoError {
-        message: format!("invalid relative download path '{download_path_segment}'"),
-    })?;
+    let download_url = dir
+        .api_url()
+        .join(&download_path_segment)
+        .or_raise(|| RepoError {
+            message: format!("invalid relative download path '{download_path_segment}'"),
+        })?;
 
     let checksum = Checksum::Md5(checksum);
 
