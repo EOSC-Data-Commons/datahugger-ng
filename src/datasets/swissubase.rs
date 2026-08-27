@@ -20,6 +20,10 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
                 .to_string(),
         })?;
 
+    let dataset_uuid: String = json_extract(json, "datasetVersionUUID").or_raise(|| RepoError {
+        message: "fail to extracting 'datasetVersionUUID' as String from json".to_string(),
+    })?;
+
     let license: String = json_extract(json, "usageLicense.iconCode").or_raise(|| RepoError {
         message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
     })?; // json.get("usageLicense").and_then(|d| d.get("iconCode")).and_then(JsonValue::as_str);
@@ -28,10 +32,11 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         message: "fail to extracting 'usageLicense.iconCode' as String from json".to_string(),
     })?;
 
-    let download_url = format!("{}/download", dir.api_url());
+    let download_path_segment = format!("{}/download", dataset_uuid);
 
-    let download_url = Url::from_str(download_url.as_str()).or_raise(|| RepoError {
-        message: format!("invalid download url '{download_url}'"),
+    // Join with the base URL (automatically drops the SwissUBase id)
+    let download_url = dir.api_url().join(&download_path_segment).or_raise(|| RepoError {
+        message: format!("invalid relative download path '{download_path_segment}'"),
     })?;
 
     let checksum = Checksum::Md5(checksum);
