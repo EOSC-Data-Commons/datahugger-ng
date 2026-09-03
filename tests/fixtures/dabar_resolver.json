@@ -1,0 +1,115 @@
+{
+  "http_interactions": [
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 302,
+          "message": "Found"
+        },
+        "headers": {
+          "date": [
+            "Wed, 26 Aug 2026 13:43:07 GMT"
+          ],
+          "location": [
+            "https://repository.biotech.uniri.hr/object/biotechri:715"
+          ],
+          "content-length": [
+            "0"
+          ],
+          "content-type": [
+            "text/html; charset=UTF-8"
+          ],
+          "cache-control": [
+            "no-store, no-cache, must-revalidate"
+          ],
+          "set-cookie": [
+            "PHPSESSID=g4tjj57g4f19iql5krgh2293mb; path=/"
+          ],
+          "pragma": [
+            "no-cache"
+          ],
+          "server": [
+            "Apache/2.4.67 (Debian)"
+          ],
+          "expires": [
+            "Thu, 19 Nov 1981 08:52:00 GMT"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://urn.nsk.hr/urn:nbn:hr:193:206659",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Wed, 26 Aug 2026 13:43:07 +0000"
+    },
+    {
+      "response": {
+        "body": {
+          "encoding": null,
+          "string": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?xml-stylesheet type=\"text/xsl\" href=\"https://dabar.srce.hr/oai/Resources/oai2.xsl\"?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-08-26T13:43:07Z</responseDate>\n  <request verb=\"GetRecord\" metadataPrefix=\"mods\" identifier=\"oai:dabar.srce.hr:biotechri:715\">https://dabar.srce.hr/oai/</request>\n  <GetRecord>\n    <record>\n      <header>\n        <identifier>oai:dabar.srce.hr:biotechri:715</identifier>\n        <datestamp>2024-10-03</datestamp>\n      </header>\n      <metadata>\n        <modsCollection xmlns=\"http://www.loc.gov/mods/v3\" xmlns:dabar=\"http://dabar.srce.hr/standards/schema/1.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:etd=\"http://www.ndltd.org/standards/metadata/etdms/1.0\" xmlns:datacite=\"http://datacite.org/schema/kernel-4\" xsi:schemaLocation=\"http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-8.xsd http://dabar.srce.hr/standards/schema/1.0 https://dabar.srce.hr/standards/schema/1.0/dabar.xsd\">\n  <mods ID=\"master\" xsi:schemaLocation=\"http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-6.xsd\">\n    <identifier type=\"local\">biotechri:715</identifier>\n    <name type=\"personal\">\n      <role>\n        <roleTerm type=\"text\" authority=\"loc\" authorityURI=\"https://id.loc.gov/vocabulary/relators\" valueURI=\"http://id.loc.gov/vocabulary/relators/aut\">author</roleTerm>\n      </role>\n      <namePart type=\"given\">Jurica</namePart>\n      <namePart type=\"family\">Novak</namePart>\n      <affiliation lang=\"hrv\">Sveučilište u Rijeci</affiliation>\n      <affiliation lang=\"\">1004</affiliation>\n    </name>\n    <name type=\"personal\">\n      <namePart type=\"given\">Nađa</namePart>\n      <namePart type=\"family\">Došlić</namePart>\n      <role>\n        <roleTerm authority=\"HRZVO-KR-UlogaSuradnika\">Supervisor</roleTerm>\n      </role>\n      <affiliation lang=\"hrv\">Institut Ruđer Bošković</affiliation>\n      <affiliation lang=\"eng\">Ruđer Bošković Institute</affiliation>\n    </name>\n    <titleInfo lang=\"hrv\" usage=\"primary\">\n      <title>Molekulsko dinamičke simulacije retinala u otopini</title>\n    </titleInfo>\n    <language>\n      <languageTerm type=\"code\" authority=\"iso639-2b\">hrv</languageTerm>\n    </language>\n    <genre authority=\"HRZVO-KR-HRZVO-KR-Vrsta_podataka\" lang=\"hrv\" valueURI=\"HRZVO-KR-HRZVO-KR-Vrsta_podataka:5\">simulacijski podaci</genre>\n    <genre authority=\"HRZVO-KR-HRZVO-KR-Vrsta_podataka\" lang=\"eng\" valueURI=\"HRZVO-KR-HRZVO-KR-Vrsta_podataka:5\">simulation data</genre>\n    <genre authority=\"coar\" authorityURI=\"https://vocabularies.coar-repositories.org/resource_types/\" valueURI=\"http://purl.org/coar/resource_type/W2XT-7017\">simulation data</genre>\n    <abstract lang=\"hrv\" type=\"primary\">Skup podataka, uglavnom kvantno-kemijskih računa (optimizacija, računa energija i simulacija UV i IR spektara), koji su rezultirali objavom tri rada: 1) Biliskov, N.; Novak, J.; Petkovic, M.; Zgrablic, G.; Baranovic, G.; Doslic, N., Localization of the Counterion of the Protonated Schiff Base of n-butylretinal in Solution, Croatica Chemica Acta, 2011, 84, 221-231 2) Malis, M.; Novak, J.; Zgrablic, G.; Parmigiani, F.; Doslic, .N, Phys. Chem. Chem. Phys., 2017, 19, 25970-25978 3) Novak, J.; Malis, M.; Doslic, N., Croatica Chemica Acta, 2020, 93, 303-310</abstract>\n    <subject lang=\"eng\" usage=\"primary\">\n      <topic>retinal</topic>\n      <topic>trifluoroacetic acid</topic>\n      <topic>hydrogen bond</topic>\n      <topic>charge transfer</topic>\n      <topic>photoisomerization</topic>\n      <topic>non-adiabatic molecular dynamics</topic>\n      <topic>n-butylretinal</topic>\n      <topic>infrared spectroscopy</topic>\n      <topic>DFT</topic>\n      <topic>anharmonic frequency</topic>\n    </subject>\n    <subject authority=\"nvzz.hr\" ID=\"1#1.04#1.04.02\">\n      <topic lang=\"hrv\">Prirodne znanosti</topic>\n      <topic lang=\"eng\">Natural Sciences</topic>\n      <topic lang=\"hrv\">Kemija</topic>\n      <topic lang=\"eng\">Chemistry</topic>\n      <topic lang=\"hrv\">teorijska kemija</topic>\n      <topic lang=\"eng\">Theoretical Chemistry</topic>\n    </subject>\n    <note type=\"public\" lang=\"eng\">When publishing work that utilized the retinal repozitory, please cite the following: 1) Biliskov, N.; Novak, J.; Petkovic, M.; Zgrablic, G.; Baranovic, G.; Doslic, N., Localization of the Counterion of the Protonated Schiff Base of n-butylretinal in Solution, Croatica Chemica Acta, 2011, 84, 221-231 2) Malis, M.; Novak, J.; Zgrablic, G.; Parmigiani, F.; Doslic, .N, Phys. Chem. Chem. Phys., 2017, 19, 25970-25978 3) Novak, J.; Malis, M.; Doslic, N., Croatica Chemica Acta, 2020, 93, 303-310</note>\n    <physicalDescription/>\n    <physicalDescription/>\n    <physicalDescription/>\n    <subject>\n      <geographic authority=\"iso3166\">HR</geographic>\n    </subject>\n    <name type=\"corporate\">\n      <role>\n        <roleTerm type=\"text\" authority=\"loc\" authorityURI=\"https://id.loc.gov/vocabulary/relators\" valueURI=\"http://id.loc.gov/vocabulary/relators/pbl\">publisher</roleTerm>\n        <roleTerm type=\"text\" lang=\"hrv\">izdavač</roleTerm>\n      </role>\n      <namePart lang=\"hrv\">Odjel za biotehnologiju</namePart>\n      <namePart lang=\"eng\">Department of Biotechnology</namePart>\n    </name>\n    <recordInfo>\n      <recordIdentifier>biotechri:715/mods:2022-05-17T15:19:01+02:00</recordIdentifier>\n      <recordCreationDate encoding=\"iso8601\">2022-05-17T15:19:01+02:00</recordCreationDate>\n      <recordContentSource authority=\"local\">biotechri</recordContentSource>\n      <recordContentSource>Repozitorij Odjela za biotehnologiju Sveučilišta u Rijeci</recordContentSource>\n      <recordChangeDate encoding=\"iso8601\">2022-11-14T15:34:26+01:00</recordChangeDate>\n    </recordInfo>\n    <name type=\"personal\">\n      <namePart type=\"given\">Jurica</namePart>\n      <namePart type=\"family\">Novak</namePart>\n      <role>\n        <roleTerm type=\"text\" authority=\"loc\" authorityURI=\"https://id.loc.gov/vocabulary/relators\" valueURI=\"http://id.loc.gov/vocabulary/relators/dtc\">data contributor</roleTerm>\n        <roleTerm type=\"text\" lang=\"hrv\">Djelatnik</roleTerm>\n      </role>\n    </name>\n    <name type=\"personal\">\n      <namePart type=\"given\">Sandra</namePart>\n      <namePart type=\"family\">Cuculić</namePart>\n      <role>\n        <roleTerm type=\"text\" authority=\"loc\" authorityURI=\"https://id.loc.gov/vocabulary/relators\" valueURI=\"http://id.loc.gov/vocabulary/relators/edt\">editor</roleTerm>\n        <roleTerm type=\"text\">data editor</roleTerm>\n      </role>\n    </name>\n    <genre authority=\"dabar\" type=\"object type\">dataset</genre>\n    <extension>\n      <dabar:kontaktZaCjelovitiTekst>jurica.novak@biotech.uniri.hr</dabar:kontaktZaCjelovitiTekst>\n    </extension>\n    <location>\n      <url access=\"object in context\" usage=\"primary\" displayLabel=\"URN:NBN\">https://urn.nsk.hr/urn:nbn:hr:193:206659</url>\n    </location>\n    <identifier type=\"urn\">urn:nbn:hr:193:206659</identifier>\n  </mods>\n  <mods ID=\"EXTERNAL0\">\n    <location>\n      <url access=\"raw object\">https://repository.biotech.uniri.hr/object/biotechri:715/EXTERNAL0</url>\n    </location>\n    <abstract displayLabel=\"data description\">DFT i MP2 optimizacije; single point računi energija; simulacija IR spektara; UV/Vis spektri; QM/MM molekulska dinamika u osnovnom i pobuđenim elektronskim stanjima</abstract>\n    <accessCondition type=\"restriction on access\" authority=\"HRZVO-KR-PravaPristupa\">openAccess</accessCondition>\n    <accessCondition type=\"use and reproduction\">http://rightsstatements.org/vocab/InC/1.0/</accessCondition>\n  </mods>\n  <mods ID=\"DOC0\">\n    <location>\n      <url access=\"raw object\">https://repository.biotech.uniri.hr/object/biotechri:715/DOC0</url>\n    </location>\n    <physicalDescription>\n      <internetMediaType>text/plain</internetMediaType>\n    </physicalDescription>\n    <accessCondition type=\"restriction on access\" authority=\"HRZVO-KR-PravaPristupa\">openAccess</accessCondition>\n    <accessCondition type=\"use and reproduction\">http://rightsstatements.org/vocab/InC/1.0/</accessCondition>\n  </mods>\n</modsCollection>\n      </metadata>\n    </record>\n  </GetRecord>\n</OAI-PMH>\n"
+        },
+        "http_version": "1.1",
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "referrer-policy": [
+            "strict-origin"
+          ],
+          "content-type": [
+            "text/xml;charset=UTF-8"
+          ],
+          "strict-transport-security": [
+            "max-age=31536000; includeSubDomains"
+          ],
+          "vary": [
+            "Accept-Encoding"
+          ],
+          "transfer-encoding": [
+            "chunked"
+          ],
+          "x-backend-server": [
+            "web-2.dabar"
+          ],
+          "date": [
+            "Wed, 26 Aug 2026 13:43:07 GMT"
+          ],
+          "server": [
+            "Apache"
+          ],
+          "x-frame-options": [
+            "SAMEORIGIN"
+          ],
+          "x-content-type-options": [
+            "nosniff"
+          ],
+          "x-xss-protection": [
+            "1; mode=block"
+          ]
+        }
+      },
+      "request": {
+        "uri": "https://dabar.srce.hr/oai/?verb=GetRecord&metadataPrefix=mods&identifier=oai:dabar.srce.hr:biotechri:715",
+        "body": {
+          "encoding": null,
+          "string": ""
+        },
+        "method": "get",
+        "headers": {}
+      },
+      "recorded_at": "Wed, 26 Aug 2026 13:43:07 +0000"
+    }
+  ],
+  "recorded_with": "rVCR 0.4.0"
+}

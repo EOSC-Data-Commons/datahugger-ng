@@ -3,7 +3,7 @@ use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_vcr::{VCRMiddleware, VCRMode};
 use std::path::PathBuf;
 
-pub fn vcr_client(cassette_name: &str) -> ClientWithMiddleware {
+pub fn vcr_client(client: Client, cassette_name: &str) -> ClientWithMiddleware {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     path.push("tests/fixtures");
     path.push(format!("{cassette_name}.json"));
@@ -18,5 +18,5 @@ pub fn vcr_client(cassette_name: &str) -> ClientWithMiddleware {
         .expect("failed to create VCR middleware")
         .with_mode(mode);
 
-    ClientBuilder::new(Client::new()).with(middleware).build()
+    ClientBuilder::new(client).with(middleware).build()
 }

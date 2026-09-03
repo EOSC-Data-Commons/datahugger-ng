@@ -2,6 +2,7 @@ mod common;
 
 use datahugger::error::ErrorStatus;
 use futures_util::TryStreamExt;
+use reqwest::redirect::Policy;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -11,7 +12,7 @@ use url::Url;
 use async_trait::async_trait;
 use datahugger::crawler::{CrawlerError, ProgressManager};
 use datahugger::datasets::{Arxiv, DataverseDataset, Zenodo, OSF};
-use datahugger::{crawl, Dataset, Entry};
+use datahugger::{crawl, dabar_dataset_resolve, Dataset, Entry};
 use exn::{Exn, ResultExt};
 use indicatif::ProgressBar;
 use reqwest_middleware::ClientWithMiddleware;
@@ -62,8 +63,15 @@ impl MetaTestExt for Dataset {
                         Entry::File(file_meta) => {
                             counter.fetch_add(1, Ordering::Relaxed);
                             dbg!(&file_meta);
-                            let filename = file_meta.filename().unwrap().to_owned();
-                            filenames.lock().await.push(filename);
+                            match file_meta.filename() {
+                                Some(filename) => {
+                                    filenames.lock().await.push(filename.to_string());
+                                }
+                                None => {
+                                    let filename = file_meta.file_identifier().unwrap();
+                                    filenames.lock().await.push(filename.to_string());
+                                }
+                            }
                         }
                         Entry::Zip(_) => {
                             counter.fetch_add(1, Ordering::Relaxed);
@@ -87,7 +95,7 @@ impl MetaTestExt for Dataset {
 #[tokio::test]
 async fn arxiv() {
     // use https://arxiv.org/abs/2101.00001v1
-    let client = vcr_client("arxiv_api");
+    let client = vcr_client(reqwest::Client::new(), "arxiv_api");
     let dataset = Dataset::new(Arxiv::new("2101.00001v1"));
     let (files, n) = dataset.meta_test(&client).await.unwrap();
 
@@ -98,7 +106,7 @@ async fn arxiv() {
 #[tokio::test]
 async fn osf() {
     // use https://osf.io/5dujq/overview as test target
-    let client = vcr_client("osf_api");
+    let client = vcr_client(reqwest::Client::new(), "osf_api");
     let dataset = Dataset::new(OSF::new("5dujq"));
     let (_, n) = dataset.meta_test(&client).await.unwrap();
 
@@ -108,7 +116,7 @@ async fn osf() {
 #[tokio::test]
 async fn dataverse() {
     // use https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KBHLOD
-    let client = vcr_client("dataverse_api");
+    let client = vcr_client(reqwest::Client::new(), "dataverse_api");
     let dataset = Dataset::new(DataverseDataset {
         id: "doi:10.7910/DVN/KBHLOD".to_string(),
         base_url: Url::from_str("https://dataverse.harvard.edu").unwrap(),
@@ -122,11 +130,26 @@ async fn dataverse() {
 #[tokio::test]
 async fn zenodo() {
     // use https://zenodo.org/records/17867222
-    let client = vcr_client("zenodo_api");
+    let client = vcr_client(reqwest::Client::new(), "zenodo_api");
     let dataset = Dataset::new(Zenodo {
         id: "17867222".to_string(),
     });
     let (_, n) = dataset.meta_test(&client).await.unwrap();
 
     assert_eq!(n, 2)
+}
+
+#[tokio::test]
+async fn dabar_resolver() {
+    // use https://urn.nsk.hr/urn:nbn:hr:193:206659
+    let link = "https://urn.nsk.hr/urn:nbn:hr:193:206659";
+    let client = reqwest::Client::builder()
+        .redirect(Policy::none())
+        .build()
+        .unwrap();
+    let client = vcr_client(client, "dabar_resolver");
+    let dataset = dabar_dataset_resolve(&client, link).await.unwrap();
+
+    let (_, n) = dataset.meta_test(&client).await.unwrap();
+    assert_eq!(n, 1)
 }
