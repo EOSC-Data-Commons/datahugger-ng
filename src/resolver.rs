@@ -408,37 +408,26 @@ pub async fn dasch_dataset_resolve(
     client: &reqwest::Client,
     link: &Url,
 ) -> Result<Dataset, Exn<DispatchError>> {
-    //println!("{}", link);
-
     // https://ark.dasch.swiss/ark:/72163/1/0803/0KCLgPG6XM6qGje=0BC8tAC.20110414T075804Z
     let segments: Vec<_> = link
         .path_segments()
         .map(|s| s.collect())
         .unwrap_or_default();
 
-    // get record id segment with date, e.g., 0KCLgPG6XM6qGje=0BC8tAC.20110414T075804Z
-    let record_id_with_date = segments.last().ok_or_else(|| DispatchError {
-        message: format!("cannot get last segment of url '{}'", link.as_str()),
-    })?;
+    if segments.len() < 2 {
+        exn::bail!(DispatchError {
+            message: format!(
+                "expected at least 2 path segments in url '{}'",
+                link.as_str()
+            ),
+        });
+    }
 
-    // get project code, e.g., 0803
-    let project_code = segments.iter().rev().nth(1).ok_or_else(|| DispatchError {
-        message: format!(
-            "cannot get second to last segment of url '{}'",
-            link.as_str()
-        ),
-    })?;
-
-    //println!("{:?}", record_id_with_date);
-    //println!("{:?}", project_code);
+    let record_id_with_date = segments[segments.len() - 1];
+    let project_code = segments[segments.len() - 2];
 
     // strip date segment, e.g., 0KCLgPG6XM6qGje=0BC8tAC.20110414T075804Z
-    let split_id: Vec<&str> = record_id_with_date.split('.').collect();
-    let record_id = *split_id.first().ok_or_else(|| DispatchError {
-        message: format!("cannot get path segments of url '{}'", link.as_str()),
-    })?;
-
-    //println!("{:?}", record_id);
+    let record_id = record_id_with_date.split('.').next().unwrap();
 
     let metadata_url = format!(
         "https://repository.dasch.swiss/dpe/records/{}/{}/file",
@@ -453,13 +442,11 @@ pub async fn dasch_dataset_resolve(
             message: format!("fail at client sent GET '{}'", metadata_url),
         })?;
 
-    let resp: JsonValue = record_metadata.json().await.or_raise(|| DispatchError {
-        message: format!("fail GET {}, unable to convert to json", metadata_url),
+    let resp: String = record_metadata.text().await.or_raise(|| DispatchError {
+        message: format!("fail GET {}, unable to read response body", metadata_url),
     })?;
 
-    //println!("{:#?}", resp);
-
-    let dataset = Dataset::new(DaschJsonSrcDataset::new(record_id, link, resp.to_string()));
+    let dataset = Dataset::new(DaschJsonSrcDataset::new(record_id, link, resp));
     Ok(dataset)
 }
 
@@ -636,7 +623,6 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
         let client = ClientBuilder::new().build().unwrap();
 
         if domain.ends_with("ark.dasch.swiss") {
-            //println!("{}", link);
             return dasch_dataset_resolve(&client, &link).await;
         }
     }
