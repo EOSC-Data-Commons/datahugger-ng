@@ -79,7 +79,7 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         Some(version.to_string()),
         Some(creation_date),
         last_modification_date,
-        false,
+        true,
     );
 
     Ok(vec![Entry::File(file)])
