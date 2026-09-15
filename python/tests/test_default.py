@@ -11,7 +11,7 @@ from datahugger import (
     HalJsonSrcDataset,
     DabarXmlSrcDataset,
     MdpositJsonSrcDataset,
-    DaschJsonSrcDataset
+    DaschJsonSrcDataset,
 )
 import requests
 
@@ -272,14 +272,18 @@ def test_crawl_mdposit():
     for i in ds.crawl_file():
         print(i)
 
+
 def test_crawl_dasch():
-    ds = resolve("https://ark.dasch.swiss/ark:/72163/1/0803/0KCLgPG6XM6qGje=0BC8tAC.20110414T075804Z")
+    ds = resolve(
+        "https://ark.dasch.swiss/ark:/72163/1/0803/0KCLgPG6XM6qGje=0BC8tAC.20110414T075804Z"
+    )
 
     for i in ds.crawl():
         print(i)
 
     for i in ds.crawl_file():
         print(i)
+
 
 def test_dasch_from_json():
     try:
