@@ -446,7 +446,7 @@ pub async fn dasch_dataset_resolve(
         message: format!("fail GET {}, unable to read response body", metadata_url),
     })?;
 
-    let dataset = Dataset::new(DaschJsonSrcDataset::new(record_id, link, resp));
+    let dataset = Dataset::new(DaschJsonSrcDataset::new(record_id, resp));
     Ok(dataset)
 }
 

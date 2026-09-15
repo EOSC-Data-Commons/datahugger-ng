@@ -7,6 +7,7 @@ use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use std::any::Any;
 use url::Url;
+use std::str::FromStr;
 
 fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
     let endpoint = Endpoint {
@@ -88,16 +89,14 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
 #[derive(Debug)]
 pub struct DaschJsonSrcDataset {
     pub id: String,
-    pub base_url: Url,
     pub content: String,
 }
 
 impl DaschJsonSrcDataset {
     #[must_use]
-    pub fn new(id: impl Into<String>, base_url: &Url, content: String) -> Self {
+    pub fn new(id: impl Into<String>, content: String) -> Self {
         DaschJsonSrcDataset {
             id: id.into(),
-            base_url: base_url.clone(),
             content,
         }
     }
@@ -120,7 +119,8 @@ impl DatasetBackend for DaschJsonSrcDataset {
     }
 
     fn root_dir(&self) -> DirMeta {
-        DirMeta::new_root(&self.base_url)
+        let url = Url::from_str("https://repository.dasch.swiss").unwrap();
+        DirMeta::new_root(&url)
     }
 
     fn as_any(&self) -> &dyn Any {
