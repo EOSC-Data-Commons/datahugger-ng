@@ -6,8 +6,8 @@ use exn::{Exn, ResultExt};
 use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use std::any::Any;
-use url::Url;
 use std::str::FromStr;
+use url::Url;
 
 fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
     let endpoint = Endpoint {

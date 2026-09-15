@@ -11,7 +11,7 @@ from .datahugger import (
     HalJsonSrcDataset,
     DabarXmlSrcDataset,
     MdpositJsonSrcDataset,
-    DaschJsonSrcDataset
+    DaschJsonSrcDataset,
 )
 
 __all__ = (
