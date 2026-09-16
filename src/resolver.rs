@@ -440,6 +440,10 @@ pub async fn dasch_dataset_resolve(
         .await
         .or_raise(|| DispatchError {
             message: format!("fail at client sent GET '{}'", metadata_url),
+        })?
+        .error_for_status()
+        .or_raise(|| DispatchError {
+            message: format!("GET '{}' returned non-success status", metadata_url),
         })?;
 
     let resp: String = record_metadata.text().await.or_raise(|| DispatchError {
