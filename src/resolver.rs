@@ -12,8 +12,9 @@ use url::Url;
 
 use crate::{
     datasets::{
-        Arxiv, DabarXmlSrcDataset, DataDryad, Dataone, DataverseDataset, DataverseFile, GitHub,
-        HalScience, HuggingFace, MaterialsCloud, Mdposit, OnedataDataset, SwissUbase, Zenodo, OSF,
+        Arxiv, DabarXmlSrcDataset, DaschJsonSrcDataset, DataDryad, Dataone, DataverseDataset,
+        DataverseFile, GitHub, HalScience, HuggingFace, MaterialsCloud, Mdposit, OnedataDataset,
+        SwissUbase, Zenodo, OSF,
     },
     repo::Dataset,
 };
@@ -403,6 +404,56 @@ pub async fn dabar_dataset_resolve(
     Ok(dataset)
 }
 
+pub async fn dasch_dataset_resolve(
+    client: &reqwest::Client,
+    link: &Url,
+) -> Result<Dataset, Exn<DispatchError>> {
+    // https://ark.dasch.swiss/ark:/72163/1/0803/0KCLgPG6XM6qGje=0BC8tAC.20110414T075804Z
+    let segments: Vec<_> = link
+        .path_segments()
+        .map(|s| s.collect())
+        .unwrap_or_default();
+
+    if segments.len() < 2 {
+        exn::bail!(DispatchError {
+            message: format!(
+                "expected at least 2 path segments in url '{}'",
+                link.as_str()
+            ),
+        });
+    }
+
+    let record_id_with_date = segments[segments.len() - 1];
+    let project_code = segments[segments.len() - 2];
+
+    // strip date segment, e.g., 0KCLgPG6XM6qGje=0BC8tAC.20110414T075804Z
+    let record_id = record_id_with_date.split('.').next().unwrap();
+
+    let metadata_url = format!(
+        "https://repository.dasch.swiss/dpe/records/{}/{}/file",
+        project_code, record_id
+    );
+
+    let record_metadata = client
+        .get(&metadata_url)
+        .send()
+        .await
+        .or_raise(|| DispatchError {
+            message: format!("fail at client sent GET '{}'", metadata_url),
+        })?
+        .error_for_status()
+        .or_raise(|| DispatchError {
+            message: format!("GET '{}' returned non-success status", metadata_url),
+        })?;
+
+    let resp: String = record_metadata.text().await.or_raise(|| DispatchError {
+        message: format!("fail GET {}, unable to read response body", metadata_url),
+    })?;
+
+    let dataset = Dataset::new(DaschJsonSrcDataset::new(record_id, resp));
+    Ok(dataset)
+}
+
 /// Resolves a dataset URL into a [`Dataset`] by dispatching based on the
 /// URL's domain and structure.
 ///
@@ -569,6 +620,14 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
                 })?;
             let client = reqwest_middleware::ClientBuilder::new(client).build();
             return dabar_dataset_resolve(&client, link.as_str()).await;
+        }
+    }
+
+    {
+        let client = ClientBuilder::new().build().unwrap();
+
+        if domain.ends_with("ark.dasch.swiss") {
+            return dasch_dataset_resolve(&client, &link).await;
         }
     }
 
