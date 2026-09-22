@@ -58,6 +58,14 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         }
     };
 
+    let mime_type: String = json_extract(json, "mimeType").or_raise(|| RepoError {
+        message: "fail to extracting 'mimeType' as String from json".to_string(),
+    })?;
+
+    let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
+        message: format!("fail to parse the '{}' to proper mime type", mime_type),
+    })?;
+
     let version: u32 = json_extract(json, "version").or_raise(|| RepoError {
         message: "fail to extracting 'version' as String from json".to_string(),
     })?;
@@ -76,7 +84,7 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
         download_url,
         Some(size),
         vec![checksum],
-        None,
+        Some(mime_type),
         Some(version.to_string()),
         Some(creation_date),
         last_modification_date,
