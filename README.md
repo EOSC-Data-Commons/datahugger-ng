@@ -16,8 +16,8 @@ Support data repositories:
 |------------------------|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ---------|
 | Dataverse              | [dataverse.org](https://dataverse.org/) | [Supported Dataverse repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataverse-repo-list.md)                                               | [example](#datasets-without-limitations) |
 | OSF                    | [osf.io](https://osf.io/)       | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
-| GitHub ✨(new)          | [github.com](https://github.com/) | Use a GitHub API token to get a higher rate limit                                                                                                                       | [example](#github---avoid-hitting-api-rate-limits-using-a-personal-access-token-pat) |
-| Hugging Face ✨(new)    | [huggingface.co](https://huggingface.co/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
+| GitHub                 | [github.com](https://github.com/) | Use a GitHub API token to get a higher rate limit                                                                                                                       | [example](#github---avoid-hitting-api-rate-limits-using-a-personal-access-token-pat) |
+| Hugging Face           | [huggingface.co](https://huggingface.co/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
 | arXiv                  | [arxiv.org](https://arxiv.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
 | Hal                    | [hal.science](https://hal.science/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
 | Zenodo                 | [zenodo.org](https://zenodo.org/) | —                                                                                                                                                                       | [example](#datasets-without-limitations) |
@@ -36,11 +36,11 @@ Support data repositories:
 prebuilt binaries via shell
 
 ```console
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.6.6/datahugger-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.6.7/datahugger-installer.sh | sh
 ```
 
 ```console
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.6.6/datahugger-installer.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/EOSC-Data-Commons/datahugger-ng/releases/download/v0.6.7/datahugger-installer.ps1 | iex"
 ```
 
 ```console
