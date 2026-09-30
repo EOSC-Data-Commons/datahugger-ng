@@ -1,5 +1,6 @@
 mod arxiv;
 mod dabar;
+mod dasch;
 mod dataone;
 mod dataverse;
 mod dryad;
@@ -15,6 +16,7 @@ mod zenodo;
 
 pub use arxiv::Arxiv;
 pub use dabar::DabarXmlSrcDataset;
+pub use dasch::DaschJsonSrcDataset;
 pub use dataone::Dataone;
 pub use dataverse::{DataverseDataset, DataverseFile, DataverseJsonSrcDataset};
 pub use dryad::DataDryad;
