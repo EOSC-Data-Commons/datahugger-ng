@@ -35,6 +35,101 @@ fn parse_url(base_url: Url, version: &str, id: &str) -> Url {
     url
 }
 
+fn analyze_file_entry(data_entry: &JsonValue, dir: &DirMeta, endpoint: Endpoint) -> Result<FileMeta, Exn<RepoError>> {
+    let name: String = json_extract(data_entry, "dataFile.filename").or_raise(|| RepoError {
+        message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
+    })?;
+    let restricted: bool = json_extract(data_entry, "restricted").or_raise(|| RepoError {
+        message: "fail to extracting 'restricted' as String from json".to_string(),
+    })?;
+    let downloadable = !restricted;
+    let id: u64 = json_extract(data_entry, "dataFile.id").or_raise(|| RepoError {
+        message: "fail to extracting 'dataFile.id' as u64 from json".to_string(),
+    })?;
+    let size: u64 = json_extract(data_entry, "dataFile.filesize").or_raise(|| RepoError {
+        message: "fail to extracting 'dataFile.filesize' as u64 from json".to_string(),
+    })?;
+    let creation_date: String =
+        json_extract(data_entry, "dataFile.creationDate").or_raise(|| RepoError {
+            message: "fail to extracting 'dataFile.creationDate' as String from json"
+                .to_string(),
+        })?;
+    let last_modification_date: Option<String> =
+        json_extract(data_entry, "dataFile.lastUpdateTime").ok();
+    let mime_type: String =
+        json_extract(data_entry, "dataFile.contentType").or_raise(|| RepoError {
+            message: "fail to extracting 'dataFile.contentType' as String from json"
+                .to_string(),
+        })?;
+    let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
+        message: format!("fail to parse the '{}' to proper mime type", mime_type),
+    })?;
+
+    let version: u64 = json_extract(data_entry, "version").or_raise(|| RepoError {
+        message: "fail to extracting 'version' as u64 from json".to_string(),
+    })?;
+
+    let download_url = dir
+        .api_url()
+        .join("/api/access/datafile/")
+        .or_raise(|| RepoError {
+            message: "cannot parse download base url".to_string(),
+        })?;
+    let download_url = download_url.join(&format!("{id}")).or_raise(|| RepoError {
+        message: format!("cannot parse '{download_url}' download url"),
+    })?;
+    let dst_path = match json_extract::<String>(data_entry, "directoryLabel") {
+        Ok(dir_label) => dir.join(&format!("{dir_label}/{name}")),
+        Err(_) => dir.join(&name),
+    };
+    let checksum_typ: String =
+        json_extract(data_entry, "dataFile.checksum.type").or_raise(|| RepoError {
+            message: "fail to extracting 'dataFile.checksum.type' as String from json"
+                .to_string(),
+        })?;
+    let checksum = match checksum_typ.as_str() {
+        "MD5" | "md5" => {
+            let hash: String =
+                json_extract(data_entry, "dataFile.checksum.value").or_raise(|| RepoError {
+                    message: "fail to extracting 'dataFile.checksum.value' as String from json"
+                        .to_string(),
+                })?;
+            Checksum::Md5(hash)
+        }
+        "SHA-1" | "sha-1" => {
+            let hash: String =
+                json_extract(data_entry, "dataFile.checksum.value").or_raise(|| RepoError {
+                    message: "fail to extracting 'dataFile.checksum.value' as String from json"
+                        .to_string(),
+                })?;
+            Checksum::Sha1(hash)
+        }
+        v => {
+            exn::bail!(RepoError {
+                    message: format!(
+                        "{v} is not yet support, please open an issue so we can add it"
+                    )
+                });
+        }
+    };
+    let file = FileMeta::new(
+        Some(name),
+        Some(id.to_string()),
+        dst_path,
+        endpoint,
+        download_url,
+        Some(size),
+        vec![checksum],
+        Some(mime_type),
+        Some(version.to_string()),
+        Some(creation_date),
+        last_modification_date,
+        downloadable,
+    );
+
+    Ok(file)
+}
+
 fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
     let files = json
         .get("data")
@@ -50,96 +145,9 @@ fn analyse_json(json: &JsonValue, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoE
             parent_url: dir.api_url().clone(),
             key: Some(format!("data.files.{idx}")),
         };
-        let name: String = json_extract(filej, "dataFile.filename").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
-        })?;
-        let restricted: bool = json_extract(filej, "restricted").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
-        })?;
-        let downloadable = !restricted;
-        let id: u64 = json_extract(filej, "dataFile.id").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.id' as u64 from json".to_string(),
-        })?;
-        let size: u64 = json_extract(filej, "dataFile.filesize").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.filesize' as u64 from json".to_string(),
-        })?;
-        let creation_date: String =
-            json_extract(filej, "dataFile.creationDate").or_raise(|| RepoError {
-                message: "fail to extracting 'dataFile.creationDate' as String from json"
-                    .to_string(),
-            })?;
-        let last_modification_date: Option<String> =
-            json_extract(filej, "dataFile.lastUpdateTime").ok();
-        let mime_type: String =
-            json_extract(filej, "dataFile.contentType").or_raise(|| RepoError {
-                message: "fail to extracting 'dataFile.contentType' as String from json"
-                    .to_string(),
-            })?;
-        let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
-            message: format!("fail to parse the '{}' to proper mime type", mime_type),
-        })?;
 
-        let version: u64 = json_extract(filej, "version").or_raise(|| RepoError {
-            message: "fail to extracting 'version' as u64 from json".to_string(),
-        })?;
+        let file = analyze_file_entry(filej, dir, endpoint)?;
 
-        let download_url = dir
-            .api_url()
-            .join("/api/access/datafile/")
-            .or_raise(|| RepoError {
-                message: "cannot parse download base url".to_string(),
-            })?;
-        let download_url = download_url.join(&format!("{id}")).or_raise(|| RepoError {
-            message: format!("cannot parse '{download_url}' download url"),
-        })?;
-        let dst_path = match json_extract::<String>(filej, "directoryLabel") {
-            Ok(dir_label) => dir.join(&format!("{dir_label}/{name}")),
-            Err(_) => dir.join(&name),
-        };
-        let checksum_typ: String =
-            json_extract(filej, "dataFile.checksum.type").or_raise(|| RepoError {
-                message: "fail to extracting 'dataFile.checksum.type' as String from json"
-                    .to_string(),
-            })?;
-        let checksum = match checksum_typ.as_str() {
-            "MD5" | "md5" => {
-                let hash: String =
-                    json_extract(filej, "dataFile.checksum.value").or_raise(|| RepoError {
-                        message: "fail to extracting 'dataFile.checksum.value' as String from json"
-                            .to_string(),
-                    })?;
-                Checksum::Md5(hash)
-            }
-            "SHA-1" | "sha-1" => {
-                let hash: String =
-                    json_extract(filej, "dataFile.checksum.value").or_raise(|| RepoError {
-                        message: "fail to extracting 'dataFile.checksum.value' as String from json"
-                            .to_string(),
-                    })?;
-                Checksum::Sha1(hash)
-            }
-            v => {
-                exn::bail!(RepoError {
-                    message: format!(
-                        "{v} is not yet support, please open an issue so we can add it"
-                    )
-                });
-            }
-        };
-        let file = FileMeta::new(
-            Some(name),
-            Some(id.to_string()),
-            dst_path,
-            endpoint,
-            download_url,
-            Some(size),
-            vec![checksum],
-            Some(mime_type),
-            Some(version.to_string()),
-            Some(creation_date),
-            last_modification_date,
-            downloadable,
-        );
         entries.push(Entry::File(file));
     }
 
@@ -340,59 +348,13 @@ impl DatasetBackend for DataverseFile {
             message: "field with key 'data' not resolve to an json value".to_string(),
         })?;
 
-        let name: String = json_extract(filej, "dataFile.filename").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
-        })?;
-        let restricted: bool = json_extract(filej, "restricted").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
-        })?;
-        let downloadable = !restricted;
-        let id: u64 = json_extract(filej, "dataFile.id").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.id' as u64 from json".to_string(),
-        })?;
-
-        let size: u64 = json_extract(filej, "dataFile.filesize").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.filesize' as u64 from json".to_string(),
-        })?;
-        let mime_type: String =
-            json_extract(filej, "dataFile.contentType").or_raise(|| RepoError {
-                message: "fail to extracting 'dataFile.contentType' as String from json"
-                    .to_string(),
-            })?;
-        let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
-            message: format!("fail to parse the '{}' to proper mime type", mime_type),
-        })?;
-        let download_url = dir
-            .api_url()
-            .join("/api/access/datafile/")
-            .or_raise(|| RepoError {
-                message: "cannot parse download base url".to_string(),
-            })?;
-        let download_url = download_url.join(&format!("{id}")).or_raise(|| RepoError {
-            message: format!("cannot parse '{download_url}' download url"),
-        })?;
-        let hash: String = json_extract(filej, "dataFile.md5").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.md5' as String from json".to_string(),
-        })?;
-        let checksum = Checksum::Md5(hash);
         let endpoint = Endpoint {
             parent_url: dir.api_url().clone(),
             key: Some("data".to_string()),
         };
-        let file = FileMeta::new(
-            Some(name.clone()),
-            Some(id.to_string()),
-            dir.join(&name),
-            endpoint,
-            download_url,
-            Some(size),
-            vec![checksum],
-            Some(mime_type),
-            None,
-            None,
-            None,
-            downloadable,
-        );
+
+        let file = analyze_file_entry(filej, &dir, endpoint)?;
+
         let entries = vec![Entry::File(file)];
 
         Ok(entries)
