@@ -9,7 +9,7 @@ use url::Url;
 use reqwest::StatusCode;
 use std::{any::Any, str::FromStr};
 
-use crate::helper::json_extract;
+use crate::helper::{json_extract, json_extract_opt};
 use crate::{
     repo::{Endpoint, FileMeta, RepoError},
     Checksum, DatasetBackend, DirMeta, Entry,
@@ -55,7 +55,10 @@ fn analyze_file_entry(data_entry: &JsonValue, dir: &DirMeta, endpoint: Endpoint)
                 .to_string(),
         })?;
     let last_modification_date: Option<String> =
-        json_extract(data_entry, "dataFile.lastUpdateTime").ok();
+        json_extract_opt(data_entry, "dataFile.lastUpdateTime").or_raise(|| RepoError {
+            message: "fail to extracting 'dataFile.lastUpdateTime' as String from json"
+                .to_string(),
+        })?;
     let mime_type: String =
         json_extract(data_entry, "dataFile.contentType").or_raise(|| RepoError {
             message: "fail to extracting 'dataFile.contentType' as String from json"
