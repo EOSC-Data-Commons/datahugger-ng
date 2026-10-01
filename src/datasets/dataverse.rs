@@ -35,7 +35,11 @@ fn parse_url(base_url: Url, version: &str, id: &str) -> Url {
     url
 }
 
-fn analyze_file_entry(data_entry: &JsonValue, dir: &DirMeta, endpoint: Endpoint) -> Result<FileMeta, Exn<RepoError>> {
+fn analyze_file_entry(
+    data_entry: &JsonValue,
+    dir: &DirMeta,
+    endpoint: Endpoint,
+) -> Result<FileMeta, Exn<RepoError>> {
     let name: String = json_extract(data_entry, "dataFile.filename").or_raise(|| RepoError {
         message: "fail to extracting 'dataFile.filename' as String from json".to_string(),
     })?;
@@ -51,18 +55,15 @@ fn analyze_file_entry(data_entry: &JsonValue, dir: &DirMeta, endpoint: Endpoint)
     })?;
     let creation_date: String =
         json_extract(data_entry, "dataFile.creationDate").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.creationDate' as String from json"
-                .to_string(),
+            message: "fail to extracting 'dataFile.creationDate' as String from json".to_string(),
         })?;
     let last_modification_date: Option<String> =
         json_extract_opt(data_entry, "dataFile.lastUpdateTime").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.lastUpdateTime' as String from json"
-                .to_string(),
+            message: "fail to extracting 'dataFile.lastUpdateTime' as String from json".to_string(),
         })?;
     let mime_type: String =
         json_extract(data_entry, "dataFile.contentType").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.contentType' as String from json"
-                .to_string(),
+            message: "fail to extracting 'dataFile.contentType' as String from json".to_string(),
         })?;
     let mime_type = mime::Mime::from_str(&mime_type).or_raise(|| RepoError {
         message: format!("fail to parse the '{}' to proper mime type", mime_type),
@@ -87,8 +88,7 @@ fn analyze_file_entry(data_entry: &JsonValue, dir: &DirMeta, endpoint: Endpoint)
     };
     let checksum_typ: String =
         json_extract(data_entry, "dataFile.checksum.type").or_raise(|| RepoError {
-            message: "fail to extracting 'dataFile.checksum.type' as String from json"
-                .to_string(),
+            message: "fail to extracting 'dataFile.checksum.type' as String from json".to_string(),
         })?;
     let checksum = match checksum_typ.as_str() {
         "MD5" | "md5" => {
@@ -109,10 +109,8 @@ fn analyze_file_entry(data_entry: &JsonValue, dir: &DirMeta, endpoint: Endpoint)
         }
         v => {
             exn::bail!(RepoError {
-                    message: format!(
-                        "{v} is not yet support, please open an issue so we can add it"
-                    )
-                });
+                message: format!("{v} is not yet support, please open an issue so we can add it")
+            });
         }
     };
     let file = FileMeta::new(
