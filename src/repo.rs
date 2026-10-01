@@ -537,6 +537,11 @@ impl std::fmt::Display for FileMeta {
             .map_or("<unknown>".to_string(), std::string::ToString::to_string);
 
         writeln!(f, "📄 FileMeta:")?;
+        if let Some(ref filename) = self.filename {
+            writeln!(f, "  Filename   : {}", filename)?;
+        } else {
+            writeln!(f, "  Filename   : <Unknown>")?;
+        }
         writeln!(f, "  Path       : {}", self.path)?;
         writeln!(f, "  Endpoint   : {}", self.endpoint)?;
         writeln!(f, "  Download   : {}", self.download_url)?;
