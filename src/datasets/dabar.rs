@@ -2,6 +2,7 @@
 
 use async_trait::async_trait;
 use exn::{Exn, OptionExt, ResultExt};
+use futures_util::future::try_join_all;
 use reqwest_middleware::ClientWithMiddleware;
 use url::Url;
 
@@ -15,9 +16,10 @@ use std::any::Any;
 // Namespace constants mirroring Python's NS dict
 const NS_MODS: &str = "http://www.loc.gov/mods/v3";
 
-fn make_file_entry(
-    file_meta: &roxmltree::Node,
-    record_identifier: &roxmltree::Node,
+async fn make_file_entry(
+    client: &ClientWithMiddleware,
+    file_meta: roxmltree::Node<'_, '_>,
+    record_identifier: &roxmltree::Node<'_, '_>,
     dir: &DirMeta,
 ) -> Result<Entry, Exn<RepoError>> {
     let file_identifier = file_meta.attribute("ID").ok_or_else(|| {
@@ -74,13 +76,35 @@ fn make_file_entry(
             message: format!("Could not parse download URL for identifier={record_id_text}"),
         })?;
 
+    let header_response = client
+        .head(download_url.clone())
+        .send()
+        .await
+        .or_raise(|| RepoError {
+            message: format!("Could not parse download URL for identifier={record_id_text}"),
+        })?;
+    dbg!(&header_response);
+
+    let filename = header_response
+        .headers()
+        .get(reqwest::header::CONTENT_DISPOSITION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| {
+            v.split(';').find_map(|part| {
+                part.trim()
+                    .strip_prefix("filename=")
+                    .map(|s| s.trim_matches('"').to_string())
+            })
+        });
+    dbg!(&filename);
+
     let endpoint = Endpoint {
         parent_url: dir.api_url(),
         key: None, // TODO: figure out how to use this in local data analyzer use case
     };
 
     Ok(Entry::File(FileMeta::new(
-        None,
+        filename,
         Some(file_identifier.to_string()),
         dir.join(file_identifier),
         endpoint, // adjust to your Endpoint construction
@@ -95,7 +119,11 @@ fn make_file_entry(
     )))
 }
 
-fn analyze_xml(doc: &roxmltree::Document, dir: &DirMeta) -> Result<Vec<Entry>, Exn<RepoError>> {
+async fn analyze_xml(
+    client: &ClientWithMiddleware,
+    doc: &roxmltree::Document<'_>,
+    dir: &DirMeta,
+) -> Result<Vec<Entry>, Exn<RepoError>> {
     let root = doc.root_element();
 
     // /oai:record/oai:metadata//mods:identifier[@type="local"]
@@ -118,19 +146,20 @@ fn analyze_xml(doc: &roxmltree::Document, dir: &DirMeta) -> Result<Vec<Entry>, E
     let record_identifier = record_identifier.unwrap();
 
     // /oai:record/oai:metadata//mods:mods[mods:physicalDescription/mods:internetMediaType]
-    let entries: Vec<_> = root
-        .descendants()
-        .filter(|n| {
-            n.tag_name().name() == "mods"
-                && n.tag_name().namespace() == Some(NS_MODS)
-                && n.attribute("ID") != Some("master")
-                && n.descendants().any(|child| {
-                    child.tag_name().name() == "internetMediaType"
-                        && child.tag_name().namespace() == Some(NS_MODS)
-                })
-        })
-        .map(|file_meta| make_file_entry(&file_meta, &record_identifier, dir))
-        .collect::<Result<Vec<_>, _>>()?;
+    let entries: Vec<_> = try_join_all(
+        root.descendants()
+            .filter(|n| {
+                n.tag_name().name() == "mods"
+                    && n.tag_name().namespace() == Some(NS_MODS)
+                    && n.attribute("ID") != Some("master")
+                    && n.descendants().any(|child| {
+                        child.tag_name().name() == "internetMediaType"
+                            && child.tag_name().namespace() == Some(NS_MODS)
+                    })
+            })
+            .map(|file_meta| make_file_entry(client, file_meta, &record_identifier, dir)),
+    )
+    .await?;
 
     Ok(entries)
 }
@@ -160,14 +189,14 @@ impl DatasetBackend for DabarXmlSrcDataset {
 
     async fn list(
         &self,
-        _client: &ClientWithMiddleware,
+        client: &ClientWithMiddleware,
         dir: DirMeta,
     ) -> Result<Vec<Entry>, Exn<RepoError>> {
         let doc = roxmltree::Document::parse(&self.content).or_raise(|| RepoError {
             message: "Failed to parse XML".to_string(),
         })?;
 
-        let entries = analyze_xml(&doc, &dir)?;
+        let entries = analyze_xml(client, &doc, &dir).await?;
 
         Ok(entries)
     }
@@ -179,11 +208,22 @@ impl DatasetBackend for DabarXmlSrcDataset {
 
 #[cfg(test)]
 mod tests {
+    use wiremock::http::HeaderMap;
+
     use super::*;
     use crate::CrawlPath;
 
-    #[test]
-    fn test_analyze_xml() {
+    #[tokio::test]
+    async fn test_analyze_xml() {
+        let user_agent = format!("datahugger-cli/{}", env!("CARGO_PKG_VERSION"));
+        let headers = HeaderMap::new();
+        let client = reqwest::ClientBuilder::new()
+            .user_agent(user_agent)
+            .default_headers(headers)
+            .use_native_tls()
+            .build()
+            .unwrap();
+        let client = reqwest_middleware::ClientBuilder::new(client).build();
         let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
 <record xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
@@ -371,7 +411,7 @@ mod tests {
             Url::parse("https://example.com").unwrap(),
         );
 
-        let entries = analyze_xml(&doc, &dir).unwrap();
+        let entries = analyze_xml(&client, &doc, &dir).await.unwrap();
 
         assert_eq!(entries.len(), 2);
     }
