@@ -624,9 +624,9 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
     }
 
     {
-        let client = ClientBuilder::new().build().unwrap();
-
         if domain.ends_with("ark.dasch.swiss") {
+            let client = ClientBuilder::new().build().unwrap();
+
             return dasch_dataset_resolve(&client, &link).await;
         }
     }
