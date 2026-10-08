@@ -116,6 +116,17 @@ def test_crawl_blocking():
         print(i)
 
 
+def test_crawl_blocking_file():
+    ds = resolve(
+        "https://dataverse.harvard.edu/file.xhtml?persistentId=doi:10.7910/DVN/KBHLOD/DHJ45U"
+    )
+    for i in ds.crawl():
+        print(i)
+
+    for i in ds.crawl_file():
+        print(i)
+
+
 def test_dataverse_from_json():
     try:
         response = requests.get(

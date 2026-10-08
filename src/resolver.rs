@@ -484,7 +484,7 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
         let queries = queries.collect::<HashMap<_, _>>();
         let Some(id) = queries.get("persistentId") else {
             exn::bail!(DispatchError {
-                message: "query don't contains 'persistentId'".to_string()
+                message: "query does not contain 'persistentId'".to_string()
             })
         };
 
