@@ -136,6 +136,23 @@ class MdpositJsonSrcDataset(Dataset):
             RuntimeError
         """
 
+class DaschJsonSrcDataset(Dataset):
+    """
+    A DaSCH JSON dataset backend that uses pre-fetched JSON content.
+    """
+
+    def __init__(self, id: str, content: str) -> None:
+        """
+        Create a new DaschJsonSrcDataset.
+
+        Args:
+            id: The DaSCH dataset ID, e.g., 0KCLgPG6XM6qGje.
+            content: The JSON content as a string
+
+        Raises:
+            RuntimeError
+        """
+
 class Dataset(object):
     def download_with_validation(
         self,
