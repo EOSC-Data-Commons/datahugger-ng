@@ -414,7 +414,8 @@ pub async fn dasch_dataset_resolve(
         .map(|s| s.collect())
         .unwrap_or_default();
 
-    if segments.len() < 2 {
+    let len_segments = segments.len();
+    if len_segments < 2 {
         exn::bail!(DispatchError {
             message: format!(
                 "expected at least 2 path segments in url '{}'",
@@ -423,8 +424,8 @@ pub async fn dasch_dataset_resolve(
         });
     }
 
-    let record_id_with_date = segments[segments.len() - 1];
-    let project_code = segments[segments.len() - 2];
+    let record_id_with_date = segments[len_segments - 1];
+    let project_code = segments[len_segments - 2];
 
     // strip date segment, e.g., 0KCLgPG6XM6qGje=0BC8tAC.20110414T075804Z
     let record_id = record_id_with_date.split('.').next().unwrap();
