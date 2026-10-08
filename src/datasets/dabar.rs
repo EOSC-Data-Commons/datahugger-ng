@@ -83,7 +83,6 @@ async fn make_file_entry(
         .or_raise(|| RepoError {
             message: format!("Could not parse download URL for identifier={record_id_text}"),
         })?;
-    dbg!(&header_response);
 
     let filename = header_response
         .headers()
@@ -96,7 +95,6 @@ async fn make_file_entry(
                     .map(|s| s.trim_matches('"').to_string())
             })
         });
-    dbg!(&filename);
 
     let endpoint = Endpoint {
         parent_url: dir.api_url(),
