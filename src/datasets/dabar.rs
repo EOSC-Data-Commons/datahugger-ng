@@ -102,9 +102,9 @@ async fn make_file_entry(
     };
 
     Ok(Entry::File(FileMeta::new(
-        filename,
+        filename.clone(),
         Some(file_identifier.to_string()),
-        dir.join(file_identifier),
+        dir.join(&filename.unwrap_or(file_identifier.to_string())),
         endpoint, // adjust to your Endpoint construction
         download_url,
         size,
