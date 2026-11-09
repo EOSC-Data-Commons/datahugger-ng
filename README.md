@@ -24,6 +24,7 @@ Support data repositories:
 | MaterialsCloud Archive | [archive.materialscloud.org](https://archive.materialscloud.org/) | —                                                                                                                                                           | [example](#datasets-without-limitations) |
 | Onedata                | [https://demo.onedata.org/](https://demo.dataone.org/) | we produce an extra file `__ARCHIVE__.tar` for onedata to include whole dataset, and you can use `--exclude __ARCHIVE__.tar` to not download it.                       | [example](#datasets-without-limitations) |
 | SwissUBase             | [https://www.swissubase.ch/](https://www.swissubase.ch/) | SwissUBase pack everything in zip, inspect will list files in zip                                                                                                    | [example](#datasets-without-limitations) |
+| FinBIF                 | [tun.fi](https://tun.fi/) | Darwin Core Archive (zip) from `gbif.laji.fi`; inspect lists files in the zip by reading `meta.xml`, without downloading it | [example](#datasets-without-limitations) |
 | Dryad                  | [datadryad.org](https://datadryad.org/) | Bearer token required to download data (see [API instructions](https://datadryad.org/api) for obtaining your API key)                                                   | [example](#datadryad-api-key-config-and-download) |
 | MDposit                | [https://mdposit.mddbr.eu/](https://mdposit.mddbr.eu//) | — | [example](#datasets-without-limitations) |
 | DataONE (deprecated)   | [dataone.org](https://www.dataone.org/) | [Supported DataONE repositories](https://github.com/EOSC-Data-Commons/datahugger-ng/blob/master/dataone-repo-list.md); requests to its umbrella repositories may be slow | [example](#datasets-without-limitations) |
@@ -253,6 +254,16 @@ https://www.swissubase.ch/en/catalogue/studies/1223/latest/datasets/114/4300/ove
 
 ```bash
 datahugger inspect https://www.swissubase.ch/en/catalogue/studies/1223/latest/datasets/114/4300/overview
+```
+
+- FinBIF - simple inspect
+
+FinBIF datasets are Darwin Core Archives (zip). The server does not support range requests, so inspect reads `meta.xml` to list the files (`meta.xml`, `eml.xml` and the data files) without downloading the zip.
+
+https://tun.fi/HR.727
+
+```bash
+datahugger inspect https://tun.fi/HR.727
 ```
 
 - MaterialsCloud - simple download
