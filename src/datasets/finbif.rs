@@ -10,6 +10,7 @@ use crate::repo::{Endpoint, FileInZipMeta, ZipMeta};
 use crate::{repo::RepoError, DatasetBackend, DirMeta, Entry};
 use async_trait::async_trait;
 use exn::{Exn, ResultExt};
+use mime::Mime;
 use reqwest::StatusCode;
 use reqwest_middleware::ClientWithMiddleware;
 use std::any::Any;
@@ -22,7 +23,8 @@ const METADATA_BASE: &str = "https://gbif.laji.fi/metadata/";
 const META_FILE: &str = "meta.xml";
 const DEFAULT_EML_FILE: &str = "eml.xml";
 
-fn make_file(dir: &DirMeta, name: &str) -> FileInZipMeta {
+/// `mimetype` is used as is when given, otherwise it is guessed from the extension.
+fn make_file(dir: &DirMeta, name: &str, mimetype: Option<Mime>) -> FileInZipMeta {
     let filename = Path::new(name)
         .file_name()
         .and_then(|f| f.to_str())
@@ -31,7 +33,7 @@ fn make_file(dir: &DirMeta, name: &str) -> FileInZipMeta {
         Some(filename),
         None,
         dir.join(name),
-        mime_guess::from_path(name).first(),
+        mimetype.or_else(|| mime_guess::from_path(name).first()),
     )
 }
 
@@ -57,8 +59,13 @@ fn analyse_meta_xml(xml: &str, id: &str, dir: &DirMeta) -> Result<Vec<Entry>, Ex
 
     let eml_name = root.attribute("metadata").unwrap_or(DEFAULT_EML_FILE);
 
-    // meta.xml and eml.xml are always part of the archive, followed by the data files
-    let mut names: Vec<String> = vec![META_FILE.to_string(), eml_name.to_string()];
+    // meta.xml and eml.xml are always part of the archive, followed by the data files.
+    // Data files (core and extensions) are served as `text/csv`; the xml files are guessed.
+    let mut files: Vec<FileInZipMeta> = vec![
+        make_file(dir, META_FILE, None),
+        make_file(dir, eml_name, None),
+    ];
+    let mut seen: Vec<&str> = vec![META_FILE, eml_name];
 
     for table in root
         .children()
@@ -69,14 +76,13 @@ fn analyse_meta_xml(xml: &str, id: &str, dir: &DirMeta) -> Result<Vec<Entry>, Ex
             .filter(|n| n.tag_name().name() == "location")
         {
             if let Some(text) = location.text().map(str::trim).filter(|t| !t.is_empty()) {
-                if !names.iter().any(|n| n == text) {
-                    names.push(text.to_string());
+                if !seen.contains(&text) {
+                    seen.push(text);
+                    files.push(make_file(dir, text, Some(mime::TEXT_CSV)));
                 }
             }
         }
     }
-
-    let files: Vec<FileInZipMeta> = names.iter().map(|name| make_file(dir, name)).collect();
 
     let download_url = Url::from_str(&format!("{ARCHIVE_BASE}{id}")).or_raise(|| RepoError {
         message: format!("invalid archive download url for id '{id}'"),
@@ -215,6 +221,12 @@ mod tests {
             names,
             ["meta.xml", "eml.xml", "occurrence.txt", "media.txt"]
         );
+
+        let mimes: Vec<Option<Mime>> = zip.files().iter().map(|f| f.mimetype()).collect();
+        // xml files are guessed, data files are set explicitly
+        assert_eq!(mimes[2], Some(mime::TEXT_CSV));
+        assert_eq!(mimes[3], Some(mime::TEXT_CSV));
+        assert!(mimes[0].as_ref().unwrap().essence_str().ends_with("xml"));
     }
 
     #[test]
