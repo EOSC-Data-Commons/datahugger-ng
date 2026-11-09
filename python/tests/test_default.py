@@ -304,6 +304,16 @@ def test_dasch_from_json():
         print(i)
 
 
+def test_crawl_finbif():
+    ds = resolve("https://tun.fi/HR.85")
+
+    for i in ds.crawl():
+        print(i)
+
+    for i in ds.crawl_file():
+        print(i)
+
+
 @pytest.mark.asyncio
 async def test_crawl_async():
     """not a rigorous test but the async is happening that clock ticks before crawling complete."""

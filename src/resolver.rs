@@ -13,8 +13,8 @@ use url::Url;
 use crate::{
     datasets::{
         Arxiv, DabarXmlSrcDataset, DaschJsonSrcDataset, DataDryad, Dataone, DataverseDataset,
-        DataverseFile, FinBif, GitHub, HalScience, HuggingFace, MaterialsCloud, Mdposit, OnedataDataset,
-        SwissUbase, Zenodo, OSF,
+        DataverseFile, FinBif, GitHub, HalScience, HuggingFace, MaterialsCloud, Mdposit,
+        OnedataDataset, SwissUbase, Zenodo, OSF,
     },
     repo::Dataset,
 };

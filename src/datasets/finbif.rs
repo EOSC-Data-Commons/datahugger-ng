@@ -211,7 +211,10 @@ mod tests {
             .iter()
             .map(|f| f.filename().unwrap().to_string())
             .collect();
-        assert_eq!(names, ["meta.xml", "eml.xml", "occurrence.txt", "media.txt"]);
+        assert_eq!(
+            names,
+            ["meta.xml", "eml.xml", "occurrence.txt", "media.txt"]
+        );
     }
 
     #[test]
