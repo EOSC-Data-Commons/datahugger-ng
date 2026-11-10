@@ -261,16 +261,10 @@ where
                     .expect("indicatif template error"),
             );
             pb.enable_steady_tick(std::time::Duration::from_millis(100));
-            pb.set_message(format!(
-                "Connecting... {}",
-                download_url.as_str()
-            ));
+            pb.set_message(format!("Connecting... {}", download_url.as_str()));
 
             if !zip_meta.is_downloadable() {
-                pb.set_message(format!(
-                    "{} is not downloadable",
-                    download_url.as_str()
-                ));
+                pb.set_message(format!("{} is not downloadable", download_url.as_str()));
                 return Ok(());
             }
 
@@ -281,8 +275,7 @@ where
                 .or_raise(|| CrawlerError {
                     message: format!(
                         "fail to send http GET to {}, to get zip '{}'",
-                        download_url,
-                        label
+                        download_url, label
                     ),
                     status: ErrorStatus::Temporary,
                 })?
@@ -290,8 +283,7 @@ where
                 .or_raise(|| CrawlerError {
                     message: format!(
                         "fail to send http GET to {} to get zip '{}'",
-                        download_url,
-                        label
+                        download_url, label
                     ),
                     // Temporary??
                     status: ErrorStatus::Temporary,
