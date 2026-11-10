@@ -151,11 +151,11 @@ where
             // See issue #54.
             let path = dst.as_ref().join(file_meta.relative());
             let parent_dir = path.parent().ok_or_raise(|| CrawlerError {
-                message: format!("connot get parent dir for '{}'", path.display()),
+                message: format!("cannot get parent dir for '{}'", path.display()),
                 status: ErrorStatus::Permanent,
             })?;
             fs::create_dir_all(parent_dir).or_raise(|| CrawlerError {
-                message: format!("connot create folder dir of '{}'", parent_dir.display()),
+                message: format!("cannot create folder dir of '{}'", parent_dir.display()),
                 status: ErrorStatus::Permanent,
             })?;
             let mut fh = OpenOptions::new()
@@ -250,7 +250,180 @@ where
             }
             Ok(())
         }
-        Entry::Zip(_) => unimplemented!(),
+        Entry::Zip(zip_meta) => {
+            // The zip is stored as a single file in the destination dir (not extracted).
+            let download_url = zip_meta.download_url();
+            let label = zip_file_name(&download_url);
+            // prepare stream src
+            let pb = mp.insert(0, ProgressBar::new_spinner());
+            pb.set_style(
+                ProgressStyle::with_template("{spinner:.green} {msg}")
+                    .expect("indicatif template error"),
+            );
+            pb.enable_steady_tick(std::time::Duration::from_millis(100));
+            pb.set_message(format!(
+                "Connecting... {}",
+                download_url.as_str()
+            ));
+
+            if !zip_meta.is_downloadable() {
+                pb.set_message(format!(
+                    "{} is not downloadable",
+                    download_url.as_str()
+                ));
+                return Ok(());
+            }
+
+            let resp = client
+                .get(download_url.clone())
+                .send()
+                .await
+                .or_raise(|| CrawlerError {
+                    message: format!(
+                        "fail to send http GET to {}, to get zip '{}'",
+                        download_url,
+                        label
+                    ),
+                    status: ErrorStatus::Temporary,
+                })?
+                .error_for_status()
+                .or_raise(|| CrawlerError {
+                    message: format!(
+                        "fail to send http GET to {} to get zip '{}'",
+                        download_url,
+                        label
+                    ),
+                    // Temporary??
+                    status: ErrorStatus::Temporary,
+                })?;
+            pb.finish_and_clear();
+            let mut stream = resp.bytes_stream();
+            // prepare file dst
+            // NOTE: like in zenodo, the file path can exist without its parent dir as Dir entity
+            // being created first. To cover that case, the folder of the path will be created no
+            // matter it existed or not using `create_dir_all`.
+            // See issue #54.
+            let path = dst.as_ref().join(label.as_str());
+            let parent_dir = path.parent().ok_or_raise(|| CrawlerError {
+                message: format!("cannot get parent dir for '{}'", path.display()),
+                status: ErrorStatus::Permanent,
+            })?;
+            fs::create_dir_all(parent_dir).or_raise(|| CrawlerError {
+                message: format!("cannot create folder dir of '{}'", parent_dir.display()),
+                status: ErrorStatus::Permanent,
+            })?;
+            let mut fh = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(path.as_path())
+                .await
+                .or_raise(|| CrawlerError {
+                    message: format!("fail on create file at {}", path.display()),
+                    status: ErrorStatus::Permanent,
+                })?;
+
+            let checksum = zip_meta
+                .checksum()
+                .iter()
+                .find(|c| matches!(c, Checksum::Sha256(_)))
+                .or_else(|| zip_meta.checksum().first());
+            let expected_size = zip_meta.size();
+            let (mut hasher, expected_checksum) = if let Some(checksum) = checksum {
+                match checksum {
+                    Checksum::Sha256(value) => {
+                        (Some(Hasher::Sha256(sha2::Sha256::new())), Some(value))
+                    }
+                    Checksum::Md5(value) => (Some(Hasher::Md5(md5::Md5::new())), Some(value)),
+                    Checksum::Sha1(value) => (Some(Hasher::Sha1(sha1::Sha1::new())), Some(value)),
+                }
+            } else {
+                warn!("unable to find expected checksum to verify");
+                (None, None)
+            };
+
+            let style = ProgressStyle::with_template(
+                "{msg:<60} [{bar:40.cyan/blue}] \
+                 {decimal_bytes:>8}/{decimal_total_bytes:>8} \
+                 ({decimal_bytes_per_sec:>12}, {eta:>3})",
+            )
+            .unwrap()
+            .progress_chars("=>-");
+            let pb = if let Some(expected_size) = expected_size {
+                mp.insert_from_back(0, ProgressBar::new(expected_size))
+            } else {
+                mp.insert_from_back(0, ProgressBar::no_length())
+            };
+            pb.set_style(style);
+            pb.enable_steady_tick(std::time::Duration::from_millis(100));
+            pb.set_message(compact_path(&label));
+
+            let mut got_size = 0;
+            while let Some(item) = stream.next().await {
+                let mut bytes = item.or_raise(|| CrawlerError {
+                    message: "reqwest error stream".to_string(),
+                    status: ErrorStatus::Permanent,
+                })?;
+                let chunk = bytes.chunk();
+                if let Some(ref mut hasher) = hasher {
+                    hasher.update(chunk);
+                }
+                let bytes_len = bytes.len() as u64;
+                got_size += bytes_len;
+                fh.write_all_buf(&mut bytes)
+                    .await
+                    .or_raise(|| CrawlerError {
+                        message: "fail at writing to fs".to_string(),
+                        status: ErrorStatus::Permanent,
+                    })?;
+                pb.inc(bytes_len);
+            }
+
+            pb.finish_and_clear();
+
+            if let (Some(expected_size), Some(expected_checksum)) =
+                (expected_size, expected_checksum)
+            {
+                if got_size != expected_size {
+                    exn::bail!(CrawlerError {
+                        message: format!("size wrong, expect {expected_size}, got {got_size}"),
+                        status: ErrorStatus::Permanent
+                    })
+                }
+
+                let checksum = hex::encode(hasher.expect("hasher is not none").finalize());
+
+                if checksum != *expected_checksum {
+                    exn::bail!(CrawlerError {
+                        message: format!(
+                            "checksum wrong, expect {expected_checksum}, got {checksum}"
+                        ),
+                        status: ErrorStatus::Permanent
+                    })
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
+/// Local file name for a zip, derived from its download url: the last non-empty path segment
+/// (a trailing `download` segment is skipped), with `.zip` appended if missing.
+fn zip_file_name(url: &url::Url) -> String {
+    let mut segments: Vec<&str> = url
+        .path_segments()
+        .into_iter()
+        .flatten()
+        .filter(|s| !s.is_empty())
+        .collect();
+    if segments.last() == Some(&"download") {
+        segments.pop();
+    }
+    let name = segments.last().copied().unwrap_or("download");
+    if name.to_ascii_lowercase().ends_with(".zip") {
+        name.to_string()
+    } else {
+        format!("{name}.zip")
     }
 }
 
