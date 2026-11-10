@@ -305,7 +305,6 @@ struct PyDaschJsonSrcDataset {
 impl PyDaschJsonSrcDataset {
     #[new]
     fn new(id: String, content: String) -> PyResult<Self> {
-
         let ds = Dataset {
             backend: Arc::new(DaschJsonSrcDataset::new(id, content)),
         };

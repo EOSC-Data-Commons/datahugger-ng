@@ -13,8 +13,8 @@ use url::Url;
 use crate::{
     datasets::{
         Arxiv, DabarXmlSrcDataset, DaschJsonSrcDataset, DataDryad, Dataone, DataverseDataset,
-        DataverseFile, GitHub, HalScience, HuggingFace, MaterialsCloud, Mdposit, OnedataDataset,
-        SwissUbase, Zenodo, OSF,
+        DataverseFile, FinBif, GitHub, HalScience, HuggingFace, MaterialsCloud, Mdposit,
+        OnedataDataset, SwissUbase, Zenodo, OSF,
     },
     repo::Dataset,
 };
@@ -832,6 +832,24 @@ pub async fn resolve(link: &str) -> Result<Dataset, Exn<DispatchError>> {
             let dataset = Dataset::new(SwissUbase::new(dataset_id.to_string()));
             Ok(dataset)
         }
+        "tun.fi" | "gbif.laji.fi" => {
+            // FinBIF Darwin Core Archive, e.g. https://tun.fi/HR.727
+            // (or already https://gbif.laji.fi/archive/HR.727); the id is the last
+            // non-empty path segment and must start with "HR."
+            let id = link
+                .path_segments()
+                .ok_or_else(|| DispatchError {
+                    message: format!("cannot get path segments of url '{}'", link.as_str()),
+                })?
+                .rfind(|s| !s.is_empty())
+                .filter(|s| s.starts_with("HR."))
+                .ok_or_else(|| DispatchError {
+                    message: format!("expected last path segment to start with 'HR.' in '{link}'"),
+                })?;
+
+            let dataset = Dataset::new(FinBif::new(id));
+            Ok(dataset)
+        }
         "mdposit.mddbr.eu" => {
             let fragment = link.fragment().ok_or_else(|| DispatchError {
                 message: format!("cannot get fragment of url '{}'", link.as_str()),
@@ -896,6 +914,22 @@ mod tests {
         let qr = resolve(url).await.unwrap();
         let qr = qr.backend.as_any().downcast_ref::<DataverseFile>().unwrap();
         assert_eq!(qr.id.as_str(), "doi:10.7910/DVN/KBHLOD/DHJ45U");
+    }
+
+    #[tokio::test]
+    async fn test_resolve_finbif() {
+        for url in [
+            "https://tun.fi/HR.727",
+            "https://tun.fi/HR.727/",
+            "https://gbif.laji.fi/archive/HR.727",
+        ] {
+            let qr = resolve(url).await.unwrap();
+            let qr = qr.backend.as_any().downcast_ref::<FinBif>().unwrap();
+            assert_eq!(qr.id.as_str(), "HR.727");
+        }
+
+        // last segment must start with "HR."
+        assert!(resolve("https://tun.fi/MX.123").await.is_err());
     }
 
     #[tokio::test]
