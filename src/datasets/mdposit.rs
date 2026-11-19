@@ -7,6 +7,7 @@ use reqwest::StatusCode;
 use reqwest_middleware::ClientWithMiddleware;
 use serde_json::Value as JsonValue;
 use std::any::Any;
+use std::collections::HashMap;
 use std::str::FromStr;
 use url::Url;
 
@@ -19,7 +20,47 @@ fn analyse_json(
         message: format!("expected array, got {:?}", json),
     })?;
 
-    files
+    // extract upload date so the files can be sorted
+    let mut upload_date_for_files: Vec<(String, JsonValue)> = files
+        .iter()
+        .map(|item| {
+            let upload_date =
+                json_extract::<String>(item, "uploadDate").map_err(|_| RepoError {
+                    message: "fail to extracting 'uploadDate' as String from json".to_string(),
+                })?;
+            Ok((upload_date, item.clone()))
+        })
+        .collect::<Result<_, RepoError>>()?;
+
+    // sort by upload date (latest first)
+    upload_date_for_files.sort_by(|(date_a, _), (date_b, _)| date_a.cmp(date_b).reverse());
+
+    // rebuild a vec of JSON values
+    let files_sorted_by_date: Vec<JsonValue> = upload_date_for_files
+        .into_iter()
+        .map(|(_, item)| item)
+        .collect();
+
+    // get rid of duplicates
+    let deduplicated_files: Vec<JsonValue> = files_sorted_by_date
+        .into_iter()
+        .try_fold(
+            HashMap::<String, JsonValue>::new(),
+            |mut acc, item| -> Result<_, RepoError> {
+                let key = json_extract::<String>(&item, "filename").map_err(|_| RepoError {
+                    message: "fail to extracting 'filename' as String from json".to_string(),
+                })?;
+
+                // Only inserts if the key does not exist yet
+                acc.entry(key).or_insert(item);
+
+                Ok(acc)
+            },
+        )?
+        .into_values()
+        .collect();
+
+    deduplicated_files
         .iter()
         .map(|filej| {
             let name: String = json_extract(filej, "filename").or_raise(|| RepoError {
@@ -34,7 +75,7 @@ fn analyse_json(
             let download_url = dir
                 .api_url()
                 .join(&format!(
-                    "/api/rest/v1/projects/{}/files/{}", // https://mdposit.mddbr.eu/api/rest/docs/#/files/get_projects__projectAccessionOrID__files__filename_
+                    "/api/rest/v2/projects/{}/files/{}", // https://mdposit.mddbr.eu/api/rest/docs/#/files/get_projects__projectAccessionOrID__files__filename_
                     id, name
                 ))
                 .or_raise(|| RepoError {
@@ -111,7 +152,7 @@ impl DatasetBackend for Mdposit {
     fn root_dir(&self) -> DirMeta {
         let url = Url::from_str(
             format!(
-                "https://mdposit.mddbr.eu/api/rest/v1/projects/{}/filenotes",
+                "https://mdposit.mddbr.eu/api/rest/v2/projects/{}/filenotes",
                 self.id
             )
             .as_str(),
