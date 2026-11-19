@@ -24,9 +24,10 @@ fn analyse_json(
     let mut upload_date_for_files: Vec<(String, JsonValue)> = files
         .iter()
         .map(|item| {
-            let upload_date = json_extract::<String>(item, "uploadDate").map_err(|_| RepoError {
-                message: "fail to extracting 'uploadDate' as String from json".to_string(),
-            })?;
+            let upload_date =
+                json_extract::<String>(item, "uploadDate").map_err(|_| RepoError {
+                    message: "fail to extracting 'uploadDate' as String from json".to_string(),
+                })?;
             Ok((upload_date, item.clone()))
         })
         .collect::<Result<_, RepoError>>()?;
@@ -35,14 +36,16 @@ fn analyse_json(
     upload_date_for_files.sort_by(|(date_a, _), (date_b, _)| date_a.cmp(date_b).reverse());
 
     // rebuild a vec of JSON values
-    let files_sorted_by_date: Vec<JsonValue> = upload_date_for_files.into_iter().map(|(_, item)| item).collect();
+    let files_sorted_by_date: Vec<JsonValue> = upload_date_for_files
+        .into_iter()
+        .map(|(_, item)| item)
+        .collect();
 
     // get rid of duplicates
     let deduplicated_files: Vec<JsonValue> = files_sorted_by_date
         .into_iter()
         .try_fold(
             HashMap::<String, JsonValue>::new(),
-
             |mut acc, item| -> Result<_, RepoError> {
                 let key = json_extract::<String>(&item, "filename").map_err(|_| RepoError {
                     message: "fail to extracting 'filename' as String from json".to_string(),
