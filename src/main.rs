@@ -45,6 +45,22 @@ struct InspectArgs {
     /// Can be specified multiple times. Excludes are applied after includes.
     #[arg(long)]
     exclude: Vec<String>,
+
+    /// Dump the file metadata in the given format instead of printing it.
+    #[arg(long, value_name = "FORMAT")]
+    dump: Option<DumpFormat>,
+
+    /// Destination directory for the dumped metadata.
+    ///
+    /// Defaults to the current directory (`"./"`).
+    #[arg(short, long, value_name = "DIR")]
+    to: Option<PathBuf>,
+}
+
+#[derive(clap::ValueEnum, Clone, Copy, Debug)]
+enum DumpFormat {
+    /// JSON representation of the crawled file metadata.
+    Json,
 }
 
 #[derive(Args)]
@@ -188,17 +204,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             };
 
-            let mp = MultiProgress::new();
-            let count = repo
-                .print_meta(&client, mp, args.limit, Some(&filter))
-                .await
-                .map_err(|err| {
-                    eprintln!("inspect failed: {err:?}");
-                    std::process::exit(1);
-                })
-                .unwrap_or(0);
-            if !filter.is_accept_all() && count == 0 {
-                eprintln!("warning: no files matched the --include/--exclude pattern(s)");
+            if let Some(format) = args.dump {
+                let dump = repo
+                    .dump_meta(&client, args.limit, Some(&filter))
+                    .await
+                    .map_err(|err| {
+                        eprintln!("inspect failed: {err:?}");
+                        std::process::exit(1);
+                    })
+                    .unwrap();
+                let content = match format {
+                    DumpFormat::Json => serde_json::to_string_pretty(&dump)?,
+                };
+                let dst = args.to.unwrap_or_else(|| PathBuf::from("."));
+                fs::create_dir_all(&dst)?;
+                let path = dst.join("datahugger.json");
+                fs::write(&path, content)?;
+                println!("metadata dumped to {}", path.display());
+            } else {
+                let mp = MultiProgress::new();
+                let count = repo
+                    .print_meta(&client, mp, args.limit, Some(&filter))
+                    .await
+                    .map_err(|err| {
+                        eprintln!("inspect failed: {err:?}");
+                        std::process::exit(1);
+                    })
+                    .unwrap_or(0);
+                if !filter.is_accept_all() && count == 0 {
+                    eprintln!("warning: no files matched the --include/--exclude pattern(s)");
+                }
             }
         }
     }

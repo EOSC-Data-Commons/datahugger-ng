@@ -15,6 +15,148 @@ use crate::{
     Dataset, Entry,
 };
 
+use std::collections::BTreeMap;
+
+/// Serializable representation of the metadata of all crawled entries.
+#[derive(serde::Serialize)]
+pub struct InspectDump {
+    /// URL of the dataset record the metadata belongs to.
+    pub record_url: String,
+    /// Metadata of the crawled directories, files and zip archives.
+    pub entries: Vec<EntryDump>,
+}
+
+/// Serializable representation of a crawled entry.
+#[derive(serde::Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum EntryDump {
+    Dir {
+        path: String,
+        root_url: String,
+        api_url: String,
+    },
+    File {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        filename: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        file_identifier: Option<String>,
+        path: String,
+        download_url: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        size: Option<u64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        mimetype: Option<String>,
+        #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+        checksums: BTreeMap<String, String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        version: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        creation_date: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        last_modification_date: Option<String>,
+        downloadable: bool,
+    },
+    Zip {
+        download_url: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        size: Option<u64>,
+        #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+        checksums: BTreeMap<String, String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        version: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        creation_date: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        last_modification_date: Option<String>,
+        downloadable: bool,
+        files: Vec<FileInZipDump>,
+    },
+}
+
+impl EntryDump {
+    fn sort_key(&self) -> &str {
+        match self {
+            EntryDump::Dir { path, .. } | EntryDump::File { path, .. } => path,
+            EntryDump::Zip { download_url, .. } => download_url,
+        }
+    }
+}
+
+impl From<Entry> for EntryDump {
+    fn from(entry: Entry) -> Self {
+        match entry {
+            Entry::Dir(dir_meta) => EntryDump::Dir {
+                path: dir_meta.relative().as_str().to_string(),
+                root_url: dir_meta.root_url().to_string(),
+                api_url: dir_meta.api_url().to_string(),
+            },
+            Entry::File(file_meta) => EntryDump::File {
+                filename: file_meta.filename().map(str::to_string),
+                file_identifier: file_meta.file_identifier().map(str::to_string),
+                path: file_meta.relative().as_str().to_string(),
+                download_url: file_meta.download_url().to_string(),
+                size: file_meta.size(),
+                mimetype: file_meta.mimetype().map(|m| m.to_string()),
+                checksums: checksums_to_map(file_meta.checksum()),
+                version: file_meta.version().map(str::to_string),
+                creation_date: file_meta.creation_date().map(str::to_string),
+                last_modification_date: file_meta.last_modification_date().map(str::to_string),
+                downloadable: file_meta.is_downloadable(),
+            },
+            Entry::Zip(zip_meta) => EntryDump::Zip {
+                download_url: zip_meta.download_url().to_string(),
+                size: zip_meta.size(),
+                checksums: checksums_to_map(zip_meta.checksum()),
+                version: zip_meta.version().map(str::to_string),
+                creation_date: zip_meta.creation_date().map(str::to_string),
+                last_modification_date: zip_meta
+                    .last_modification_date()
+                    .map(str::to_string),
+                downloadable: zip_meta.is_downloadable(),
+                files: zip_meta
+                    .files()
+                    .into_iter()
+                    .map(FileInZipDump::from_zip_entry)
+                    .collect(),
+            },
+        }
+    }
+}
+
+fn checksums_to_map(checksums: &[crate::Checksum]) -> BTreeMap<String, String> {
+    checksums
+        .iter()
+        .map(|checksum| match checksum {
+            crate::Checksum::Md5(value) => ("md5".to_string(), value.clone()),
+            crate::Checksum::Sha256(value) => ("sha256".to_string(), value.clone()),
+            crate::Checksum::Sha1(value) => ("sha1".to_string(), value.clone()),
+        })
+        .collect()
+}
+
+/// Serializable representation of a file contained in a zip archive.
+#[derive(serde::Serialize)]
+pub struct FileInZipDump {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    file_identifier: Option<String>,
+    path: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mimetype: Option<String>,
+}
+
+impl FileInZipDump {
+    fn from_zip_entry(file_meta: crate::FileInZipMeta) -> Self {
+        FileInZipDump {
+            filename: file_meta.filename().map(str::to_string),
+            file_identifier: file_meta.file_identifier().map(str::to_string),
+            path: file_meta.relative().as_str().to_string(),
+            mimetype: file_meta.mimetype().map(|m| m.to_string()),
+        }
+    }
+}
+
 use bytes::Buf;
 use digest::Digest;
 use std::{fs, path::Path};
@@ -73,6 +215,55 @@ impl Dataset {
                 status: ErrorStatus::Permanent,
             })?;
         Ok(file_count.load(Ordering::Relaxed))
+    }
+
+    /// Crawls the dataset and collects the metadata of all entries into
+    /// a serializable structure.
+    ///
+    /// # Errors
+    /// when crawl fails
+    pub async fn dump_meta(
+        &self,
+        client: &ClientWithMiddleware,
+        limit: usize,
+        filter: Option<&FileFilter>,
+    ) -> Result<InspectDump, Exn<CrawlerError>> {
+        let root_dir = self.root_dir();
+        let record_url = root_dir.root_url().to_string();
+        let mp = MultiProgress::with_draw_target(indicatif::ProgressDrawTarget::hidden());
+        let entries: Arc<tokio::sync::Mutex<Vec<EntryDump>>> = Arc::new(tokio::sync::Mutex::new(Vec::new()));
+        crawl(client.clone(), Arc::clone(&self.backend), root_dir, mp)
+            .try_filter(move |entry| {
+                let pass = match entry {
+                    Entry::Dir(_) => true,
+                    Entry::File(file_meta) => match filter {
+                        Some(filter) => filter.matches(file_meta.relative().as_str()),
+                        None => true,
+                    },
+                    Entry::Zip(_) => true,
+                };
+                futures_util::future::ready(pass)
+            })
+            .try_for_each_concurrent(limit, |entry| {
+                let entries = Arc::clone(&entries);
+                async move {
+                    entries.lock().await.push(EntryDump::from(entry));
+                    Ok(())
+                }
+            })
+            .await
+            .or_raise(|| CrawlerError {
+                message: "crawl and collect metadata failed".to_string(),
+                status: ErrorStatus::Permanent,
+            })?;
+        let mut entries = Arc::try_unwrap(entries)
+            .unwrap_or_else(|_| panic!("no other reference to the entries"))
+            .into_inner();
+        entries.sort_by(|a, b| a.sort_key().cmp(b.sort_key()));
+        Ok(InspectDump {
+            record_url,
+            entries,
+        })
     }
 }
 

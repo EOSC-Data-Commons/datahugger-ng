@@ -140,6 +140,28 @@ async fn zenodo() {
 }
 
 #[tokio::test]
+async fn zenodo_dump_meta() {
+    // use https://zenodo.org/records/17867222
+    let client = vcr_client(reqwest::Client::new(), "zenodo_api");
+    let dataset = Dataset::new(Zenodo {
+        id: "17867222".to_string(),
+    });
+    let dump = dataset.dump_meta(&client, 5, None).await.unwrap();
+
+    let file_count = dump
+        .entries
+        .iter()
+        .filter(|entry| matches!(entry, datahugger::EntryDump::File { .. }))
+        .count();
+    assert_eq!(file_count, 2);
+
+    let json = serde_json::to_string(&dump).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(value["entries"].as_array().unwrap().len(), 2);
+    assert!(value["record_url"].is_string());
+}
+
+#[tokio::test]
 async fn dabar_resolver() {
     // use https://urn.nsk.hr/urn:nbn:hr:193:206659
     let link = "https://urn.nsk.hr/urn:nbn:hr:193:206659";
